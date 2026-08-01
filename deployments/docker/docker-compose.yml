@@ -6,6 +6,7 @@ services:
       dockerfile: deployments/docker/Dockerfile
     image: enterprise-mcp-server:latest
     environment:
+      DOCKER_BUILDKIT: "1"
       ENTERPRISE_MCP_ENV: development
       ENTERPRISE_MCP_SERVER__TRANSPORTS__PORT: 0
     ports:
@@ -26,6 +27,7 @@ services:
       dockerfile: deployments/docker/Dockerfile
     image: enterprise-mcp-server:latest
     environment:
+      DOCKER_BUILDKIT: "1"
       BROWSER_MCP_ENV: development
       BROWSER_MCP_API__PORT: 0
     ports:
@@ -60,6 +62,7 @@ services:
       dockerfile: deployments/docker/Dockerfile
     image: enterprise-mcp-server:latest
     environment:
+      DOCKER_BUILDKIT: "1"
       BROWSER_MCP_ENV: development
       REDIS_URI: redis://redis:6379/0
     volumes:
