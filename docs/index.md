@@ -19,6 +19,7 @@ business logic — downstream servers fork it and add their own capabilities.
 - [Element Engine](elements/overview.md)
 - [Plugins](plugins/creating-plugin.md)
 - [Form Automation](forms/overview.md)
+- [Authentication Engine](auth/overview.md)
 
 ## Quick Start
 

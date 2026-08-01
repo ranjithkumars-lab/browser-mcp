@@ -7,6 +7,8 @@ kept specific so callers (tools, HTTP handlers, tests) can react precisely.
 from __future__ import annotations
 
 __all__ = [
+    "AuthError",
+    "AuthenticationError",
     "BrowserError",
     "BrowserNotFoundError",
     "BrowserNotReadyError",
@@ -25,6 +27,7 @@ __all__ = [
     "FrameError",
     "InteractionError",
     "InvalidLocatorStrategyError",
+    "LoginFailedError",
     "NavigationError",
     "NavigationTimeoutError",
     "PageError",
@@ -36,9 +39,13 @@ __all__ = [
     "ProfileError",
     "ScraperError",
     "SessionError",
+    "SessionExpiredError",
     "SessionNotFoundError",
     "StaleElementReferenceError",
+    "StateLoadError",
+    "StateSaveError",
     "SubmitError",
+    "UnsupportedAuthStrategyError",
     "ValidationError",
 ]
 
@@ -173,3 +180,31 @@ class PaginationError(ScraperError):
 
 class ProductExtractionError(ScraperError):
     """Raised when the composite product collector cannot extract any data."""
+
+
+class AuthenticationError(BrowserError):
+    """Base class for authentication failures."""
+
+
+class AuthError(AuthenticationError):
+    """Base class for auth subsystem errors."""
+
+
+class LoginFailedError(AuthError):
+    """Raised when a login attempt fails."""
+
+
+class SessionExpiredError(AuthError):
+    """Raised when an authentication session has expired."""
+
+
+class StateLoadError(AuthError):
+    """Raised when a persisted auth state cannot be loaded."""
+
+
+class StateSaveError(AuthError):
+    """Raised when an auth state cannot be saved."""
+
+
+class UnsupportedAuthStrategyError(AuthError):
+    """Raised when a requested auth strategy is not registered or available."""

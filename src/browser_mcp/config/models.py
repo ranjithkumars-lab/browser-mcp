@@ -11,6 +11,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from browser_mcp.config.defaults import ENV_VAR_PREFIX
 
 __all__ = [
+    "AuthConfig",
     "BrowserConfig",
     "BrowserEngine",
     "BrowserProfile",
@@ -68,6 +69,19 @@ class ViewportConfig(BaseModel):
 
     width: int = Field(default=1280, ge=1)
     height: int = Field(default=720, ge=1)
+
+
+class AuthConfig(BaseModel):
+    """Authentication engine configuration."""
+
+    storage_directory: str = Field(
+        default="~/.browser-mcp/auth_states",
+        description="Root directory for persisted auth states.",
+    )
+    allow_plaintext: bool = Field(
+        default=False,
+        description="Allow unencrypted auth state files in development.",
+    )
 
 
 class BrowserConfig(BaseModel):
@@ -196,3 +210,4 @@ class BrowserSettings(BaseSettings):
     profiles: ProfilesConfig = Field(default_factory=ProfilesConfig)
     navigation: NavigationConfig = Field(default_factory=NavigationConfig)
     timeouts: TimeoutConfig = Field(default_factory=TimeoutConfig)
+    auth: AuthConfig = Field(default_factory=AuthConfig)

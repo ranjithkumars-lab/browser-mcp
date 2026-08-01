@@ -35,6 +35,7 @@ class PluginContext:
         element_engine: ElementEngine,
         state_manager: StateManager,
         event_bus: EventBus,
+        auth_manager: Any | None = None,
     ) -> None:
         self._app_context = app_context
         self._container = container
@@ -44,6 +45,7 @@ class PluginContext:
         self._element_engine = element_engine
         self._state_manager = state_manager
         self._event_bus = event_bus
+        self._auth_manager = auth_manager
 
     @property
     def app_context(self) -> AppContext:
@@ -76,6 +78,10 @@ class PluginContext:
     @property
     def event_bus(self) -> EventBus:
         return self._event_bus
+
+    @property
+    def auth_manager(self) -> Any | None:
+        return self._auth_manager
 
     @property
     def settings(self) -> Any:

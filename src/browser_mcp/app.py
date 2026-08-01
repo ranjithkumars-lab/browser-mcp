@@ -35,6 +35,15 @@ from browser_mcp.config.models import BrowserSettings
 from browser_mcp.plugins.scraper.actions import ScraperActions
 from browser_mcp.plugins.scraper.sizer import PayloadSizer
 from browser_mcp.plugins.scraper.tools import ScraperToolkit
+from browser_mcp.auth.manager import AuthManager
+from browser_mcp.auth.provider import PlaywrightAuthProvider
+from browser_mcp.auth.storage.encryption import AuthEncryptionEngine
+from browser_mcp.auth.storage.manager import AuthStorageManager
+from browser_mcp.auth.strategies.registry import AuthStrategyRegistry
+from browser_mcp.auth.strategies.form import FormAuthStrategy
+from browser_mcp.auth.strategies.cookie import CookieAuthStrategy
+from browser_mcp.auth.strategies.header import HeaderAuthStrategy
+from browser_mcp.auth.tools import AuthToolkit
 from browser_mcp.tools.browser import BrowserToolkit
 from browser_mcp.tools.elements import ElementToolkit
 from browser_mcp.tools.navigation import NavigationToolkit
@@ -91,6 +100,23 @@ def create_browser_context(
     resolved.register_health_provider("navigation", _navigation_health(state, browser_settings))
     resolved.register_health_provider("elements", _elements_health(elements))
 
+    auth_registry = AuthStrategyRegistry()
+    auth_registry.register(FormAuthStrategy())
+    auth_registry.register(CookieAuthStrategy())
+    auth_registry.register(HeaderAuthStrategy())
+    auth_storage = AuthStorageManager(
+        directory=browser_settings.auth.storage_directory,
+        encryption=AuthEncryptionEngine(allow_plaintext=browser_settings.auth.allow_plaintext),
+    )
+    auth_provider = PlaywrightAuthProvider()
+    auth_manager = AuthManager(
+        registry=auth_registry,
+        storage=auth_storage,
+        provider=auth_provider,
+        event_bus=events,
+    )
+    resolved.container.register_instance(auth_manager, name="auth_manager")
+
     lifecycle = BrowserToolkit(sessions)
     lifecycle.register(resolved.tools)
     navigation_toolkit = NavigationToolkit(
@@ -103,6 +129,9 @@ def create_browser_context(
     scraper_actions = ScraperActions(state, events, PayloadSizer())
     scraper_toolkit = ScraperToolkit(scraper_actions)
     scraper_toolkit.register(resolved.tools)
+
+    auth_toolkit = AuthToolkit(auth_manager, pool, sessions)
+    auth_toolkit.register(resolved.tools)
 
     resolved.container.register_instance(sessions, name="browser_sessions")
     resolved.container.register_instance(state, name="navigation_state")
