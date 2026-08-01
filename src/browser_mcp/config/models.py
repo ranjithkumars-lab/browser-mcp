@@ -11,22 +11,22 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from browser_mcp.config.defaults import ENV_VAR_PREFIX
 
 __all__ = [
-    "AuthConfig",
-    "EventsConfig",
-    "PluginsConfig",
-    "ServerConfig",
     "ApiConfig",
-    "UiConfig",
-    "TransferConfig",
+    "AuthConfig",
     "BrowserConfig",
     "BrowserEngine",
     "BrowserProfile",
     "BrowserSettings",
+    "EventsConfig",
     "NavigationConfig",
     "NavigationStrategy",
+    "PluginsConfig",
     "PoolConfig",
     "ProfilesConfig",
+    "ServerConfig",
     "TimeoutConfig",
+    "TransferConfig",
+    "UiConfig",
     "ViewportConfig",
 ]
 
@@ -104,6 +104,7 @@ class TransferConfig(BaseModel):
 
 class EventsConfig(BaseModel):
     """Browser event history, dispatch, and streaming configuration."""
+
     max_history_size: int = Field(default=1000, ge=1)
     max_queue_size: int = Field(default=10_000, ge=1)
     subscriber_timeout_seconds: float = Field(default=5.0, gt=0)

@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import Any
 
 import pytest
 
-from browser_mcp.errors import StateLoadError, StateSaveError
-from browser_mcp.auth.models import AuthMetadata, AuthSession, AuthState
+from browser_mcp.auth.models import AuthSession, AuthState
 from browser_mcp.auth.storage.encryption import AuthEncryptionEngine
 from browser_mcp.auth.storage.manager import AuthStorageManager
 from browser_mcp.auth.storage.serializer import StateSerializer
 from browser_mcp.auth.storage.ttl import TTLValidator
+from browser_mcp.errors import StateLoadError
 
 pytestmark = pytest.mark.unit
 
@@ -45,12 +43,14 @@ class TestTTLValidator:
 
     def test_valid_future_expiry(self) -> None:
         from datetime import UTC, datetime, timedelta
+
         validator = TTLValidator()
         future = (datetime.now(UTC) + timedelta(days=1)).isoformat()
         assert validator.is_cookie_valid({"name": "a", "expires": future}) is True
 
     def test_expired_cookie(self) -> None:
         from datetime import UTC, datetime, timedelta
+
         validator = TTLValidator()
         past = (datetime.now(UTC) - timedelta(days=1)).isoformat()
         assert validator.is_cookie_valid({"name": "a", "expires": past}) is False

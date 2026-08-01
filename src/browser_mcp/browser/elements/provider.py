@@ -142,7 +142,7 @@ class PlaywrightLocatorProvider(LocatorProvider):
         name: str | None = None,
         exact: bool = False,
     ) -> Locator:
-        return target.get_by_role(role, name=name, exact=exact) # type: ignore
+        return target.get_by_role(role, name=name, exact=exact)  # type: ignore
 
     def create_playwright(self, target: Page | Frame, value: str) -> Locator:
         return target.locator(value)
@@ -189,4 +189,4 @@ class PlaywrightLocatorProvider(LocatorProvider):
         strict: bool | None = None,
     ) -> None:
         target = locator.first if strict is False else locator
-        await target.wait_for(state=state, timeout=timeout) # type: ignore
+        await target.wait_for(state=state, timeout=timeout)  # type: ignore

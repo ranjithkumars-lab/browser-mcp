@@ -24,7 +24,13 @@ class ProductNormalizer:
         price = self._extract_price(data)
         currency = self._first(
             data,
-            ["priceCurrency", "currency", "og:price:currency", "offers.priceCurrency", "offers.currency"],
+            [
+                "priceCurrency",
+                "currency",
+                "og:price:currency",
+                "offers.priceCurrency",
+                "offers.currency",
+            ],
         )
         brand = self._first(data, ["brand", "brand.name", "manufacturer.name"])
         sku = self._first(data, ["sku", "productID", "gtin"])
@@ -36,7 +42,9 @@ class ProductNormalizer:
         if url is None:
             url = self._first(data, ["sku"])
         rating = self._first(data, ["ratingValue", "rating.value", "aggregateRating.ratingValue"])
-        rating_count = self._first(data, ["ratingCount", "reviewCount", "aggregateRating.reviewCount"])
+        rating_count = self._first(
+            data, ["ratingCount", "reviewCount", "aggregateRating.reviewCount"]
+        )
 
         image = normalize_href(str(image_raw), base_url) if image_raw else None
         resolved_url = normalize_href(str(url), base_url) if url else None

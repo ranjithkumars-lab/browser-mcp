@@ -62,9 +62,7 @@ class TestTextCollector:
             "char_count": 15,
         }
         result = await TextCollector().collect(page)
-        assert result == [
-            {"text": "Hello World\nFoo bar", "word_count": 4, "char_count": 15}
-        ]
+        assert result == [{"text": "Hello World\nFoo bar", "word_count": 4, "char_count": 15}]
 
     @pytest.mark.asyncio
     async def test_collect_with_selector(self) -> None:
@@ -89,7 +87,11 @@ class TestTableCollector:
                 "caption": "Users",
                 "rows": [
                     {"cells": [{"value": "Name", "is_header": True, "col_span": 1, "row_span": 1}]},
-                    {"cells": [{"value": "Alice", "is_header": False, "col_span": 1, "row_span": 1}]},
+                    {
+                        "cells": [
+                            {"value": "Alice", "is_header": False, "col_span": 1, "row_span": 1}
+                        ]
+                    },
                 ],
             },
         ]
@@ -146,7 +148,19 @@ class TestImagesCollector:
     async def test_collect_with_selector(self) -> None:
         page = _mock_page(url="https://example.com")
         page.evaluate.return_value = [
-            {"src": "/a.png", "current_src": "", "alt": "A", "loading": "lazy", "width": 0, "height": 0, "natural_width": 0, "natural_height": 0, "complete": True, "decoded": True, "is_decorative": True}
+            {
+                "src": "/a.png",
+                "current_src": "",
+                "alt": "A",
+                "loading": "lazy",
+                "width": 0,
+                "height": 0,
+                "natural_width": 0,
+                "natural_height": 0,
+                "complete": True,
+                "decoded": True,
+                "is_decorative": True,
+            }
         ]
         result = await ImagesCollector().collect(page, selector=".gallery img")
         assert len(result) == 1
@@ -279,27 +293,19 @@ class TestLinksCollector:
 
     @pytest.mark.asyncio
     async def test_classify_internal(self) -> None:
-        assert LinksCollector._classify(
-            "https://example.com/page", True, False
-        ) == "internal"
+        assert LinksCollector._classify("https://example.com/page", True, False) == "internal"
 
     @pytest.mark.asyncio
     async def test_classify_external(self) -> None:
-        assert LinksCollector._classify(
-            "https://external.com/page", False, False
-        ) == "external"
+        assert LinksCollector._classify("https://external.com/page", False, False) == "external"
 
     @pytest.mark.asyncio
     async def test_classify_anchor(self) -> None:
-        assert LinksCollector._classify(
-            "https://example.com/page#section", False, True
-        ) == "anchor"
+        assert LinksCollector._classify("https://example.com/page#section", False, True) == "anchor"
 
     @pytest.mark.asyncio
     async def test_classify_other(self) -> None:
-        assert LinksCollector._classify(
-            "ftp://example.com/file", None, None
-        ) == "other"
+        assert LinksCollector._classify("ftp://example.com/file", None, None) == "other"
 
 
 # ---------------------------------------------------------------------------
@@ -312,7 +318,11 @@ class TestProductCollector:
     async def test_collect_jsonld_product(self) -> None:
         page = _mock_page(url="https://example.com/product")
         page.evaluate.side_effect = [
-            {"@type": "Product", "name": "Widget", "offers": {"price": "19.99", "priceCurrency": "USD"}},
+            {
+                "@type": "Product",
+                "name": "Widget",
+                "offers": {"price": "19.99", "priceCurrency": "USD"},
+            },
             None,
             None,
             None,

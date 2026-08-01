@@ -5,7 +5,6 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from browser_mcp.errors import LoginFailedError
 from browser_mcp.auth.events import (
     emit_auth_failed,
     emit_auth_headers_updated,
@@ -14,11 +13,12 @@ from browser_mcp.auth.events import (
     emit_auth_state_saved,
     emit_auth_success,
 )
-from browser_mcp.auth.models import AuthCredentials, AuthState, AuthSession, AuthMetadata
+from browser_mcp.auth.models import AuthCredentials, AuthMetadata, AuthSession, AuthState
 from browser_mcp.auth.provider import AuthProvider
 from browser_mcp.auth.storage.manager import AuthStorageManager
 from browser_mcp.auth.strategies.base import BaseAuthStrategy
 from browser_mcp.auth.strategies.registry import AuthStrategyRegistry
+from browser_mcp.errors import LoginFailedError
 
 __all__ = ["AuthManager"]
 
@@ -76,7 +76,11 @@ class AuthManager:
                 session_id=session.session_id,
                 duration_ms=duration_ms,
             )
-            return {"success": True, "session": state.model_dump(mode="json"), "duration_ms": duration_ms}
+            return {
+                "success": True,
+                "session": state.model_dump(mode="json"),
+                "duration_ms": duration_ms,
+            }
         except LoginFailedError:
             raise
         except Exception as exc:
@@ -91,7 +95,9 @@ class AuthManager:
             )
             raise LoginFailedError(str(exc)) from exc
 
-    async def save_state(self, context_id: str, session_id: str, state: AuthState) -> dict[str, Any]:
+    async def save_state(
+        self, context_id: str, session_id: str, state: AuthState
+    ) -> dict[str, Any]:
         path = await self._storage.save(context_id, state)
         await emit_auth_state_saved(
             self._events,
@@ -112,7 +118,9 @@ class AuthManager:
         )
         return state
 
-    async def set_headers(self, context: Any, headers: dict[str, str], *, context_id: str, session_id: str) -> dict[str, Any]:
+    async def set_headers(
+        self, context: Any, headers: dict[str, str], *, context_id: str, session_id: str
+    ) -> dict[str, Any]:
         await self._provider.inject_headers(context, headers)
         await emit_auth_headers_updated(
             self._events,

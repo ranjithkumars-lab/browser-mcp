@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from playwright.async_api import Page
 
-__all__ = ["TransferProvider", "PlaywrightTransferProvider"]
+__all__ = ["PlaywrightTransferProvider", "TransferProvider"]
 
 
 class TransferProvider(ABC):
@@ -204,16 +204,24 @@ class PlaywrightTransferProvider(TransferProvider):
                         const file = new File([p], p.split('/').pop() || 'file');
                         dt.items.add(file);
                     }
-                    el.dispatchEvent(new DragEvent('dragstart', { dataTransfer: dt, bubbles: true }));
-                    el.dispatchEvent(new DragEvent('dragover', { dataTransfer: dt, bubbles: true }));
-                    el.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true }));
+                    el.dispatchEvent(
+                        new DragEvent('dragstart', { dataTransfer: dt, bubbles: true })
+                    );
+                    el.dispatchEvent(
+                        new DragEvent('dragover', { dataTransfer: dt, bubbles: true })
+                    );
+                    el.dispatchEvent(
+                        new DragEvent('drop', { dataTransfer: dt, bubbles: true })
+                    );
                 }""",
                 [selector, files],
             )
         except Exception as exc:
             from browser_mcp.transfer.errors import DragDropFailedError
 
-            raise DragDropFailedError(f"failed to dispatch drag-and-drop for '{selector}': {exc}") from exc
+            raise DragDropFailedError(
+                f"failed to dispatch drag-and-drop for '{selector}': {exc}"
+            ) from exc
 
     async def page_url(self, page: Page) -> str:
         return page.url

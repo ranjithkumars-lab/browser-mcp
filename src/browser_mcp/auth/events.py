@@ -12,13 +12,13 @@ from enterprise_mcp.events.types import DomainEvent
 
 __all__ = [
     "AuthEvent",
-    "emit_auth_started",
-    "emit_auth_success",
-    "emit_auth_failed",
-    "emit_auth_state_saved",
-    "emit_auth_state_loaded",
-    "emit_auth_headers_updated",
     "emit_auth_expired",
+    "emit_auth_failed",
+    "emit_auth_headers_updated",
+    "emit_auth_started",
+    "emit_auth_state_loaded",
+    "emit_auth_state_saved",
+    "emit_auth_success",
 ]
 
 

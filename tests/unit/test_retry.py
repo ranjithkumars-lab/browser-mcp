@@ -77,9 +77,7 @@ class TestRetryPolicy:
                 raise RuntimeError("transient")
             return call_count
 
-        policy = RetryPolicy(
-            RetryConfig(max_attempts=5, initial_delay_ms=50, backoff_factor=2.0)
-        )
+        policy = RetryPolicy(RetryConfig(max_attempts=5, initial_delay_ms=50, backoff_factor=2.0))
         start = asyncio.get_event_loop().time()
         result = await policy.run(flaky)
         elapsed = asyncio.get_event_loop().time() - start

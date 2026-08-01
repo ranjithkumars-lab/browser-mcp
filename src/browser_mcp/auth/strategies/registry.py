@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from browser_mcp.errors import UnsupportedAuthStrategyError
 from browser_mcp.auth.strategies.base import BaseAuthStrategy
+from browser_mcp.errors import UnsupportedAuthStrategyError
 
 __all__ = ["AuthStrategyRegistry"]
 
@@ -24,9 +24,7 @@ class AuthStrategyRegistry:
             )
         strategy = self._strategies.get(name)
         if strategy is None:
-            raise UnsupportedAuthStrategyError(
-                f"auth strategy '{name}' is not registered"
-            )
+            raise UnsupportedAuthStrategyError(f"auth strategy '{name}' is not registered")
         return strategy
 
     def names(self) -> list[str]:

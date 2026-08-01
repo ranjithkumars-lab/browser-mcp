@@ -8,9 +8,9 @@ capabilities.
 
 Public surface
 --------------
-- :class:`~browser_mcp.transfer.manager.TransferManager` – top-level facade.
-- :class:`~browser_mcp.transfer.models.TransferResponse` – standardised result.
-- :class:`~browser_mcp.transfer.errors.TransferError` – error hierarchy.
+- :class:`~browser_mcp.transfer.manager.TransferManager` - top-level facade.
+- :class:`~browser_mcp.transfer.models.TransferResponse` - standardised result.
+- :class:`~browser_mcp.transfer.errors.TransferError` - error hierarchy.
 """
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ from browser_mcp.transfer.errors import (
     UploadError,
 )
 from browser_mcp.transfer.events import (
+    TransferEvent,
     emit_download_completed,
     emit_download_failed,
     emit_download_progress,
@@ -35,13 +36,13 @@ from browser_mcp.transfer.events import (
     emit_upload_failed,
     emit_upload_progress,
     emit_upload_started,
-    TransferEvent,
 )
+from browser_mcp.transfer.manager import TransferManager
 from browser_mcp.transfer.models import (
     ChecksumAlgorithm,
     ChecksumResult,
-    CollisionStrategy,
     CleanupPolicy,
+    CollisionStrategy,
     DownloadStrategy,
     TransferItem,
     TransferProgress,
@@ -50,22 +51,41 @@ from browser_mcp.transfer.models import (
     UploadStrategy,
 )
 from browser_mcp.transfer.provider import PlaywrightTransferProvider, TransferProvider
-from browser_mcp.transfer.state import TransferRecord, TransferStateManager, TransferState
-from browser_mcp.transfer.manager import TransferManager
+from browser_mcp.transfer.state import TransferRecord, TransferState, TransferStateManager
 
 __all__ = [
+    # models
+    "ChecksumAlgorithm",
+    "ChecksumResult",
+    "CleanupPolicy",
+    "CollisionStrategy",
     # errors
     "DownloadCanceledError",
     "DownloadError",
+    "DownloadStrategy",
     "DownloadTimeoutError",
     "DragDropFailedError",
     "FileSizeExceededError",
     "IntegrityVerificationError",
     "InvalidMimeTypeError",
+    # provider
+    "PlaywrightTransferProvider",
     "TransferError",
-    "UploadError",
     # events
     "TransferEvent",
+    "TransferItem",
+    # manager
+    "TransferManager",
+    "TransferProgress",
+    "TransferProvider",
+    # state
+    "TransferRecord",
+    "TransferResponse",
+    "TransferState",
+    "TransferStateManager",
+    "TransferStatus",
+    "UploadError",
+    "UploadStrategy",
     "emit_download_completed",
     "emit_download_failed",
     "emit_download_progress",
@@ -74,24 +94,4 @@ __all__ = [
     "emit_upload_failed",
     "emit_upload_progress",
     "emit_upload_started",
-    # models
-    "ChecksumAlgorithm",
-    "ChecksumResult",
-    "CollisionStrategy",
-    "CleanupPolicy",
-    "DownloadStrategy",
-    "TransferItem",
-    "TransferProgress",
-    "TransferResponse",
-    "TransferStatus",
-    "UploadStrategy",
-    # provider
-    "PlaywrightTransferProvider",
-    "TransferProvider",
-    # state
-    "TransferRecord",
-    "TransferStateManager",
-    "TransferState",
-    # manager
-    "TransferManager",
 ]

@@ -45,7 +45,9 @@ class ImagesCollector(BaseCollector):
         raw_images = await page.evaluate(_IMAGES_JS, selector if selector else None)
 
         results: list[dict[str, Any]] = []
-        raw_images: list[dict[str, Any]] = await page.evaluate(_IMAGES_JS, selector if selector else None)
+        raw_images: list[dict[str, Any]] = await page.evaluate(
+            _IMAGES_JS, selector if selector else None
+        )
         for img in raw_images or []:
             src = str(img.get("src", ""))
             current_src = str(img.get("current_src") or "")

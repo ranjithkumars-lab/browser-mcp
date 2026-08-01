@@ -67,11 +67,7 @@ class TestPluginManifest:
 
     def test_parse_manifest_json(self, tmp_path: Path) -> None:
         manifest_file = tmp_path / "manifest.json"
-        manifest_file.write_text(
-            json.dumps(
-                {"name": "json.plugin", "entrypoint": "mod:Cls"}
-            )
-        )
+        manifest_file.write_text(json.dumps({"name": "json.plugin", "entrypoint": "mod:Cls"}))
         result = parse_manifest(manifest_file)
         assert result.name == "json.plugin"
         assert result.entrypoint == "mod:Cls"
@@ -172,10 +168,7 @@ class TestPluginLoader:
         plugins_dir = tmp_path / "plugins"
         plugins_dir.mkdir()
         manifest_file = plugins_dir / "manifest.yaml"
-        manifest_file.write_text(
-            "name: test.plugin\n"
-            "entrypoint: test.module:TestPlugin\n"
-        )
+        manifest_file.write_text("name: test.plugin\nentrypoint: test.module:TestPlugin\n")
         loader = PluginLoader(tmp_path)
         manifests = loader.discover()
         assert len(manifests) == 1
@@ -183,9 +176,7 @@ class TestPluginLoader:
 
     def test_load_nonexistent_entrypoint(self) -> None:
         registry = PluginRegistry()
-        loader = PluginLoader(
-            Path("tests/fixtures/nonexistent"), registry
-        )
+        loader = PluginLoader(Path("tests/fixtures/nonexistent"), registry)
         with pytest.raises(ModuleNotFoundError):
             loader.load(
                 PluginManifest(
@@ -219,4 +210,3 @@ class TestPermissions:
     def test_empty(self) -> None:
         perms = Permissions()
         assert perms.all() == frozenset()
-

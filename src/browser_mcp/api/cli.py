@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+from typing import Any
+
 import typer
 import uvicorn
-from typing import Any
 
 app = typer.Typer(
     help="REST API Engine commands",
     no_args_is_help=True,
     pretty_exceptions_show_locals=False,
 )
+
 
 @app.command()
 def serve(
@@ -25,14 +27,14 @@ def serve(
         reload=reload,
     )
 
+
 def create_app() -> Any:
     """Factory for uvicorn to run the API."""
     from browser_mcp.api.app import create_api_app
-    from enterprise_mcp.foundation.app import AppContext
-    from browser_mcp.config.loader import load_browser_settings
-    
-    settings = load_browser_settings()
-    # We use AppContext to inject dependencies just like the main enterprise server.
-    context = AppContext(settings=settings)
-    # The API configuration is handled within create_api_app
+    from browser_mcp.app import create_browser_context
+
+    # Build a fully wired Browser Core context (browser engine, plugins,
+    # auth, transfer, events). The API configuration is handled separately
+    # within create_api_app.
+    context = create_browser_context()
     return create_api_app(context, None)

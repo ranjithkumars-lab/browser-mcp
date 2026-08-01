@@ -95,9 +95,9 @@ class TestIsInternal:
 
 class TestIsAnchorLink:
     def test_same_page_anchor(self) -> None:
-        assert is_anchor_link(
-            "https://example.com/page#section", "https://example.com/page"
-        ) is True
+        assert (
+            is_anchor_link("https://example.com/page#section", "https://example.com/page") is True
+        )
 
     def test_fragment_only(self) -> None:
         assert is_anchor_link("#section", None) is True
@@ -112,9 +112,7 @@ class TestIsAnchorLink:
         assert is_anchor_link("#section", "https://example.com") is False
 
     def test_fragment_with_trailing_slash_base(self) -> None:
-        assert is_anchor_link(
-            "https://example.com/#section", "https://example.com"
-        ) is True
+        assert is_anchor_link("https://example.com/#section", "https://example.com") is True
 
 
 class TestBlockedSchemes:

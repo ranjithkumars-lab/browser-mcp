@@ -142,7 +142,15 @@ class TestFormActionsWithMockPage:
         detector = MagicMock()
         detector.detect = AsyncMock(return_value=[{"strategy": "css", "value": "#email"}])
         validator = MagicMock()
-        validator.validate = AsyncMock(return_value={"exists": True, "visible": True, "enabled": True, "editable": True, "checked": False})
+        validator.validate = AsyncMock(
+            return_value={
+                "exists": True,
+                "visible": True,
+                "enabled": True,
+                "editable": True,
+                "checked": False,
+            }
+        )
         state = MagicMock()
         event_bus = MagicMock()
         event_bus.publish = AsyncMock()

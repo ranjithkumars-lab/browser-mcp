@@ -12,7 +12,13 @@ from browser_mcp.transfer.models import ChecksumAlgorithm, ChecksumResult
 class ChecksumVerifier:
     """Calculate SHA-256, SHA-1, or MD5 checksums without loading files in memory."""
 
-    def verify(self, path: str | Path, *, algorithm: ChecksumAlgorithm | str = ChecksumAlgorithm.SHA256, expected: str | None = None) -> ChecksumResult:
+    def verify(
+        self,
+        path: str | Path,
+        *,
+        algorithm: ChecksumAlgorithm | str = ChecksumAlgorithm.SHA256,
+        expected: str | None = None,
+    ) -> ChecksumResult:
         algo = ChecksumAlgorithm(algorithm)
         digest = hashlib.new(algo.value)
         with Path(path).open("rb") as source:

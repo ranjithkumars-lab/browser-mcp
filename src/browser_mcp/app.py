@@ -11,6 +11,15 @@ from typing import Any
 
 import structlog
 
+from browser_mcp.auth.manager import AuthManager
+from browser_mcp.auth.provider import PlaywrightAuthProvider
+from browser_mcp.auth.storage.encryption import AuthEncryptionEngine
+from browser_mcp.auth.storage.manager import AuthStorageManager
+from browser_mcp.auth.strategies.cookie import CookieAuthStrategy
+from browser_mcp.auth.strategies.form import FormAuthStrategy
+from browser_mcp.auth.strategies.header import HeaderAuthStrategy
+from browser_mcp.auth.strategies.registry import AuthStrategyRegistry
+from browser_mcp.auth.tools import AuthToolkit
 from browser_mcp.browser.context import ContextManager
 from browser_mcp.browser.elements.engine import ElementEngine
 from browser_mcp.browser.elements.locators.registry import LocatorRegistry
@@ -32,26 +41,20 @@ from browser_mcp.browser.runtime import check_playwright_binaries
 from browser_mcp.browser.session import SessionManager
 from browser_mcp.config.loader import load_browser_settings
 from browser_mcp.config.models import BrowserSettings
-from browser_mcp.plugins.scraper.actions import ScraperActions
-from browser_mcp.plugins.scraper.sizer import PayloadSizer
-from browser_mcp.plugins.scraper.tools import ScraperToolkit
-from browser_mcp.plugins.manager import PluginLifecycleManager
-from browser_mcp.plugins.tools import PluginToolkit
-from browser_mcp.auth.manager import AuthManager
-from browser_mcp.auth.provider import PlaywrightAuthProvider
-from browser_mcp.auth.storage.encryption import AuthEncryptionEngine
-from browser_mcp.auth.storage.manager import AuthStorageManager
-from browser_mcp.auth.strategies.registry import AuthStrategyRegistry
-from browser_mcp.auth.strategies.form import FormAuthStrategy
-from browser_mcp.auth.strategies.cookie import CookieAuthStrategy
-from browser_mcp.auth.strategies.header import HeaderAuthStrategy
-from browser_mcp.auth.tools import AuthToolkit
 from browser_mcp.events.manager import BrowserEventManager
 from browser_mcp.events.middleware import MetricsMiddleware
 from browser_mcp.events.provider import InMemoryEventProvider
 from browser_mcp.events.router import EventRouter
 from browser_mcp.events.store import EventHistoryStore
 from browser_mcp.events.tools import EventsToolkit
+from browser_mcp.plugins.manager import PluginLifecycleManager
+from browser_mcp.plugins.scraper.actions import ScraperActions
+from browser_mcp.plugins.scraper.sizer import PayloadSizer
+from browser_mcp.plugins.scraper.tools import ScraperToolkit
+from browser_mcp.plugins.tools import PluginToolkit
+from browser_mcp.tools.browser import BrowserToolkit
+from browser_mcp.tools.elements import ElementToolkit
+from browser_mcp.tools.navigation import NavigationToolkit
 from browser_mcp.transfer.downloads.integrity import ChecksumVerifier
 from browser_mcp.transfer.downloads.manager import DownloadManager
 from browser_mcp.transfer.downloads.naming import FileNamingStrategy
@@ -67,9 +70,6 @@ from browser_mcp.transfer.uploads.strategies.drag_drop import DragDropUploadStra
 from browser_mcp.transfer.uploads.strategies.input import InputUploadStrategy
 from browser_mcp.transfer.uploads.strategies.registry import UploadStrategyRegistry
 from browser_mcp.transfer.uploads.validator import FileValidator
-from browser_mcp.tools.browser import BrowserToolkit
-from browser_mcp.tools.elements import ElementToolkit
-from browser_mcp.tools.navigation import NavigationToolkit
 from enterprise_mcp.foundation.app import AppContext
 
 __all__ = ["create_browser_app", "create_browser_context"]
@@ -148,14 +148,24 @@ def create_browser_context(
     upload_registry.register(ChooserUploadStrategy(transfer_provider))
     upload_registry.register(DragDropUploadStrategy(transfer_provider))
     transfer_manager = TransferManager(
-        DownloadManager(download_registry, FileNamingStrategy(), ChecksumVerifier(),
-                        directory=browser_settings.transfer.download_directory,
-                        collision_strategy=browser_settings.transfer.collision_strategy,
-                        checksum_algorithm=browser_settings.transfer.checksum_algorithm),
-        UploadManager(upload_registry, FileValidator(max_file_size_bytes=browser_settings.transfer.max_file_size_bytes,
-                                                     allowed_extensions=browser_settings.transfer.allowed_extensions,
-                                                     allowed_mime_types=browser_settings.transfer.allowed_mime_types)),
-        TransferStateManager(), events,
+        DownloadManager(
+            download_registry,
+            FileNamingStrategy(),
+            ChecksumVerifier(),
+            directory=browser_settings.transfer.download_directory,
+            collision_strategy=browser_settings.transfer.collision_strategy,
+            checksum_algorithm=browser_settings.transfer.checksum_algorithm,
+        ),
+        UploadManager(
+            upload_registry,
+            FileValidator(
+                max_file_size_bytes=browser_settings.transfer.max_file_size_bytes,
+                allowed_extensions=browser_settings.transfer.allowed_extensions,
+                allowed_mime_types=browser_settings.transfer.allowed_mime_types,
+            ),
+        ),
+        TransferStateManager(),
+        events,
     )
     resolved.container.register_instance(transfer_manager, name="transfer_manager")
 

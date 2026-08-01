@@ -25,22 +25,33 @@ class AuthCredentials(BaseModel):
     password: str | None = Field(default=None, description="Login password.")
     url: str = Field(description="Target URL for the login page.")
     strategy: str = Field(default="form", description="Auth strategy identifier.")
-    headers: dict[str, str] = Field(default_factory=dict[str, str], description="Extra headers for the login request.")
-    cookies: dict[str, str] = Field(default_factory=dict[str, str], description="Extra cookies for the login request.")
-    metadata: dict[str, Any] = Field(default_factory=dict[str, Any], description="Strategy-specific extra data.")
+    headers: dict[str, str] = Field(
+        default_factory=dict[str, str], description="Extra headers for the login request."
+    )
+    cookies: dict[str, str] = Field(
+        default_factory=dict[str, str], description="Extra cookies for the login request."
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict[str, Any], description="Strategy-specific extra data."
+    )
 
 
 class AuthHeaders(BaseModel):
     """Structured HTTP headers to inject into requests."""
 
-    headers: dict[str, str] = Field(default_factory=dict, description="Header name -> value mapping.")
+    headers: dict[str, str] = Field(
+        default_factory=dict, description="Header name -> value mapping."
+    )
     strategy: str = Field(default="header", description="Header injection strategy.")
 
 
 class CookieCollection(BaseModel):
     """Collection of cookies for injection."""
 
-    cookies: list[dict[str, object]] = Field(default_factory=list, description="Playwright-style cookie dicts.")  # type: ignore[reportUnknownVariableType]
+    cookies: list[dict[str, object]] = Field(
+        default_factory=lambda: [],
+        description="Playwright-style cookie dicts.",
+    )
     strategy: str = Field(default="cookie", description="Cookie injection strategy.")
 
 

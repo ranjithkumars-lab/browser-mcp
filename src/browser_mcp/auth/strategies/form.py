@@ -5,8 +5,8 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from browser_mcp.errors import LoginFailedError
 from browser_mcp.auth.strategies.base import BaseAuthStrategy
+from browser_mcp.errors import LoginFailedError
 
 __all__ = ["FormAuthStrategy"]
 
@@ -22,9 +22,15 @@ class FormAuthStrategy(BaseAuthStrategy):
         started = time.perf_counter()
         try:
             await context.goto(credentials.url)
-            username_selector = credentials.metadata.get("username_selector", 'input[name="username"], input[name="email"], #email')
-            password_selector = credentials.metadata.get("password_selector", 'input[name="password"], #password')
-            submit_selector = credentials.metadata.get("submit_selector", 'button[type="submit"], input[type="submit"]')
+            username_selector = credentials.metadata.get(
+                "username_selector", 'input[name="username"], input[name="email"], #email'
+            )
+            password_selector = credentials.metadata.get(
+                "password_selector", 'input[name="password"], #password'
+            )
+            submit_selector = credentials.metadata.get(
+                "submit_selector", 'button[type="submit"], input[type="submit"]'
+            )
             await context.fill(username_selector, credentials.username or "")
             await context.fill(password_selector, credentials.password or "")
             await context.click(submit_selector)

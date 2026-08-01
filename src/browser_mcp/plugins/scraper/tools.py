@@ -58,9 +58,11 @@ class ScraperToolkit:
     ) -> dict[str, Any]:
         """Extract visible text from the page body."""
         try:
-            return _ok(**await self._actions.scrape_text(
-                session_id, page_id, selector=selector, output_format=output_format
-            ))
+            return _ok(
+                **await self._actions.scrape_text(
+                    session_id, page_id, selector=selector, output_format=output_format
+                )
+            )
         except Exception as exc:
             return _err(str(exc), session_id=session_id, page_id=page_id)
 
@@ -81,9 +83,11 @@ class ScraperToolkit:
     ) -> dict[str, Any]:
         """Extract structured table data from the page."""
         try:
-            return _ok(**await self._actions.scrape_tables(
-                session_id, page_id, selector=selector, output_format=output_format
-            ))
+            return _ok(
+                **await self._actions.scrape_tables(
+                    session_id, page_id, selector=selector, output_format=output_format
+                )
+            )
         except Exception as exc:
             return _err(str(exc), session_id=session_id, page_id=page_id)
 
@@ -104,17 +108,18 @@ class ScraperToolkit:
     ) -> dict[str, Any]:
         """Extract image elements from the page."""
         try:
-            return _ok(**await self._actions.scrape_images(
-                session_id, page_id, selector=selector, output_format=output_format
-            ))
+            return _ok(
+                **await self._actions.scrape_images(
+                    session_id, page_id, selector=selector, output_format=output_format
+                )
+            )
         except Exception as exc:
             return _err(str(exc), session_id=session_id, page_id=page_id)
 
     @tool(
         name=f"{TOOL_NAMESPACE}.metadata",
         description=(
-            "Extract ``<meta>`` tags, ``<title>``, OpenGraph and Twitter card "
-            "data from the page."
+            "Extract ``<meta>`` tags, ``<title>``, OpenGraph and Twitter card data from the page."
         ),
         returns="json",
     )
@@ -126,17 +131,18 @@ class ScraperToolkit:
     ) -> dict[str, Any]:
         """Extract page-level metadata."""
         try:
-            return _ok(**await self._actions.scrape_metadata(
-                session_id, page_id, output_format=output_format
-            ))
+            return _ok(
+                **await self._actions.scrape_metadata(
+                    session_id, page_id, output_format=output_format
+                )
+            )
         except Exception as exc:
             return _err(str(exc), session_id=session_id, page_id=page_id)
 
     @tool(
         name=f"{TOOL_NAMESPACE}.jsonld",
         description=(
-            "Extract and parse embedded ``application/ld+json`` JSON-LD "
-            "structured-data blocks."
+            "Extract and parse embedded ``application/ld+json`` JSON-LD structured-data blocks."
         ),
         returns="json",
     )
@@ -148,9 +154,11 @@ class ScraperToolkit:
     ) -> dict[str, Any]:
         """Extract JSON-LD structured data from the page."""
         try:
-            return _ok(**await self._actions.scrape_jsonld(
-                session_id, page_id, output_format=output_format
-            ))
+            return _ok(
+                **await self._actions.scrape_jsonld(
+                    session_id, page_id, output_format=output_format
+                )
+            )
         except Exception as exc:
             return _err(str(exc), session_id=session_id, page_id=page_id)
 
@@ -172,9 +180,11 @@ class ScraperToolkit:
     ) -> dict[str, Any]:
         """Extract links from the page with URL normalisation."""
         try:
-            return _ok(**await self._actions.scrape_links(
-                session_id, page_id, selector=selector, output_format=output_format
-            ))
+            return _ok(
+                **await self._actions.scrape_links(
+                    session_id, page_id, selector=selector, output_format=output_format
+                )
+            )
         except Exception as exc:
             return _err(str(exc), session_id=session_id, page_id=page_id)
 
@@ -195,9 +205,11 @@ class ScraperToolkit:
     ) -> dict[str, Any]:
         """Extract product data using the composite collector."""
         try:
-            return _ok(**await self._actions.scrape_products(
-                session_id, page_id, output_format=output_format
-            ))
+            return _ok(
+                **await self._actions.scrape_products(
+                    session_id, page_id, output_format=output_format
+                )
+            )
         except Exception as exc:
             return _err(str(exc), session_id=session_id, page_id=page_id)
 
@@ -208,9 +220,7 @@ class ScraperToolkit:
             registry_register(getattr(self, name))
 
 
-_TOOL_METHODS = frozenset(
-    {"text", "tables", "images", "metadata", "jsonld", "links", "products"}
-)
+_TOOL_METHODS = frozenset({"text", "tables", "images", "metadata", "jsonld", "links", "products"})
 
 
 def build_scraper_tools(actions: ScraperActions) -> list[Callable[..., Any]]:

@@ -116,7 +116,9 @@ class ElementEngine:
         strict: bool = True,
     ) -> dict[str, Any]:
         """Resolve a locator to a cached ``element_id`` and return its record."""
-        model = LocatorModel.model_validate({"strategy": strategy, "value": value, "timeout": timeout_ms, "strict": strict})
+        model = LocatorModel.model_validate(
+            {"strategy": strategy, "value": value, "timeout": timeout_ms, "strict": strict}
+        )
         timeout = model.timeout or resolve_timeout(self._settings, "interaction", None)
         handle = self._state.page_in_session(session_id, page_id)
         target = await self._target(session_id, page_id, frame_id)
@@ -164,7 +166,9 @@ class ElementEngine:
         timeout_ms: int | None = None,
     ) -> dict[str, Any]:
         """Resolve every match to a cached ``element_id``."""
-        model = LocatorModel.model_validate({"strategy": strategy, "value": value, "timeout": timeout_ms, "strict": False})
+        model = LocatorModel.model_validate(
+            {"strategy": strategy, "value": value, "timeout": timeout_ms, "strict": False}
+        )
         timeout = model.timeout or resolve_timeout(self._settings, "interaction", None)
         handle = self._state.page_in_session(session_id, page_id)
         target = await self._target(session_id, page_id, frame_id)
@@ -321,7 +325,9 @@ class ElementEngine:
         strict: bool = True,
     ) -> Any:
         """Return a locator handle for ``strategy``/``value`` (no caching)."""
-        model = LocatorModel.model_validate({"strategy": strategy, "value": value, "timeout": timeout_ms, "strict": strict})
+        model = LocatorModel.model_validate(
+            {"strategy": strategy, "value": value, "timeout": timeout_ms, "strict": strict}
+        )
         target = await self._target(session_id, page_id, frame_id)
         return await self._registry.resolve(target, model)
 

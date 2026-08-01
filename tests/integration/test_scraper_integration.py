@@ -13,10 +13,9 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from pydantic import TypeAdapter
 
 from browser_mcp.browser.models import PageHandle, PageState
-from browser_mcp.errors import FormattingError, ProductExtractionError, ScraperError
+from browser_mcp.errors import ScraperError
 from browser_mcp.plugins.scraper.actions import ScraperActions
 from browser_mcp.plugins.scraper.sizer import PayloadSizer
 from enterprise_mcp.events.bus import EventBus
@@ -40,7 +39,12 @@ def _meta_dict() -> dict:
 class MockPage:
     """Minimal page stub returning scripted ``evaluate`` results."""
 
-    def __init__(self, evaluate_results: list, url: str = "https://example.com/page", title: str = "Test Page"):
+    def __init__(
+        self,
+        evaluate_results: list,
+        url: str = "https://example.com/page",
+        title: str = "Test Page",
+    ):
         self._evaluate_results: list = list(evaluate_results)
         self._index = 0
         self._url = url
@@ -113,10 +117,12 @@ def _collect_events(events: EventBus) -> list[DomainEvent]:
 class TestScrapeText:
     @pytest.mark.asyncio
     async def test_full_text_extraction(self) -> None:
-        page = MockPage(evaluate_results=[
-            {"text": "Hello World\nFoo bar", "word_count": 4, "char_count": 15},
-        ])
-        actions, _, events = _build_actions(page)
+        page = MockPage(
+            evaluate_results=[
+                {"text": "Hello World\nFoo bar", "word_count": 4, "char_count": 15},
+            ]
+        )
+        actions, _, _ = _build_actions(page)
         result = await actions.scrape_text("s1", "p1")
         assert result["success"] is True
         assert result["data"] is not None
@@ -125,9 +131,11 @@ class TestScrapeText:
 
     @pytest.mark.asyncio
     async def test_selector_text_extraction(self) -> None:
-        page = MockPage(evaluate_results=[
-            ["Heading", "Subheading"],
-        ])
+        page = MockPage(
+            evaluate_results=[
+                ["Heading", "Subheading"],
+            ]
+        )
         actions, _, _ = _build_actions(page)
         result = await actions.scrape_text("s1", "p1", selector="h1, h2")
         assert result["success"] is True
@@ -135,7 +143,9 @@ class TestScrapeText:
 
     @pytest.mark.asyncio
     async def test_csv_output_format(self) -> None:
-        page = MockPage(evaluate_results=[{"text": "hello world", "word_count": 2, "char_count": 11}])
+        page = MockPage(
+            evaluate_results=[{"text": "hello world", "word_count": 2, "char_count": 11}]
+        )
         actions, _, _ = _build_actions(page)
         result = await actions.scrape_text("s1", "p1", output_format="csv")
         assert result["success"] is True
@@ -186,24 +196,50 @@ class TestScrapeText:
 class TestScrapeTables:
     @pytest.mark.asyncio
     async def test_full_table_extraction(self) -> None:
-        page = MockPage(evaluate_results=[
-            [
-                {
-                    "index": 0,
-                    "caption": "Users",
-                    "rows": [
-                        {"cells": [
-                            {"value": "Name", "is_header": True, "col_span": 1, "row_span": 1},
-                            {"value": "Age", "is_header": True, "col_span": 1, "row_span": 1},
-                        ]},
-                        {"cells": [
-                            {"value": "Alice", "is_header": False, "col_span": 1, "row_span": 1},
-                            {"value": "30", "is_header": False, "col_span": 1, "row_span": 1},
-                        ]},
-                    ],
-                },
-            ],
-        ])
+        page = MockPage(
+            evaluate_results=[
+                [
+                    {
+                        "index": 0,
+                        "caption": "Users",
+                        "rows": [
+                            {
+                                "cells": [
+                                    {
+                                        "value": "Name",
+                                        "is_header": True,
+                                        "col_span": 1,
+                                        "row_span": 1,
+                                    },
+                                    {
+                                        "value": "Age",
+                                        "is_header": True,
+                                        "col_span": 1,
+                                        "row_span": 1,
+                                    },
+                                ]
+                            },
+                            {
+                                "cells": [
+                                    {
+                                        "value": "Alice",
+                                        "is_header": False,
+                                        "col_span": 1,
+                                        "row_span": 1,
+                                    },
+                                    {
+                                        "value": "30",
+                                        "is_header": False,
+                                        "col_span": 1,
+                                        "row_span": 1,
+                                    },
+                                ]
+                            },
+                        ],
+                    },
+                ],
+            ]
+        )
         actions, _, _ = _build_actions(page)
         result = await actions.scrape_tables("s1", "p1")
         assert result["success"] is True
@@ -220,36 +256,38 @@ class TestScrapeTables:
 class TestScrapeImages:
     @pytest.mark.asyncio
     async def test_full_image_extraction(self) -> None:
-        page = MockPage(evaluate_results=[
-            [
-                {
-                    "src": "/hero.jpg",
-                    "current_src": "",
-                    "alt": "Hero",
-                    "loading": "eager",
-                    "width": 1200,
-                    "height": 400,
-                    "natural_width": 1200,
-                    "natural_height": 400,
-                    "complete": True,
-                    "decoded": True,
-                    "is_decorative": False,
-                },
-                {
-                    "src": "/decorative.png",
-                    "current_src": "",
-                    "alt": "",
-                    "loading": "lazy",
-                    "width": 0,
-                    "height": 0,
-                    "natural_width": 0,
-                    "natural_height": 0,
-                    "complete": True,
-                    "decoded": True,
-                    "is_decorative": True,
-                },
-            ],
-        ])
+        page = MockPage(
+            evaluate_results=[
+                [
+                    {
+                        "src": "/hero.jpg",
+                        "current_src": "",
+                        "alt": "Hero",
+                        "loading": "eager",
+                        "width": 1200,
+                        "height": 400,
+                        "natural_width": 1200,
+                        "natural_height": 400,
+                        "complete": True,
+                        "decoded": True,
+                        "is_decorative": False,
+                    },
+                    {
+                        "src": "/decorative.png",
+                        "current_src": "",
+                        "alt": "",
+                        "loading": "lazy",
+                        "width": 0,
+                        "height": 0,
+                        "natural_width": 0,
+                        "natural_height": 0,
+                        "complete": True,
+                        "decoded": True,
+                        "is_decorative": True,
+                    },
+                ],
+            ]
+        )
         actions, _, _ = _build_actions(page)
         result = await actions.scrape_images("s1", "p1")
         assert result["success"] is True
@@ -265,16 +303,18 @@ class TestScrapeImages:
 class TestScrapeMetadata:
     @pytest.mark.asyncio
     async def test_full_metadata_extraction(self) -> None:
-        page = MockPage(evaluate_results=[
-            {
-                "title": "My Page",
-                "description": "A description",
-                "keywords": "key1, key2",
-                "og": {"og:title": "My Page", "og:type": "article"},
-                "twitter": {"twitter:card": "summary"},
-                "other": {"author": "John"},
-            },
-        ])
+        page = MockPage(
+            evaluate_results=[
+                {
+                    "title": "My Page",
+                    "description": "A description",
+                    "keywords": "key1, key2",
+                    "og": {"og:title": "My Page", "og:type": "article"},
+                    "twitter": {"twitter:card": "summary"},
+                    "other": {"author": "John"},
+                },
+            ]
+        )
         actions, _, _ = _build_actions(page)
         result = await actions.scrape_metadata("s1", "p1")
         assert result["success"] is True
@@ -291,12 +331,14 @@ class TestScrapeMetadata:
 class TestScrapeJsonLd:
     @pytest.mark.asyncio
     async def test_full_jsonld_extraction(self) -> None:
-        page = MockPage(evaluate_results=[
-            [
-                '{"@context": "https://schema.org/", "@type": "Product", "name": "Widget"}',
-                '{"@context": "https://schema.org/", "@type": "Organization", "name": "Acme"}',
-            ],
-        ])
+        page = MockPage(
+            evaluate_results=[
+                [
+                    '{"@context": "https://schema.org/", "@type": "Product", "name": "Widget"}',
+                    '{"@context": "https://schema.org/", "@type": "Organization", "name": "Acme"}',
+                ],
+            ]
+        )
         actions, _, _ = _build_actions(page)
         result = await actions.scrape_jsonld("s1", "p1")
         assert result["success"] is True
@@ -312,15 +354,18 @@ class TestScrapeJsonLd:
 class TestScrapeLinks:
     @pytest.mark.asyncio
     async def test_full_links_extraction(self) -> None:
-        page = MockPage(url="https://example.com/blog/post-1", evaluate_results=[
-            [
-                {"href": "https://example.com/home", "text": "Home", "rel": ""},
-                {"href": "/about", "text": "About", "rel": ""},
-                {"href": "#section-1", "text": "Section 1", "rel": ""},
-                {"href": "mailto:test@example.com", "text": "Email", "rel": ""},
-                {"href": "https://external.com", "text": "External", "rel": "nofollow"},
+        page = MockPage(
+            url="https://example.com/blog/post-1",
+            evaluate_results=[
+                [
+                    {"href": "https://example.com/home", "text": "Home", "rel": ""},
+                    {"href": "/about", "text": "About", "rel": ""},
+                    {"href": "#section-1", "text": "Section 1", "rel": ""},
+                    {"href": "mailto:test@example.com", "text": "Email", "rel": ""},
+                    {"href": "https://external.com", "text": "External", "rel": "nofollow"},
+                ],
             ],
-        ])
+        )
         actions, _, _ = _build_actions(page)
         result = await actions.scrape_links("s1", "p1")
         assert result["success"] is True
@@ -338,13 +383,20 @@ class TestScrapeLinks:
 class TestScrapeProducts:
     @pytest.mark.asyncio
     async def test_jsonld_product(self) -> None:
-        page = MockPage(url="https://shop.example.com/product", evaluate_results=[
-            {"@type": "Product", "name": "Widget", "offers": {"price": "19.99", "priceCurrency": "USD"}},
-            None,  # og
-            None,  # microdata
-            None,  # dom
-            None,  # meta
-        ])
+        page = MockPage(
+            url="https://shop.example.com/product",
+            evaluate_results=[
+                {
+                    "@type": "Product",
+                    "name": "Widget",
+                    "offers": {"price": "19.99", "priceCurrency": "USD"},
+                },
+                None,  # og
+                None,  # microdata
+                None,  # dom
+                None,  # meta
+            ],
+        )
         actions, _, _ = _build_actions(page)
         result = await actions.scrape_products("s1", "p1")
         assert result["success"] is True
@@ -361,11 +413,21 @@ class TestScrapeProducts:
 
     @pytest.mark.asyncio
     async def test_og_product(self) -> None:
-        page = MockPage(url="https://example.com", evaluate_results=[
-            None,
-            {"og:type": "product", "og:title": "Gadget", "og:price:amount": "49.99", "og:price:currency": "EUR"},
-            None, None, None,
-        ])
+        page = MockPage(
+            url="https://example.com",
+            evaluate_results=[
+                None,
+                {
+                    "og:type": "product",
+                    "og:title": "Gadget",
+                    "og:price:amount": "49.99",
+                    "og:price:currency": "EUR",
+                },
+                None,
+                None,
+                None,
+            ],
+        )
         actions, _, _ = _build_actions(page)
         result = await actions.scrape_products("s1", "p1")
         assert result["success"] is True

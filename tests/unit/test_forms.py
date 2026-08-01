@@ -36,19 +36,13 @@ class TestFormDetector:
     @pytest.mark.asyncio
     async def test_field_placeholder(self) -> None:
         detector = FormDetector(MagicMock())
-        result = await detector.detect(
-            MagicMock(), field_placeholder="Enter email"
-        )
-        assert any(
-            '[placeholder="Enter email"]' in c["value"] for c in result
-        )
+        result = await detector.detect(MagicMock(), field_placeholder="Enter email")
+        assert any('[placeholder="Enter email"]' in c["value"] for c in result)
 
     @pytest.mark.asyncio
     async def test_multiple_criteria(self) -> None:
         detector = FormDetector(MagicMock())
-        result = await detector.detect(
-            MagicMock(), field_id="email", field_name="email"
-        )
+        result = await detector.detect(MagicMock(), field_id="email", field_name="email")
         assert len(result) >= 2
 
     @pytest.mark.asyncio
@@ -175,9 +169,7 @@ class TestFormActionsFill:
     @pytest.mark.asyncio
     async def test_fill_success(self) -> None:
         detector = MagicMock()
-        detector.detect = AsyncMock(
-            return_value=[{"strategy": "css", "value": "#name"}]
-        )
+        detector.detect = AsyncMock(return_value=[{"strategy": "css", "value": "#name"}])
         validator = MagicMock()
         validator.validate = AsyncMock(
             return_value={
@@ -237,9 +229,7 @@ class TestFormActionsCheck:
     @pytest.mark.asyncio
     async def test_check_success(self) -> None:
         detector = MagicMock()
-        detector.detect = AsyncMock(
-            return_value=[{"strategy": "css", "value": "#agree"}]
-        )
+        detector.detect = AsyncMock(return_value=[{"strategy": "css", "value": "#agree"}])
         validator = MagicMock()
         validator.validate = AsyncMock(
             return_value={
@@ -273,9 +263,7 @@ class TestFormActionsUncheck:
     @pytest.mark.asyncio
     async def test_uncheck_success(self) -> None:
         detector = MagicMock()
-        detector.detect = AsyncMock(
-            return_value=[{"strategy": "css", "value": "#agree"}]
-        )
+        detector.detect = AsyncMock(return_value=[{"strategy": "css", "value": "#agree"}])
         validator = MagicMock()
         validator.validate = AsyncMock(
             return_value={
@@ -309,9 +297,7 @@ class TestFormActionsSelect:
     @pytest.mark.asyncio
     async def test_select_success(self) -> None:
         detector = MagicMock()
-        detector.detect = AsyncMock(
-            return_value=[{"strategy": "css", "value": "#country"}]
-        )
+        detector.detect = AsyncMock(return_value=[{"strategy": "css", "value": "#country"}])
         validator = MagicMock()
         validator.validate = AsyncMock(
             return_value={
@@ -346,9 +332,7 @@ class TestFormActionsSubmit:
     @pytest.mark.asyncio
     async def test_submit_with_field(self) -> None:
         detector = MagicMock()
-        detector.detect = AsyncMock(
-            return_value=[{"strategy": "css", "value": "#submit-btn"}]
-        )
+        detector.detect = AsyncMock(return_value=[{"strategy": "css", "value": "#submit-btn"}])
         validator = MagicMock()
         validator.validate = AsyncMock(
             return_value={
@@ -405,9 +389,7 @@ class TestFormActionsEvents:
     @pytest.mark.asyncio
     async def test_fill_publishes_form_started(self) -> None:
         detector = MagicMock()
-        detector.detect = AsyncMock(
-            return_value=[{"strategy": "css", "value": "#name"}]
-        )
+        detector.detect = AsyncMock(return_value=[{"strategy": "css", "value": "#name"}])
         validator = MagicMock()
         validator.validate = AsyncMock(
             return_value={
@@ -435,9 +417,7 @@ class TestFormActionsEvents:
             field="name",
             value="John",
         )
-        event_names = [
-            call[0][0].event_name for call in event_bus.publish.call_args_list
-        ]
+        event_names = [call[0][0].event_name for call in event_bus.publish.call_args_list]
         assert "form.started" in event_names
         assert "form.field.filled" in event_names
 
@@ -463,9 +443,6 @@ class TestFormActionsEvents:
             value="val",
         )
         assert result["success"] is False
-        event_names = [
-            call[0][0].event_name for call in event_bus.publish.call_args_list
-        ]
+        event_names = [call[0][0].event_name for call in event_bus.publish.call_args_list]
         assert "form.started" in event_names
         assert "form.field.failed" in event_names
-

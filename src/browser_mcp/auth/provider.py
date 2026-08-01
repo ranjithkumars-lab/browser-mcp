@@ -8,11 +8,14 @@ Selenium provider can replace it without touching the strategies.
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from playwright.async_api import BrowserContext
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["AuthProvider", "PlaywrightAuthProvider"]
 
@@ -60,8 +63,8 @@ class PlaywrightAuthProvider(AuthProvider):
         for key, value in origins.items():
             try:
                 await context.goto(key)  # type: ignore[attr-defined]
-                localStorage_items: dict[str, str] = value.get("localStorage") or {}
-                for name, val in localStorage_items.items():
+                local_storage_items: dict[str, str] = value.get("localStorage") or {}
+                for name, val in local_storage_items.items():
                     await context.evaluate(f"localStorage.setItem('{name}', '{val}')")  # type: ignore[attr-defined]
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("failed to restore localStorage for origin %s", key, exc_info=exc)

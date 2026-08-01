@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from browser_mcp.transfer.errors import DownloadError
 from browser_mcp.transfer.downloads.strategies.base import BaseDownloadStrategy
+from browser_mcp.transfer.errors import DownloadError
 
 
 class DownloadStrategyRegistry:

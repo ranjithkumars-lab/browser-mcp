@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Any
+
+
 class BrokerProvider(ABC):
     @abstractmethod
     async def enqueue(self, payload: dict[str, Any], priority: str = "default") -> None: ...

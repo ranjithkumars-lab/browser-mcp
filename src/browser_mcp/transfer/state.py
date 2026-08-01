@@ -27,8 +27,8 @@ from browser_mcp.transfer.models import TransferProgress, TransferStatus, new_tr
 
 __all__ = [
     "TransferRecord",
-    "TransferStateManager",
     "TransferState",
+    "TransferStateManager",
 ]
 
 
@@ -102,9 +102,16 @@ class TransferRecord:
 
 # Valid state transitions: current -> set of allowed next states
 _TRANSITIONS: dict[TransferStatus, frozenset[TransferStatus]] = {
-    TransferStatus.QUEUED: frozenset({TransferStatus.RUNNING, TransferStatus.CANCELLED, TransferStatus.FAILED}),
+    TransferStatus.QUEUED: frozenset(
+        {TransferStatus.RUNNING, TransferStatus.CANCELLED, TransferStatus.FAILED}
+    ),
     TransferStatus.RUNNING: frozenset(
-        {TransferStatus.PAUSED, TransferStatus.COMPLETED, TransferStatus.FAILED, TransferStatus.CANCELLED}
+        {
+            TransferStatus.PAUSED,
+            TransferStatus.COMPLETED,
+            TransferStatus.FAILED,
+            TransferStatus.CANCELLED,
+        }
     ),
     TransferStatus.PAUSED: frozenset({TransferStatus.RUNNING, TransferStatus.CANCELLED}),
     TransferStatus.COMPLETED: frozenset(),
@@ -166,7 +173,11 @@ class TransferStateManager:
                     f"invalid transition: '{state.status.value}' -> '{to_status.value}'"
                 )
             state.status = to_status
-            if to_status in (TransferStatus.COMPLETED, TransferStatus.FAILED, TransferStatus.CANCELLED):
+            if to_status in (
+                TransferStatus.COMPLETED,
+                TransferStatus.FAILED,
+                TransferStatus.CANCELLED,
+            ):
                 state.completed_at = datetime.now(UTC)
             if to_status == TransferStatus.RUNNING and state.started_at is None:
                 state.started_at = datetime.now(UTC)
@@ -282,7 +293,8 @@ class TransferStateManager:
             terminal = [
                 tid
                 for tid, s in self._transfers.items()
-                if s.status in (TransferStatus.COMPLETED, TransferStatus.FAILED, TransferStatus.CANCELLED)
+                if s.status
+                in (TransferStatus.COMPLETED, TransferStatus.FAILED, TransferStatus.CANCELLED)
             ]
             if len(terminal) <= max_history:
                 return 0

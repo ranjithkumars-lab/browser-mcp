@@ -68,9 +68,7 @@ class PluginLoader:
 
         cls = getattr(module, class_name)
         if not issubclass(cls, Plugin):
-            raise TypeError(
-                f"Entrypoint '{manifest.entrypoint}' is not a Plugin subclass"
-            )
+            raise TypeError(f"Entrypoint '{manifest.entrypoint}' is not a Plugin subclass")
 
         plugin = cls()
         return plugin
@@ -95,9 +93,7 @@ class PluginLoader:
 def _split_entrypoint(entrypoint: str) -> tuple[str, str]:
     """Split ``module.path:ClassName`` into (module_path, class_name)."""
     if ":" not in entrypoint:
-        raise ValueError(
-            f"Entrypoint '{entrypoint}' must be in the form 'module.path:ClassName'"
-        )
+        raise ValueError(f"Entrypoint '{entrypoint}' must be in the form 'module.path:ClassName'")
     module_path, class_name = entrypoint.rsplit(":", 1)
     return module_path, class_name
 

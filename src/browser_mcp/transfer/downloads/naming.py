@@ -9,7 +9,13 @@ from browser_mcp.transfer.models import CollisionStrategy
 
 
 class FileNamingStrategy:
-    def destination(self, directory: str | Path, filename: str, *, collision_strategy: CollisionStrategy | str = CollisionStrategy.AUTO_RENAME) -> Path:
+    def destination(
+        self,
+        directory: str | Path,
+        filename: str,
+        *,
+        collision_strategy: CollisionStrategy | str = CollisionStrategy.AUTO_RENAME,
+    ) -> Path:
         root = Path(directory).expanduser()
         root.mkdir(parents=True, exist_ok=True)
         # A suggested filename must never escape the configured artifact root.

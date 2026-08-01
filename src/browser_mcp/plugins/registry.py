@@ -70,11 +70,20 @@ class PluginRegistry:
 
 
 class InstalledPluginRegistry:
-    def __init__(self) -> None: self._manifests: dict[str, Any] = {}
-    def register(self, manifest: Any) -> None: self._manifests[manifest.name] = manifest
-    def get(self, name: str) -> Any: return self._manifests[name]
-    def names(self) -> list[str]: return list(self._manifests)
-    def all(self) -> dict[str, Any]: return dict(self._manifests)
+    def __init__(self) -> None:
+        self._manifests: dict[str, Any] = {}
+
+    def register(self, manifest: Any) -> None:
+        self._manifests[manifest.name] = manifest
+
+    def get(self, name: str) -> Any:
+        return self._manifests[name]
+
+    def names(self) -> list[str]:
+        return list(self._manifests)
+
+    def all(self) -> dict[str, Any]:
+        return dict(self._manifests)
 
 
 class ActivePluginRegistry(PluginRegistry):

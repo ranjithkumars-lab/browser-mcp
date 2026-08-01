@@ -3,4 +3,9 @@ from browser_mcp.transfer.uploads.strategies.drag_drop import DragDropUploadStra
 from browser_mcp.transfer.uploads.strategies.input import InputUploadStrategy
 from browser_mcp.transfer.uploads.strategies.registry import UploadStrategyRegistry
 
-__all__ = ["ChooserUploadStrategy", "DragDropUploadStrategy", "InputUploadStrategy", "UploadStrategyRegistry"]
+__all__ = [
+    "ChooserUploadStrategy",
+    "DragDropUploadStrategy",
+    "InputUploadStrategy",
+    "UploadStrategyRegistry",
+]

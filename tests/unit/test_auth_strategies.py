@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from browser_mcp.errors import LoginFailedError, UnsupportedAuthStrategyError
 from browser_mcp.auth.strategies.base import BaseAuthStrategy
 from browser_mcp.auth.strategies.cookie import CookieAuthStrategy
 from browser_mcp.auth.strategies.form import FormAuthStrategy
 from browser_mcp.auth.strategies.header import HeaderAuthStrategy
 from browser_mcp.auth.strategies.registry import AuthStrategyRegistry
+from browser_mcp.errors import UnsupportedAuthStrategyError
 
 pytestmark = pytest.mark.unit
 
@@ -55,6 +54,7 @@ class TestFormAuthStrategy:
         page.url = "https://example.com/dashboard"
 
         from browser_mcp.auth.models import AuthCredentials
+
         creds = AuthCredentials(
             username="user",
             password="pass",
@@ -73,6 +73,7 @@ class TestCookieAuthStrategy:
         context.add_cookies = AsyncMock()
 
         from browser_mcp.auth.models import AuthCredentials
+
         creds = AuthCredentials(
             url="https://example.com",
             cookies={"session": "abc"},
@@ -90,6 +91,7 @@ class TestHeaderAuthStrategy:
         context.set_extra_http_headers = AsyncMock()
 
         from browser_mcp.auth.models import AuthCredentials
+
         creds = AuthCredentials(
             url="https://example.com",
             headers={"Authorization": "Bearer token"},

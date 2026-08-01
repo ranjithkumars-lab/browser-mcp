@@ -153,6 +153,4 @@ class FormToolkit:
             registry_register(getattr(self, name))
 
 
-_TOOL_METHODS = frozenset(
-    {"fill", "check", "uncheck", "select", "submit"}
-)
+_TOOL_METHODS = frozenset({"fill", "check", "uncheck", "select", "submit"})

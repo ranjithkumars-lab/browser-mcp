@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Awaitable, Callable
 
 from browser_mcp.events.models import BrowserEvent
 from browser_mcp.events.store import topic_matches
+
+logger = logging.getLogger(__name__)
 
 Subscriber = Callable[[BrowserEvent], Awaitable[None] | None]
 
@@ -27,6 +30,6 @@ class EventRouter:
                     result = handler(event)
                     if asyncio.iscoroutine(result):
                         await asyncio.wait_for(result, self._timeout)
-                except Exception:
-                    # Listener errors/timeouts are deliberately isolated.
-                    continue
+                except Exception as exc:
+                    # Listener errors/timeouts are deliberately isolated, but logged.
+                    logger.debug("subscriber failed for %s", event.event_type, exc_info=exc)

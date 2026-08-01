@@ -8,7 +8,8 @@ upload sub-hierarchies preserve backward compatibility with the pre-existing
 
 from __future__ import annotations
 
-from browser_mcp.errors import BrowserError, DownloadError as _BrowserDownloadError
+from browser_mcp.errors import BrowserError
+from browser_mcp.errors import DownloadError as _BrowserDownloadError
 
 __all__ = [
     "DownloadCanceledError",

@@ -42,13 +42,10 @@ class HtmlFormatter(BaseFormatter):
         rows: list[str] = []
         for key, value in d.items():
             if isinstance(value, (dict, list)) and value:
-                rows.append(
-                    f"<tr><th>{escape(str(key))}</th><td>{self._nested(value)}</td></tr>"
-                )
+                rows.append(f"<tr><th>{escape(str(key))}</th><td>{self._nested(value)}</td></tr>")
             else:
                 rows.append(
-                    f"<tr><th>{escape(str(key))}</th><td>"
-                    f"{escape(_html_value(value))}</td></tr>"
+                    f"<tr><th>{escape(str(key))}</th><td>{escape(_html_value(value))}</td></tr>"
                 )
 
         return ["<table>", *rows, "</table>"]
@@ -64,14 +61,10 @@ class HtmlFormatter(BaseFormatter):
             inner: list[str] = []
             for key, val in d.items():
                 if isinstance(val, (dict, list)) and val:
-                    inner.append(
-                        f"<p><strong>{escape(str(key))}</strong>: "
-                        f"{self._nested(val)}</p>"
-                    )
+                    inner.append(f"<p><strong>{escape(str(key))}</strong>: {self._nested(val)}</p>")
                 else:
                     inner.append(
-                        f"<p><strong>{escape(str(key))}</strong>: "
-                        f"{escape(_html_value(val))}</p>"
+                        f"<p><strong>{escape(str(key))}</strong>: {escape(_html_value(val))}</p>"
                     )
             return "".join(inner)
         return escape(str(value))

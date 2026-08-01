@@ -365,8 +365,7 @@ class ScraperActions:
                 )
 
             models = [
-                self._product_normalizer.normalize(ri, ScrapeMeta(**meta_dict))
-                for ri in raw_items
+                self._product_normalizer.normalize(ri, ScrapeMeta(**meta_dict)) for ri in raw_items
             ]
 
             await emit_collect_completed(

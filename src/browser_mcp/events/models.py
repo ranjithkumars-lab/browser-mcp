@@ -63,6 +63,9 @@ class BrowserEvent(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
 
     @property
-    def event_id(self) -> str: return self.header.event_id
+    def event_id(self) -> str:
+        return self.header.event_id
+
     @property
-    def priority(self) -> EventPriority: return self.header.priority
+    def priority(self) -> EventPriority:
+        return self.header.priority

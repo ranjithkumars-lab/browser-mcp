@@ -2,9 +2,19 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
-from browser_mcp.auth.events import AuthEvent, emit_auth_expired, emit_auth_failed, emit_auth_headers_updated, emit_auth_started, emit_auth_state_loaded, emit_auth_state_saved, emit_auth_success
+from browser_mcp.auth.events import (
+    emit_auth_expired,
+    emit_auth_failed,
+    emit_auth_headers_updated,
+    emit_auth_started,
+    emit_auth_state_loaded,
+    emit_auth_state_saved,
+    emit_auth_success,
+)
 from enterprise_mcp.events.bus import EventBus
 from enterprise_mcp.events.types import DomainEvent
 
@@ -34,7 +44,9 @@ async def test_emit_auth_success() -> None:
         received.append(event)
 
     bus.subscribe("auth.success", handler)
-    await emit_auth_success(bus, strategy="header", context_id="ctx-1", session_id="ses-1", duration_ms=42.5)
+    await emit_auth_success(
+        bus, strategy="header", context_id="ctx-1", session_id="ses-1", duration_ms=42.5
+    )
 
     assert received[0].payload["duration_ms"] == 42.5
 
@@ -47,12 +59,14 @@ async def test_emit_auth_failed() -> None:
         received.append(event)
 
     bus.subscribe("auth.failed", handler)
-    await emit_auth_failed(bus, strategy="form", context_id="ctx-1", session_id="ses-1", error="bad", duration_ms=10.0)
+    await emit_auth_failed(
+        bus, strategy="form", context_id="ctx-1", session_id="ses-1", error="bad", duration_ms=10.0
+    )
 
     assert received[0].payload["error"] == "bad"
 
 
-async def test_emit_auth_state_saved() -> None:
+async def test_emit_auth_state_saved(tmp_path: Path) -> None:
     bus = EventBus()
     received: list[DomainEvent] = []
 
@@ -60,13 +74,19 @@ async def test_emit_auth_state_saved() -> None:
         received.append(event)
 
     bus.subscribe("auth.state.saved", handler)
-    await emit_auth_state_saved(bus, context_id="ctx-1", session_id="ses-1", path="/tmp/x", encrypted=True)
+    await emit_auth_state_saved(
+        bus,
+        context_id="ctx-1",
+        session_id="ses-1",
+        path=str(tmp_path / "state.json"),
+        encrypted=True,
+    )
 
-    assert received[0].payload["path"] == "/tmp/x"
+    assert received[0].payload["path"] == str(tmp_path / "state.json")
     assert received[0].payload["encrypted"] is True
 
 
-async def test_emit_auth_state_loaded() -> None:
+async def test_emit_auth_state_loaded(tmp_path: Path) -> None:
     bus = EventBus()
     received: list[DomainEvent] = []
 
@@ -74,7 +94,12 @@ async def test_emit_auth_state_loaded() -> None:
         received.append(event)
 
     bus.subscribe("auth.state.loaded", handler)
-    await emit_auth_state_loaded(bus, context_id="ctx-1", session_id="ses-1", path="/tmp/x")
+    await emit_auth_state_loaded(
+        bus,
+        context_id="ctx-1",
+        session_id="ses-1",
+        path=str(tmp_path / "state.json"),
+    )
 
     assert received[0].event_name == "auth.state.loaded"
 
@@ -87,7 +112,9 @@ async def test_emit_auth_headers_updated() -> None:
         received.append(event)
 
     bus.subscribe("auth.headers.updated", handler)
-    await emit_auth_headers_updated(bus, context_id="ctx-1", session_id="ses-1", headers=["Authorization"])
+    await emit_auth_headers_updated(
+        bus, context_id="ctx-1", session_id="ses-1", headers=["Authorization"]
+    )
 
     assert received[0].payload["headers"] == ["Authorization"]
 

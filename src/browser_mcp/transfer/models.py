@@ -120,7 +120,7 @@ class TransferProgress(BaseModel):
         default=0.0,
         ge=0.0,
         le=100.0,
-        description="Completion percentage (0–100).",
+        description="Completion percentage (0-100).",
     )
     speed_bps: float = Field(
         default=0.0,
@@ -168,7 +168,9 @@ class TransferResponse(BaseModel):
     context_id: str | None = Field(default=None, description="Browser context id, if applicable.")
     page_id: str | None = Field(default=None, description="Browser page id, if applicable.")
     file_name: str | None = Field(default=None, description="Base name of the transferred file.")
-    file_path: str | None = Field(default=None, description="Absolute path of the transferred file.")
+    file_path: str | None = Field(
+        default=None, description="Absolute path of the transferred file."
+    )
     file_size_bytes: int | None = Field(default=None, ge=0, description="File size in bytes.")
     mime_type: str | None = Field(default=None, description="MIME type of the file.")
     checksum: ChecksumResult | None = Field(

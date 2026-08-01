@@ -7,7 +7,7 @@ import json
 import pytest
 
 from browser_mcp.errors import FormattingError
-from browser_mcp.plugins.scraper.formatters import FORMATTERS, get_formatter
+from browser_mcp.plugins.scraper.formatters import get_formatter
 from browser_mcp.plugins.scraper.formatters.base import BaseFormatter
 from browser_mcp.plugins.scraper.formatters.csv import CsvFormatter
 from browser_mcp.plugins.scraper.formatters.html import HtmlFormatter
@@ -17,10 +17,8 @@ from browser_mcp.plugins.scraper.formatters.xml import XmlFormatter
 from browser_mcp.plugins.scraper.formatters.yaml import YamlFormatter
 from browser_mcp.plugins.scraper.models import (
     ImageResult,
-    JsonLdResult,
     LinkResult,
     MetadataResult,
-    ProductResult,
     ScrapeMeta,
     TableCell,
     TableResult,
@@ -183,7 +181,9 @@ class TestHtmlFormatter:
         assert "</body></html>" in result
 
     def test_format_escapes_content(self) -> None:
-        model = TextResult(meta=_META, text="<script>alert(1)</script>", word_count=1, char_count=25)
+        model = TextResult(
+            meta=_META, text="<script>alert(1)</script>", word_count=1, char_count=25
+        )
         result = HtmlFormatter().format([model])
         assert "<script>alert(1)</script>" not in result or "&lt;script&gt;" in result
 

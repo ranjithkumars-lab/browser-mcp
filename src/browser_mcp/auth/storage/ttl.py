@@ -30,6 +30,4 @@ class TTLValidator:
         if expires_at is None:
             return
         if expires_at <= datetime.now(UTC):
-            raise SessionExpiredError(
-                f"auth session expired at {expires_at.isoformat()}"
-            )
+            raise SessionExpiredError(f"auth session expired at {expires_at.isoformat()}")

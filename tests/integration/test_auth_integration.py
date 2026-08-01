@@ -6,7 +6,6 @@ session, exercising login, state persistence, and header injection end-to-end.
 
 from __future__ import annotations
 
-import asyncio
 import functools
 import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -25,9 +24,6 @@ from browser_mcp.auth.strategies.form import FormAuthStrategy
 from browser_mcp.auth.strategies.header import HeaderAuthStrategy
 from browser_mcp.auth.strategies.registry import AuthStrategyRegistry
 from browser_mcp.browser.context import ContextManager
-from browser_mcp.browser.elements.engine import ElementEngine
-from browser_mcp.browser.elements.locators.registry import LocatorRegistry
-from browser_mcp.browser.elements.provider import PlaywrightLocatorProvider
 from browser_mcp.browser.factory import BrowserFactory
 from browser_mcp.browser.manager import BrowserManager
 from browser_mcp.browser.page import PageManager
@@ -60,7 +56,11 @@ def html_server() -> str:
 async def runtime(tmp_path_factory: pytest.TempPathFactory, html_server: str) -> dict[str, Any]:
     settings = BrowserSettings(
         browser={"headless": True},
-        timeouts={"navigation_timeout_ms": 15_000, "interaction_timeout_ms": 10_000, "wait_timeout_ms": 10_000},
+        timeouts={
+            "navigation_timeout_ms": 15_000,
+            "interaction_timeout_ms": 10_000,
+            "wait_timeout_ms": 10_000,
+        },
     )
     pool = BrowserPool(settings)
     factory = BrowserFactory()
@@ -82,7 +82,9 @@ async def runtime(tmp_path_factory: pytest.TempPathFactory, html_server: str) ->
         encryption=AuthEncryptionEngine(allow_plaintext=True),
     )
     provider = PlaywrightAuthProvider()
-    auth_manager = AuthManager(registry=registry, storage=storage, provider=provider, event_bus=events)
+    auth_manager = AuthManager(
+        registry=registry, storage=storage, provider=provider, event_bus=events
+    )
 
     created = await sessions.create_session()
     session_id = str(created["session_id"])
@@ -138,7 +140,9 @@ async def test_header_injection(runtime: dict[str, Any]) -> None:
     auth_manager = runtime["auth_manager"]
     context = runtime["pool"].get_context(context_id).context
 
-    result = await auth_manager.set_headers(context, {"Authorization": "Bearer token"}, context_id=context_id, session_id=session_id)
+    result = await auth_manager.set_headers(
+        context, {"Authorization": "Bearer token"}, context_id=context_id, session_id=session_id
+    )
     assert result["success"] is True
     assert "Authorization" in result["headers_injected"]
 

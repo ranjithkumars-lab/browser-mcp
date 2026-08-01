@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from browser_mcp.errors import LoginFailedError
 from browser_mcp.auth.manager import AuthManager
 from browser_mcp.auth.models import AuthCredentials, AuthMetadata, AuthSession, AuthState
-from browser_mcp.auth.strategies.base import BaseAuthStrategy
-from browser_mcp.auth.strategies.registry import AuthStrategyRegistry
 from browser_mcp.auth.storage.encryption import AuthEncryptionEngine
 from browser_mcp.auth.storage.manager import AuthStorageManager
+from browser_mcp.auth.strategies.base import BaseAuthStrategy
+from browser_mcp.auth.strategies.registry import AuthStrategyRegistry
+from browser_mcp.errors import LoginFailedError
 
 pytestmark = pytest.mark.unit
 
@@ -37,7 +36,9 @@ class TestAuthManagerLogin:
         manager = _make_manager(tmp_path)
         strategy = MagicMock(spec=BaseAuthStrategy)
         strategy.name = "form"
-        strategy.execute = AsyncMock(return_value={"success": True, "url": "https://example.com/dashboard"})
+        strategy.execute = AsyncMock(
+            return_value={"success": True, "url": "https://example.com/dashboard"}
+        )
         manager.register_strategy(strategy)
 
         context = MagicMock()
@@ -79,9 +80,7 @@ class TestAuthManagerStatePersistence:
             session_id="ses-1",
             context_id="ctx-1",
             authenticated=True,
-            metadata=AuthMetadata(
-                strategy="form", context_id="ctx-1", session_id="ses-1"
-            ),
+            metadata=AuthMetadata(strategy="form", context_id="ctx-1", session_id="ses-1"),
         )
         state = AuthState(session=session)
         save_result = await manager.save_state("ctx-1", "ses-1", state)
@@ -98,6 +97,8 @@ class TestAuthManagerSetHeaders:
         context = MagicMock()
         manager._provider.inject_headers = AsyncMock()
 
-        result = await manager.set_headers(context, {"X": "Y"}, context_id="ctx-1", session_id="ses-1")
+        result = await manager.set_headers(
+            context, {"X": "Y"}, context_id="ctx-1", session_id="ses-1"
+        )
         assert result["success"] is True
         assert "X" in result["headers_injected"]

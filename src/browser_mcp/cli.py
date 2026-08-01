@@ -13,6 +13,7 @@ app = typer.Typer(
 app.add_typer(api_app, name="api", help="REST API Engine & UI Server commands.")
 app.add_typer(workers_app, name="worker", help="Distributed Worker Engine commands.")
 
+
 def main() -> None:
     """Console script entry point."""
     app()

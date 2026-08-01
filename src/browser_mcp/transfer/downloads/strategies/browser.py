@@ -18,8 +18,12 @@ class BrowserDownloadStrategy(BaseDownloadStrategy):
     async def execute(self, page: Any, **options: Any) -> dict[str, Any]:
         download = options.get("download")
         if download is None:
-            download = await self._provider.expect_download(page, timeout_ms=options.get("timeout_ms"))
-        suggested = getattr(download, "suggested_filename", None) or options.get("file_name") or "download"
+            download = await self._provider.expect_download(
+                page, timeout_ms=options.get("timeout_ms")
+            )
+        suggested = (
+            getattr(download, "suggested_filename", None) or options.get("file_name") or "download"
+        )
         destination = Path(options["destination"])
         path = await self._provider.save_download(download, str(destination))
         return {"file_name": Path(suggested).name, "file_path": path}

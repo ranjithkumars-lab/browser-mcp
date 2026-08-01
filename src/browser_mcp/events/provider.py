@@ -11,5 +11,8 @@ class EventProvider(ABC):
 
 
 class InMemoryEventProvider(EventProvider):
-    def __init__(self) -> None: self.events: list[BrowserEvent] = []
-    async def publish(self, event: BrowserEvent) -> None: self.events.append(event)
+    def __init__(self) -> None:
+        self.events: list[BrowserEvent] = []
+
+    async def publish(self, event: BrowserEvent) -> None:
+        self.events.append(event)

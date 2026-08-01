@@ -86,10 +86,7 @@ class FormDetector:
             candidates.append(
                 {
                     "strategy": "xpath",
-                    "value": (
-                        f"//label[contains(text(), '{field_name}')]"
-                        "/following::input[1]"
-                    ),
+                    "value": (f"//label[contains(text(), '{field_name}')]/following::input[1]"),
                     "type": field_type or "unknown",
                 }
             )

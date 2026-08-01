@@ -1,4 +1,6 @@
 from pydantic import BaseModel, Field
+
+
 class WorkerConfig(BaseModel):
     concurrency: int = Field(default=4, ge=1)
     lease_timeout_seconds: float = Field(default=60, gt=0)
