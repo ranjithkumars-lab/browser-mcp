@@ -12,6 +12,7 @@ from browser_mcp.config.defaults import ENV_VAR_PREFIX
 
 __all__ = [
     "AuthConfig",
+    "TransferConfig",
     "BrowserConfig",
     "BrowserEngine",
     "BrowserProfile",
@@ -82,6 +83,18 @@ class AuthConfig(BaseModel):
         default=False,
         description="Allow unencrypted auth state files in development.",
     )
+
+
+class TransferConfig(BaseModel):
+    """Download/upload engine limits and storage behaviour."""
+
+    download_directory: str = Field(default="~/.browser-mcp/artifacts")
+    max_file_size_bytes: int = Field(default=500 * 1024 * 1024, ge=1)
+    allowed_extensions: list[str] = Field(default_factory=list[str])
+    allowed_mime_types: list[str] = Field(default_factory=list[str])
+    checksum_algorithm: str = Field(default="sha256")
+    collision_strategy: str = Field(default="auto_rename")
+    cleanup_policy: str = Field(default="on_failure")
 
 
 class BrowserConfig(BaseModel):
@@ -211,3 +224,4 @@ class BrowserSettings(BaseSettings):
     navigation: NavigationConfig = Field(default_factory=NavigationConfig)
     timeouts: TimeoutConfig = Field(default_factory=TimeoutConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
+    transfer: TransferConfig = Field(default_factory=TransferConfig)

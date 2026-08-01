@@ -44,6 +44,21 @@ from browser_mcp.auth.strategies.form import FormAuthStrategy
 from browser_mcp.auth.strategies.cookie import CookieAuthStrategy
 from browser_mcp.auth.strategies.header import HeaderAuthStrategy
 from browser_mcp.auth.tools import AuthToolkit
+from browser_mcp.transfer.downloads.integrity import ChecksumVerifier
+from browser_mcp.transfer.downloads.manager import DownloadManager
+from browser_mcp.transfer.downloads.naming import FileNamingStrategy
+from browser_mcp.transfer.downloads.strategies.browser import BrowserDownloadStrategy
+from browser_mcp.transfer.downloads.strategies.registry import DownloadStrategyRegistry
+from browser_mcp.transfer.manager import TransferManager
+from browser_mcp.transfer.provider import PlaywrightTransferProvider
+from browser_mcp.transfer.state import TransferStateManager
+from browser_mcp.transfer.tools import TransferToolkit
+from browser_mcp.transfer.uploads.manager import UploadManager
+from browser_mcp.transfer.uploads.strategies.chooser import ChooserUploadStrategy
+from browser_mcp.transfer.uploads.strategies.drag_drop import DragDropUploadStrategy
+from browser_mcp.transfer.uploads.strategies.input import InputUploadStrategy
+from browser_mcp.transfer.uploads.strategies.registry import UploadStrategyRegistry
+from browser_mcp.transfer.uploads.validator import FileValidator
 from browser_mcp.tools.browser import BrowserToolkit
 from browser_mcp.tools.elements import ElementToolkit
 from browser_mcp.tools.navigation import NavigationToolkit
@@ -117,6 +132,25 @@ def create_browser_context(
     )
     resolved.container.register_instance(auth_manager, name="auth_manager")
 
+    transfer_provider = PlaywrightTransferProvider()
+    download_registry = DownloadStrategyRegistry()
+    download_registry.register(BrowserDownloadStrategy(transfer_provider))
+    upload_registry = UploadStrategyRegistry()
+    upload_registry.register(InputUploadStrategy(transfer_provider))
+    upload_registry.register(ChooserUploadStrategy(transfer_provider))
+    upload_registry.register(DragDropUploadStrategy(transfer_provider))
+    transfer_manager = TransferManager(
+        DownloadManager(download_registry, FileNamingStrategy(), ChecksumVerifier(),
+                        directory=browser_settings.transfer.download_directory,
+                        collision_strategy=browser_settings.transfer.collision_strategy,
+                        checksum_algorithm=browser_settings.transfer.checksum_algorithm),
+        UploadManager(upload_registry, FileValidator(max_file_size_bytes=browser_settings.transfer.max_file_size_bytes,
+                                                     allowed_extensions=browser_settings.transfer.allowed_extensions,
+                                                     allowed_mime_types=browser_settings.transfer.allowed_mime_types)),
+        TransferStateManager(), events,
+    )
+    resolved.container.register_instance(transfer_manager, name="transfer_manager")
+
     lifecycle = BrowserToolkit(sessions)
     lifecycle.register(resolved.tools)
     navigation_toolkit = NavigationToolkit(
@@ -132,6 +166,7 @@ def create_browser_context(
 
     auth_toolkit = AuthToolkit(auth_manager, pool, sessions)
     auth_toolkit.register(resolved.tools)
+    TransferToolkit(transfer_manager, pool, sessions).register(resolved.tools)
 
     resolved.container.register_instance(sessions, name="browser_sessions")
     resolved.container.register_instance(state, name="navigation_state")

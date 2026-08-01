@@ -37,3 +37,12 @@ timeouts:
   navigation_timeout_ms: 30000
   interaction_timeout_ms: 10000
   wait_timeout_ms: 10000
+
+transfer:
+  download_directory: "~/.browser-mcp/artifacts"
+  max_file_size_bytes: 524288000
+  allowed_extensions: []
+  allowed_mime_types: []
+  checksum_algorithm: sha256
+  collision_strategy: auto_rename
+  cleanup_policy: on_failure
