@@ -46,3 +46,12 @@ transfer:
   checksum_algorithm: sha256
   collision_strategy: auto_rename
   cleanup_policy: on_failure
+
+events:
+  max_history_size: 1000
+  max_queue_size: 10000
+  subscriber_timeout_seconds: 5.0
+  worker_count: 4
+  drop_policy: drop_oldest
+  enable_metrics: true
+  enable_streaming: true

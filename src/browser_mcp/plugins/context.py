@@ -37,6 +37,7 @@ class PluginContext:
         event_bus: EventBus,
         auth_manager: Any | None = None,
         transfer_manager: Any | None = None,
+        event_manager: Any | None = None,
     ) -> None:
         self._app_context = app_context
         self._container = container
@@ -48,6 +49,7 @@ class PluginContext:
         self._event_bus = event_bus
         self._auth_manager = auth_manager
         self._transfer_manager = transfer_manager
+        self._event_manager = event_manager
 
     @property
     def app_context(self) -> AppContext:
@@ -89,6 +91,10 @@ class PluginContext:
     def transfer_manager(self) -> Any | None:
         """Shared download/upload engine facade."""
         return self._transfer_manager
+
+    @property
+    def event_manager(self) -> Any | None:
+        return self._event_manager
 
     @property
     def settings(self) -> Any:

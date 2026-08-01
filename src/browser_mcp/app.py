@@ -44,6 +44,12 @@ from browser_mcp.auth.strategies.form import FormAuthStrategy
 from browser_mcp.auth.strategies.cookie import CookieAuthStrategy
 from browser_mcp.auth.strategies.header import HeaderAuthStrategy
 from browser_mcp.auth.tools import AuthToolkit
+from browser_mcp.events.manager import BrowserEventManager
+from browser_mcp.events.middleware import MetricsMiddleware
+from browser_mcp.events.provider import InMemoryEventProvider
+from browser_mcp.events.router import EventRouter
+from browser_mcp.events.store import EventHistoryStore
+from browser_mcp.events.tools import EventsToolkit
 from browser_mcp.transfer.downloads.integrity import ChecksumVerifier
 from browser_mcp.transfer.downloads.manager import DownloadManager
 from browser_mcp.transfer.downloads.naming import FileNamingStrategy
@@ -151,6 +157,16 @@ def create_browser_context(
     )
     resolved.container.register_instance(transfer_manager, name="transfer_manager")
 
+    event_manager = BrowserEventManager(
+        InMemoryEventProvider(),
+        EventHistoryStore(browser_settings.events.max_history_size),
+        EventRouter(browser_settings.events.subscriber_timeout_seconds),
+        [MetricsMiddleware()] if browser_settings.events.enable_metrics else [],
+    )
+    # Preserve every existing EventBus publisher; the typed engine observes it.
+    events.subscribe(None, event_manager.publish_domain_event)
+    resolved.container.register_instance(event_manager, name="event_manager")
+
     lifecycle = BrowserToolkit(sessions)
     lifecycle.register(resolved.tools)
     navigation_toolkit = NavigationToolkit(
@@ -167,6 +183,7 @@ def create_browser_context(
     auth_toolkit = AuthToolkit(auth_manager, pool, sessions)
     auth_toolkit.register(resolved.tools)
     TransferToolkit(transfer_manager, pool, sessions).register(resolved.tools)
+    EventsToolkit(event_manager).register(resolved.tools)
 
     resolved.container.register_instance(sessions, name="browser_sessions")
     resolved.container.register_instance(state, name="navigation_state")

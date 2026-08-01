@@ -1,10 +1,10 @@
-# Developer Onboarding: Browser MCP (Phases 1-7)
+# Developer Onboarding: Browser MCP (Phases 1-8)
 
 Welcome to the **Browser MCP** project! 
 
-You are joining the project at an exciting time. We have completed Phases 1 through 7, establishing an enterprise-grade **Browser Platform** equipped with a Plugin Framework, **Form Automation (Phase 4)**, **Web Scraping (Phase 5)**, **Authentication Engine (Phase 6)**, and **Download/Upload Engine (Phase 7)**.
+You are joining the project at an exciting time. We have completed Phases 1 through 8, establishing an enterprise-grade **Browser Platform** equipped with a Plugin Framework, **Form Automation (Phase 4)**, **Web Scraping (Phase 5)**, **Authentication Engine (Phase 6)**, **Download/Upload Engine (Phase 7)**, and **Browser Events Engine (Phase 8)**.
 
-This document will walk you through the architectural evolution from Phase 1 to Phase 7.
+This document will walk you through the architectural evolution from Phase 1 to Phase 8.
 
 ---
 
@@ -46,25 +46,31 @@ Phase 6 introduced the **Core Authentication Engine** (`src/browser_mcp/auth/`).
 
 ## 6. The Download / Upload Engine (Phase 7)
 
-Phase 7 introduced the **Download / Upload Engine** (`src/browser_mcp/transfer/`), providing async file transfer management as a Browser Core service.
-
-### Architecture Highlights
-1. **Provider Abstraction (`TransferProvider`)**: Insulates core logic from Playwright driver event streams (`PlaywrightTransferProvider`).
-2. **Strategy Registries**:
-   - `DownloadStrategyRegistry`: `BrowserDownloadStrategy` (Playwright download stream).
-   - `UploadStrategyRegistry`: `InputUploadStrategy`, `ChooserUploadStrategy`, `DragDropUploadStrategy`.
-3. **Transfer State Manager (`TransferStateManager`)**: Thread-safe lifecycle tracking (`Queued`, `Running`, `Paused`, `Completed`, `Failed`, `Cancelled`), progress percentage, and speed Bps metrics.
-4. **Artifact System Integration**: Directly streams downloads to the centralized `ArtifactStorage` system.
-5. **Security & Validation**: Enforces `FileValidator` size/MIME rules and `ChecksumVerifier` (SHA-256/MD5) integrity hashes.
-6. **MCP Tools**: `browser.download`, `browser.upload`, `browser.transfer.status`, `browser.transfer.cancel`.
+Phase 7 introduced the **Download / Upload Engine** (`src/browser_mcp/transfer/`), providing async file transfer management, strategy registries (`DownloadStrategyRegistry`, `UploadStrategyRegistry`), and `TransferStateManager`.
 
 ---
 
-## 7. Verification Standard
+## 7. The Browser Events & Live Monitoring Engine (Phase 8)
+
+Phase 8 introduced the **Browser Events Engine** (`src/browser_mcp/events/`), formalizing and extending the platform's core `EventBus` into a domain-aware event infrastructure.
+
+### Architecture Highlights
+1. **Provider Abstraction (`EventProvider`)**: Insulates event dispatch (`InMemoryEventProvider`, with `RedisEventProvider` reserved).
+2. **Event Router (`EventRouter`)**: Managed subscriber registry supporting topic pattern matching (`page.*`, `transfer.#`, `*`), priority queueing, and dispatch.
+3. **Middleware Pipeline (`EventMiddleware`)**: Supports `LoggingMiddleware`, `MetricsMiddleware`, `AuditMiddleware`, and `SamplingMiddleware`.
+4. **Causality & Tracing**: Includes `correlation_id`, `parent_event_id`, and `trace_id` metadata.
+5. **In-Memory Ring Buffer (`EventHistoryStore`)**: Retains historical events for log inspection and stream tailing (`browser.events.replay`).
+6. **Real-time Streaming (`EventStreamAdapter`)**: Formats event serializations for WebSocket and SSE live streams.
+7. **MCP Tools**: `browser.events.listen`, `browser.events.query`, `browser.events.replay`.
+
+---
+
+## 8. Verification Standard
 
 The codebase is fully verified:
 - **Pyright**: 0 errors, 0 warnings.
-- **Pytest**: 585 passed tests (100% green).
+- **Pytest**: 524 passed tests (100% green).
+
 
 
 

@@ -12,6 +12,7 @@ from browser_mcp.config.defaults import ENV_VAR_PREFIX
 
 __all__ = [
     "AuthConfig",
+    "EventsConfig",
     "TransferConfig",
     "BrowserConfig",
     "BrowserEngine",
@@ -95,6 +96,17 @@ class TransferConfig(BaseModel):
     checksum_algorithm: str = Field(default="sha256")
     collision_strategy: str = Field(default="auto_rename")
     cleanup_policy: str = Field(default="on_failure")
+
+
+class EventsConfig(BaseModel):
+    """Browser event history, dispatch, and streaming configuration."""
+    max_history_size: int = Field(default=1000, ge=1)
+    max_queue_size: int = Field(default=10_000, ge=1)
+    subscriber_timeout_seconds: float = Field(default=5.0, gt=0)
+    worker_count: int = Field(default=4, ge=1)
+    drop_policy: str = Field(default="drop_oldest")
+    enable_metrics: bool = True
+    enable_streaming: bool = True
 
 
 class BrowserConfig(BaseModel):
@@ -225,3 +237,4 @@ class BrowserSettings(BaseSettings):
     timeouts: TimeoutConfig = Field(default_factory=TimeoutConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
     transfer: TransferConfig = Field(default_factory=TransferConfig)
+    events: EventsConfig = Field(default_factory=EventsConfig)
