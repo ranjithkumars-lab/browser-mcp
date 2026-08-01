@@ -297,7 +297,8 @@ class NavigationToolkit:
         self,
         session_id: str,
         page_id: str,
-        selector: str,
+        selector: str | None = None,
+        element_id: str | None = None,
         frame_id: str | None = None,
         align: str = "center",
         timeout_ms: int | None = None,
@@ -308,6 +309,7 @@ class NavigationToolkit:
                 session_id,
                 page_id,
                 selector,
+                element_id=element_id,
                 frame_id=frame_id,
                 align=align,  # type: ignore[arg-type]
                 timeout_ms=timeout_ms,
@@ -321,8 +323,9 @@ class NavigationToolkit:
     @tool(
         name=f"{TOOL_NAMESPACE}.click",
         description=(
-            "Click the element matching a selector. button is one of "
-            "'left', 'right', 'middle'; click_count controls the number of clicks."
+            "Click an element. Either pass a selector (CSS) or an element_id "
+            "returned by browser.element.find. button is one of 'left', 'right', "
+            "'middle'; click_count controls the number of clicks."
         ),
         returns="json",
     )
@@ -330,7 +333,8 @@ class NavigationToolkit:
         self,
         session_id: str,
         page_id: str,
-        selector: str,
+        selector: str | None = None,
+        element_id: str | None = None,
         frame_id: str | None = None,
         timeout_ms: int | None = None,
         button: str = "left",
@@ -343,6 +347,7 @@ class NavigationToolkit:
                 session_id,
                 page_id,
                 selector,
+                element_id=element_id,
                 frame_id=frame_id,
                 timeout_ms=timeout_ms,
                 button=button,  # type: ignore[arg-type]
@@ -355,21 +360,27 @@ class NavigationToolkit:
 
     @tool(
         name=f"{TOOL_NAMESPACE}.hover",
-        description="Hover the element matching a selector.",
+        description="Hover an element by selector or element_id.",
         returns="json",
     )
     async def hover(
         self,
         session_id: str,
         page_id: str,
-        selector: str,
+        selector: str | None = None,
+        element_id: str | None = None,
         frame_id: str | None = None,
         timeout_ms: int | None = None,
     ) -> dict[str, Any]:
         """Hover an element."""
         try:
             result = await self._interactions.hover(
-                session_id, page_id, selector, frame_id=frame_id, timeout_ms=timeout_ms
+                session_id,
+                page_id,
+                selector,
+                element_id=element_id,
+                frame_id=frame_id,
+                timeout_ms=timeout_ms,
             )
             return _ok(**result)
         except Exception as exc:
@@ -377,14 +388,15 @@ class NavigationToolkit:
 
     @tool(
         name=f"{TOOL_NAMESPACE}.double_click",
-        description="Double-click the element matching a selector.",
+        description="Double-click an element by selector or element_id.",
         returns="json",
     )
     async def double_click(
         self,
         session_id: str,
         page_id: str,
-        selector: str,
+        selector: str | None = None,
+        element_id: str | None = None,
         frame_id: str | None = None,
         timeout_ms: int | None = None,
         delay_ms: int | None = None,
@@ -395,6 +407,7 @@ class NavigationToolkit:
                 session_id,
                 page_id,
                 selector,
+                element_id=element_id,
                 frame_id=frame_id,
                 timeout_ms=timeout_ms,
                 delay_ms=delay_ms,
@@ -405,21 +418,27 @@ class NavigationToolkit:
 
     @tool(
         name=f"{TOOL_NAMESPACE}.right_click",
-        description="Right-click the element matching a selector.",
+        description="Right-click an element by selector or element_id.",
         returns="json",
     )
     async def right_click(
         self,
         session_id: str,
         page_id: str,
-        selector: str,
+        selector: str | None = None,
+        element_id: str | None = None,
         frame_id: str | None = None,
         timeout_ms: int | None = None,
     ) -> dict[str, Any]:
         """Right-click an element."""
         try:
             result = await self._interactions.right_click(
-                session_id, page_id, selector, frame_id=frame_id, timeout_ms=timeout_ms
+                session_id,
+                page_id,
+                selector,
+                element_id=element_id,
+                frame_id=frame_id,
+                timeout_ms=timeout_ms,
             )
             return _ok(**result)
         except Exception as exc:

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Elements Page</title>
+</head>
+<body>
+  <h1 id="heading" class="title" data-kind="page">Elements Fixture</h1>
+
+  <div id="intro" class="card">
+    <p class="intro-text">Welcome to the element fixture.</p>
+    <p>Static paragraph one.</p>
+    <p>Static paragraph two.</p>
+  </div>
+
+  <ul id="items" data-count="3">
+    <li class="item" id="item-1">first item</li>
+    <li class="item" id="item-2">second item</li>
+    <li class="item" id="item-3">third item</li>
+  </ul>
+
+  <button id="submit" name="submit" disabled>Submit</button>
+  <button id="save" name="save">Save</button>
+  <a id="home" href="elements.html" title="Go home">Home</a>
+
+  <input id="text-input" type="text" name="q" value="hello" />
+  <input id="disabled-input" type="text" disabled />
+  <input id="checkbox" type="checkbox" checked />
+  <input id="radio" type="radio" />
+
+  <div id="hidden" style="display:none;">invisible content</div>
+  <div id="empty"></div>
+
+  <p title="tooltip paragraph">Hover text here.</p>
+
+  <script>
+    document.getElementById('submit').addEventListener('click', function () {
+      document.body.dataset.submitted = 'true';
+    });
+    document.getElementById('save').addEventListener('click', function () {
+      document.body.dataset.saved = 'true';
+    });
+  </script>
+</body>
+</html>

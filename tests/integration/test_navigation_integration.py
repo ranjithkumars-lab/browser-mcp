@@ -20,6 +20,9 @@ from typing import Any
 import pytest
 
 from browser_mcp.browser.context import ContextManager
+from browser_mcp.browser.elements.engine import ElementEngine
+from browser_mcp.browser.elements.locators.registry import LocatorRegistry
+from browser_mcp.browser.elements.provider import PlaywrightLocatorProvider
 from browser_mcp.browser.factory import BrowserFactory
 from browser_mcp.browser.manager import BrowserManager
 from browser_mcp.browser.navigation.frames import FrameManager
@@ -89,7 +92,9 @@ async def runtime(tmp_path_factory: pytest.TempPathFactory, html_server: str) ->
     navigation = NavigationManager(state, policy, events, settings)
     history = HistoryManager(state, events, settings)
     windows = WindowManager(pool, state, pages, events, settings)
-    interactions = InteractionManager(state, frames, events, settings)
+    registry = LocatorRegistry(PlaywrightLocatorProvider())
+    engine = ElementEngine(state, frames, registry, events, settings)
+    interactions = InteractionManager(state, frames, events, settings, engine)
     waiting = WaitingManager(state, windows, events, settings)
 
     created = await sessions.create_session()

@@ -7,7 +7,7 @@ from tests.fakes import FakeFrame, FakeLocator, FakePage
 from tests.helpers import build_runtime
 
 from browser_mcp.browser.navigation.interactions import InteractionManager, LocatorResolver
-from browser_mcp.errors import InteractionError
+from browser_mcp.errors import ElementError, InteractionError
 
 pytestmark = pytest.mark.unit
 
@@ -135,7 +135,7 @@ async def test_locator_resolver_targets_frame() -> None:
     await runtime["frames"].sync_frames(session_id, page_id)
     inner_frame = next(s for s in runtime["state"].list_frames(page_id) if not s.is_main)
 
-    resolver: LocatorResolver = LocatorResolver(runtime["frames"])
+    resolver: LocatorResolver = LocatorResolver(runtime["frames"], runtime["engine"])
     locator = await resolver.resolve(session_id, page_id, "#inside", frame_id=inner_frame.frame_id)
     assert isinstance(locator, FakeLocator)
     assert locator.frame is not None
@@ -144,9 +144,70 @@ async def test_locator_resolver_targets_frame() -> None:
 
 async def test_locator_resolver_page_target() -> None:
     runtime = await build_runtime()
-    resolver: LocatorResolver = LocatorResolver(runtime["frames"])
+    resolver: LocatorResolver = LocatorResolver(runtime["frames"], runtime["engine"])
     session_id, page_id = runtime["session_id"], runtime["page_handle"].page_id
 
     locator = await resolver.resolve(session_id, page_id, "#main")
     assert isinstance(locator, FakeLocator)
     assert locator.frame is None
+
+
+async def test_locator_resolver_resolves_element_id() -> None:
+    runtime = await build_runtime()
+    resolver: LocatorResolver = LocatorResolver(runtime["frames"], runtime["engine"])
+    session_id, page_id = runtime["session_id"], runtime["page_handle"].page_id
+    element_id = (await runtime["engine"].find(session_id, page_id, "css", "#cached"))["element_id"]
+
+    locator = await resolver.resolve_element(element_id, page_id)
+    assert isinstance(locator, FakeLocator)
+    assert locator.selector == "#cached"
+
+
+async def test_click_by_element_id() -> None:
+    runtime = await build_runtime()
+    interactions: InteractionManager = runtime["interactions"]
+    page: FakePage = runtime["page"]
+    session_id, page_id = runtime["session_id"], runtime["page_handle"].page_id
+    element_id = (await runtime["engine"].find(session_id, page_id, "css", "#click-me"))[
+        "element_id"
+    ]
+
+    result = await interactions.click(session_id, page_id, element_id=element_id)
+    assert result["action"] == "click"
+    assert result["element_id"] == element_id
+    assert page.locator("#click-me").clicks == 1
+
+
+async def test_click_by_element_id_ignores_selector() -> None:
+    runtime = await build_runtime()
+    interactions: InteractionManager = runtime["interactions"]
+    page: FakePage = runtime["page"]
+    session_id, page_id = runtime["session_id"], runtime["page_handle"].page_id
+    element_id = (await runtime["engine"].find(session_id, page_id, "css", "#target"))["element_id"]
+
+    result = await interactions.click(session_id, page_id, "#ignored", element_id=element_id)
+    assert result["element_id"] == element_id
+    assert page.locator("#target").clicks == 1
+    assert page.locator("#ignored").clicks == 0
+
+
+async def test_click_by_unknown_element_id_raises() -> None:
+    runtime = await build_runtime()
+    interactions: InteractionManager = runtime["interactions"]
+    session_id, page_id = runtime["session_id"], runtime["page_handle"].page_id
+    with pytest.raises(ElementError):
+        await interactions.click(session_id, page_id, element_id="element_unknown")
+
+
+async def test_scroll_element_by_element_id() -> None:
+    runtime = await build_runtime()
+    interactions: InteractionManager = runtime["interactions"]
+    page: FakePage = runtime["page"]
+    session_id, page_id = runtime["session_id"], runtime["page_handle"].page_id
+    element_id = (await runtime["engine"].find(session_id, page_id, "css", "#scrollable"))[
+        "element_id"
+    ]
+
+    result = await interactions.scroll_element(session_id, page_id, element_id=element_id)
+    assert result["action"] == "scroll_element"
+    assert page.locator("#scrollable").scrolled == 1

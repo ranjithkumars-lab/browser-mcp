@@ -53,12 +53,13 @@ def test_registers_navigation_and_lifecycle_tools() -> None:
     names = {m.name for m in context.tools.list()}
     assert f"{TOOL_NAMESPACE}.create_session" in names
     assert {f"{TOOL_NAMESPACE}.{name}" for name in NAV_TOOL_NAMES} <= names
-    assert len(names) >= 20 + 3
+    assert {"browser.element.find", "browser.element.text", "browser.element.state"} <= names
+    assert len(names) >= 20 + 3 + 6
 
 
 def test_registers_health_providers() -> None:
     context = _app_context()
-    assert {"browser_pool", "navigation"} <= set(context.health_providers)
+    assert {"browser_pool", "navigation", "elements"} <= set(context.health_providers)
 
 
 def test_registers_container_instances() -> None:
@@ -66,7 +67,9 @@ def test_registers_container_instances() -> None:
     assert context.container.has("browser_sessions")
     assert context.container.has("navigation_state")
     assert context.container.has("navigation_manager")
+    assert context.container.has("element_engine")
     assert context.container.resolve("navigation_state") is not None
+    assert context.container.resolve("element_engine") is not None
 
 
 async def test_start_stop_runs_lifecycle() -> None:
@@ -89,3 +92,10 @@ async def test_navigation_health_provider_payload() -> None:
     }
     assert payload["navigation"]["default_strategy"] == "normal"
     assert payload["navigation"]["allow_redirects"] is True
+
+
+async def test_elements_health_provider_payload() -> None:
+    context = _app_context()
+    provider = context.health_providers["elements"]
+    payload = await provider()
+    assert payload == {"cache": {"cached_elements": 0}}

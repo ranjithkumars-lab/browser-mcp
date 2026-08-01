@@ -19,7 +19,7 @@ Phase 2 does **not** implement locator strategies; interactions consume the
 
 from browser_mcp.browser.navigation.frames import FrameManager
 from browser_mcp.browser.navigation.history import HistoryManager
-from browser_mcp.browser.navigation.interactions import InteractionManager, LocatorResolver
+from browser_mcp.browser.navigation.interactions import InteractionManager
 from browser_mcp.browser.navigation.manager import NavigationManager
 from browser_mcp.browser.navigation.policy import NavigationPolicy, PolicyResult
 from browser_mcp.browser.navigation.state import (
@@ -35,7 +35,6 @@ __all__ = [
     "FrameState",
     "HistoryManager",
     "InteractionManager",
-    "LocatorResolver",
     "NavigationManager",
     "NavigationPolicy",
     "PolicyResult",

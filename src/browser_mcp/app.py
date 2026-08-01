@@ -12,6 +12,9 @@ from typing import Any
 import structlog
 
 from browser_mcp.browser.context import ContextManager
+from browser_mcp.browser.elements.engine import ElementEngine
+from browser_mcp.browser.elements.locators.registry import LocatorRegistry
+from browser_mcp.browser.elements.provider import PlaywrightLocatorProvider
 from browser_mcp.browser.factory import BrowserFactory
 from browser_mcp.browser.manager import BrowserManager
 from browser_mcp.browser.navigation.frames import FrameManager
@@ -30,6 +33,7 @@ from browser_mcp.browser.session import SessionManager
 from browser_mcp.config.loader import load_browser_settings
 from browser_mcp.config.models import BrowserSettings
 from browser_mcp.tools.browser import BrowserToolkit
+from browser_mcp.tools.elements import ElementToolkit
 from browser_mcp.tools.navigation import NavigationToolkit
 from enterprise_mcp.foundation.app import AppContext
 
@@ -70,7 +74,9 @@ def create_browser_context(
     navigation = NavigationManager(state, policy, events, browser_settings)
     history = HistoryManager(state, events, browser_settings)
     windows = WindowManager(pool, state, pages, events, browser_settings)
-    interactions = InteractionManager(state, frames, events, browser_settings)
+    element_registry = LocatorRegistry(PlaywrightLocatorProvider())
+    elements = ElementEngine(state, frames, element_registry, events, browser_settings)
+    interactions = InteractionManager(state, frames, events, browser_settings, elements)
     waiting = WaitingManager(state, windows, events, browser_settings)
 
     resolved.register_startup_hook(factory.start)
@@ -80,6 +86,7 @@ def create_browser_context(
         "browser_pool", _browser_pool_health(sessions, browser_settings)
     )
     resolved.register_health_provider("navigation", _navigation_health(state, browser_settings))
+    resolved.register_health_provider("elements", _elements_health(elements))
 
     lifecycle = BrowserToolkit(sessions)
     lifecycle.register(resolved.tools)
@@ -87,10 +94,13 @@ def create_browser_context(
         navigation, history, frames, windows, interactions, waiting
     )
     navigation_toolkit.register(resolved.tools)
+    element_toolkit = ElementToolkit(elements)
+    element_toolkit.register(resolved.tools)
 
     resolved.container.register_instance(sessions, name="browser_sessions")
     resolved.container.register_instance(state, name="navigation_state")
     resolved.container.register_instance(navigation, name="navigation_manager")
+    resolved.container.register_instance(elements, name="element_engine")
 
     _LOGGER.info(
         "browser_context_ready",
@@ -130,6 +140,13 @@ def _navigation_health(state: StateManager, settings: BrowserSettings) -> Any:
                 "allowed_schemes": settings.navigation.allowed_schemes,
             },
         }
+
+    return health
+
+
+def _elements_health(elements: ElementEngine) -> Any:
+    async def health() -> dict[str, Any]:
+        return {"cache": elements.cache_stats()}
 
     return health
 

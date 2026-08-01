@@ -1,10 +1,15 @@
-"""Shared test runtime builders for the navigation package."""
+"""Shared test runtime builders for the navigation and element packages."""
 
 from __future__ import annotations
 
 from types import SimpleNamespace
 from typing import Any
 
+from browser_mcp.browser.elements.engine import ElementEngine
+from browser_mcp.browser.elements.locators.registry import LocatorRegistry
+from browser_mcp.browser.elements.properties import ElementProperties
+from browser_mcp.browser.elements.resolver import LocatorResolver
+from browser_mcp.browser.elements.state import ElementState
 from browser_mcp.browser.models import (
     BrowserHandle,
     BrowserState,
@@ -28,7 +33,7 @@ from browser_mcp.browser.pool import BrowserPool
 from browser_mcp.browser.session import SessionRecord
 from browser_mcp.config.models import BrowserEngine, BrowserProfile, BrowserSettings
 from browser_mcp.errors import SessionNotFoundError
-from tests.fakes import FakePage
+from tests.fakes import FakeLocatorProvider, FakePage
 
 
 class FakeSessions:
@@ -153,7 +158,9 @@ async def build_runtime(
         ),
     )
     windows = WindowManager(pool, state, pages, events, resolved_settings)
-    interactions = InteractionManager(state, frames, events, resolved_settings)
+    registry = LocatorRegistry(FakeLocatorProvider())
+    engine = ElementEngine(state, frames, registry, events, resolved_settings)
+    interactions = InteractionManager(state, frames, events, resolved_settings, engine)
     waiting = WaitingManager(state, windows, events, resolved_settings)
 
     return {
@@ -173,4 +180,9 @@ async def build_runtime(
         "session_id": session_id,
         "context_id": context_id,
         "browser_id": browser_id,
+        "registry": registry,
+        "engine": engine,
+        "properties": ElementProperties(registry.provider),
+        "element_state": ElementState(registry.provider),
+        "resolver": LocatorResolver(frames, engine),
     }

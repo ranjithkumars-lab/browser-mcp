@@ -114,6 +114,7 @@ src/enterprise_mcp/
 - [Folder Structure](docs/Folder-Structure.md)
 - [Production Checklist](docs/Production-Checklist.md)
 - [ADR index](docs/adr/)
+- [Element Engine](docs/elements/overview.md)
 
 ## License
 

@@ -14,8 +14,12 @@ __all__ = [
     "ContextError",
     "ContextNotFoundError",
     "DownloadError",
+    "ElementError",
+    "ElementNotFoundError",
+    "ElementStateError",
     "FrameError",
     "InteractionError",
+    "InvalidLocatorStrategyError",
     "NavigationError",
     "NavigationTimeoutError",
     "PageError",
@@ -25,6 +29,7 @@ __all__ = [
     "ProfileError",
     "SessionError",
     "SessionNotFoundError",
+    "StaleElementReferenceError",
 ]
 
 
@@ -86,6 +91,26 @@ class PolicyViolationError(NavigationError):
 
 class DownloadError(NavigationError):
     """Raised when a download cannot be awaited or resolved."""
+
+
+class ElementError(PageError):
+    """Base class for element finding and property extraction failures."""
+
+
+class ElementNotFoundError(ElementError):
+    """Raised when a locator resolves to no element."""
+
+
+class InvalidLocatorStrategyError(ElementError):
+    """Raised when an unknown locator strategy name is requested."""
+
+
+class ElementStateError(ElementError):
+    """Raised when an element property or state query fails."""
+
+
+class StaleElementReferenceError(ElementError):
+    """Raised when a cached ``element_id`` no longer refers to a live page."""
 
 
 class SessionError(BrowserError):

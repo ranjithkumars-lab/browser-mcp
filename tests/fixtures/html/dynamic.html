@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dynamic Page</title>
+</head>
+<body>
+  <h1 id="title">Dynamic Page</h1>
+  <p>This page mutates its DOM after load to exercise auto-waiting and stale
+  element handling.</p>
+
+  <div id="loading">Loading…</div>
+  <ul id="results"></ul>
+  <div id="status"></div>
+
+  <script>
+    // Replace #loading content shortly after load.
+    setTimeout(function () {
+      document.getElementById('loading').textContent = 'Done loading';
+    }, 150);
+
+    // Append list items one second after load.
+    setTimeout(function () {
+      const ul = document.getElementById('results');
+      for (let i = 1; i <= 3; i++) {
+        const li = document.createElement('li');
+        li.className = 'result-item';
+        li.textContent = 'Result ' + i;
+        ul.appendChild(li);
+      }
+    }, 400);
+
+    // Reveal a button two seconds after load.
+    setTimeout(function () {
+      const btn = document.createElement('button');
+      btn.id = 'late-button';
+      btn.textContent = 'Late Button';
+      document.getElementById('status').appendChild(btn);
+    }, 600);
+  </script>
+</body>
+</html>
