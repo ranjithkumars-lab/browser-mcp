@@ -1,10 +1,10 @@
-# Developer Onboarding: Browser MCP (Phases 1-8)
+# Developer Onboarding: Browser MCP (Phases 1-9)
 
 Welcome to the **Browser MCP** project! 
 
-You are joining the project at an exciting time. We have completed Phases 1 through 8, establishing an enterprise-grade **Browser Platform** equipped with a Plugin Framework, **Form Automation (Phase 4)**, **Web Scraping (Phase 5)**, **Authentication Engine (Phase 6)**, **Download/Upload Engine (Phase 7)**, and **Browser Events Engine (Phase 8)**.
+You are joining the project at an exciting time. We have completed Phases 1 through 9, establishing an enterprise-grade **Browser Platform** equipped with an Enhanced Plugin Framework, **Form Automation (Phase 4)**, **Web Scraping (Phase 5)**, **Authentication Engine (Phase 6)**, **Download/Upload Engine (Phase 7)**, and **Browser Events Engine (Phase 8)**.
 
-This document will walk you through the architectural evolution from Phase 1 to Phase 8.
+This document will walk you through the architectural evolution from Phase 1 to Phase 9.
 
 ---
 
@@ -26,7 +26,7 @@ The **Element Engine** (`src/browser_mcp/browser/elements/`) resolves DOM elemen
 
 ---
 
-## 3. The Plugin Framework & Form Automation (Phase 4)
+## 3. The Minimal Plugin Framework & Form Automation (Phase 4)
 
 Phase 4 introduced a **Minimal Plugin Framework** (`src/browser_mcp/plugins/`) and deployed **Form Automation** using verb-oriented tools (`browser.form.fill`, `browser.form.submit`, `browser.form.check`).
 
@@ -54,18 +54,23 @@ Phase 7 introduced the **Download / Upload Engine** (`src/browser_mcp/transfer/`
 
 Phase 8 introduced the **Browser Events Engine** (`src/browser_mcp/events/`), formalizing and extending the platform's core `EventBus` into a domain-aware event infrastructure.
 
+---
+
+## 8. The Enhanced Plugin Framework & Execution Engine (Phase 9)
+
+Phase 9 elevated the minimal plugin system into an enterprise plugin runtime (`src/browser_mcp/plugins/`).
+
 ### Architecture Highlights
-1. **Provider Abstraction (`EventProvider`)**: Insulates event dispatch (`InMemoryEventProvider`, with `RedisEventProvider` reserved).
-2. **Event Router (`EventRouter`)**: Managed subscriber registry supporting topic pattern matching (`page.*`, `transfer.#`, `*`), priority queueing, and dispatch.
-3. **Middleware Pipeline (`EventMiddleware`)**: Supports `LoggingMiddleware`, `MetricsMiddleware`, `AuditMiddleware`, and `SamplingMiddleware`.
-4. **Causality & Tracing**: Includes `correlation_id`, `parent_event_id`, and `trace_id` metadata.
-5. **In-Memory Ring Buffer (`EventHistoryStore`)**: Retains historical events for log inspection and stream tailing (`browser.events.replay`).
-6. **Real-time Streaming (`EventStreamAdapter`)**: Formats event serializations for WebSocket and SSE live streams.
-7. **MCP Tools**: `browser.events.listen`, `browser.events.query`, `browser.events.replay`.
+1. **Plugin Runtime (`PluginRuntime`)**: Dedicated isolated runtime encapsulating lifecycle ownership and context injection (`BrowserManager`, `AuthManager`, `TransferManager`, `BrowserEventManager`, etc.).
+2. **Security & Permissions**: Cryptographic signature validation (`SignatureVerifier`), typed permission scopes (`PluginPermission`), and strict sandbox enforcement (`SandboxPolicy`).
+3. **Dependency & Schema Engines**: Dependency resolution graph (`DependencyResolver`) and strict JSON Schema validation for inputs/outputs (`PluginSchemaValidator`).
+4. **Separated Registries**: `InstalledPluginRegistry` (on-disk manifest index) vs `ActivePluginRegistry` (running plugin runtimes).
+5. **Metadata Caching**: Fast in-memory manifest caching (`PluginMetadataStore`).
+6. **MCP Tools**: `browser.plugins.list`, `browser.plugins.info`, `browser.plugins.execute`, `browser.plugins.reload`.
 
 ---
 
-## 8. Verification Standard
+## 9. Verification Standard
 
 The codebase is fully verified:
 - **Pyright**: 0 errors, 0 warnings.

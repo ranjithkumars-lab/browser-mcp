@@ -67,3 +67,23 @@ class PluginRegistry:
             except Exception as exc:
                 results[name] = {"healthy": False, "error": str(exc)}
         return results
+
+
+class InstalledPluginRegistry:
+    def __init__(self) -> None: self._manifests: dict[str, Any] = {}
+    def register(self, manifest: Any) -> None: self._manifests[manifest.name] = manifest
+    def get(self, name: str) -> Any: return self._manifests[name]
+    def names(self) -> list[str]: return list(self._manifests)
+    def all(self) -> dict[str, Any]: return dict(self._manifests)
+
+
+class ActivePluginRegistry(PluginRegistry):
+    """Explicit name for the runtime registry; retains PluginRegistry API."""
+
+    def register(self, name: str, plugin: Any) -> None:
+        if name in self._plugins:
+            raise ValueError(f"Plugin '{name}' is already registered")
+        self._plugins[name] = plugin  # type: ignore[assignment]
+
+    def get(self, name: str) -> Any:
+        return super().get(name)

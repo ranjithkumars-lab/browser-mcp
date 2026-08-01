@@ -35,6 +35,8 @@ from browser_mcp.config.models import BrowserSettings
 from browser_mcp.plugins.scraper.actions import ScraperActions
 from browser_mcp.plugins.scraper.sizer import PayloadSizer
 from browser_mcp.plugins.scraper.tools import ScraperToolkit
+from browser_mcp.plugins.manager import PluginLifecycleManager
+from browser_mcp.plugins.tools import PluginToolkit
 from browser_mcp.auth.manager import AuthManager
 from browser_mcp.auth.provider import PlaywrightAuthProvider
 from browser_mcp.auth.storage.encryption import AuthEncryptionEngine
@@ -166,6 +168,8 @@ def create_browser_context(
     # Preserve every existing EventBus publisher; the typed engine observes it.
     events.subscribe(None, event_manager.publish_domain_event)
     resolved.container.register_instance(event_manager, name="event_manager")
+    plugin_manager = PluginLifecycleManager()
+    resolved.container.register_instance(plugin_manager, name="plugin_manager")
 
     lifecycle = BrowserToolkit(sessions)
     lifecycle.register(resolved.tools)
@@ -184,6 +188,7 @@ def create_browser_context(
     auth_toolkit.register(resolved.tools)
     TransferToolkit(transfer_manager, pool, sessions).register(resolved.tools)
     EventsToolkit(event_manager).register(resolved.tools)
+    PluginToolkit(plugin_manager).register(resolved.tools)
 
     resolved.container.register_instance(sessions, name="browser_sessions")
     resolved.container.register_instance(state, name="navigation_state")

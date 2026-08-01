@@ -13,6 +13,7 @@ from browser_mcp.config.defaults import ENV_VAR_PREFIX
 __all__ = [
     "AuthConfig",
     "EventsConfig",
+    "PluginsConfig",
     "TransferConfig",
     "BrowserConfig",
     "BrowserEngine",
@@ -107,6 +108,17 @@ class EventsConfig(BaseModel):
     drop_policy: str = Field(default="drop_oldest")
     enable_metrics: bool = True
     enable_streaming: bool = True
+
+
+class PluginsConfig(BaseModel):
+    plugin_directory: str = "~/.browser-mcp/plugins"
+    auto_discover: bool = True
+    auto_reload: bool = True
+    marketplace_enabled: bool = False
+    verify_signatures: bool = False
+    allow_unsigned: bool = True
+    max_execution_time_seconds: float = Field(default=30.0, gt=0)
+    max_memory_mb: int = Field(default=256, ge=1)
 
 
 class BrowserConfig(BaseModel):
@@ -238,3 +250,4 @@ class BrowserSettings(BaseSettings):
     auth: AuthConfig = Field(default_factory=AuthConfig)
     transfer: TransferConfig = Field(default_factory=TransferConfig)
     events: EventsConfig = Field(default_factory=EventsConfig)
+    plugins: PluginsConfig = Field(default_factory=PluginsConfig)

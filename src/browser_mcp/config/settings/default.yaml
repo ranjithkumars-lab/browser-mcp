@@ -55,3 +55,13 @@ events:
   drop_policy: drop_oldest
   enable_metrics: true
   enable_streaming: true
+
+plugins:
+  plugin_directory: "~/.browser-mcp/plugins"
+  auto_discover: true
+  auto_reload: true
+  marketplace_enabled: false
+  verify_signatures: false
+  allow_unsigned: true
+  max_execution_time_seconds: 30.0
+  max_memory_mb: 256
