@@ -16,3 +16,7 @@ class JobModel(BaseModel):
     progress: float = Field(default=0, ge=0, le=100)
     result: object | None = None
     error: str | None = None
+    worker_id: str | None = None
+    claimed_at: datetime | None = None
+    heartbeat: datetime | None = None
+    lease_expiration: datetime | None = None

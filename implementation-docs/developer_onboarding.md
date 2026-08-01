@@ -1,8 +1,8 @@
-# Developer Onboarding: Browser MCP (Phases 1-11)
+# Developer Onboarding: Browser MCP (Phases 1-12)
 
 Welcome to the **Browser MCP** project! 
 
-You are joining the project at an exciting time. We have completed Phases 1 through 11, establishing an enterprise-grade **Browser Platform** equipped with an Enhanced Plugin Framework, **Form Automation (Phase 4)**, **Web Scraping (Phase 5)**, **Authentication Engine (Phase 6)**, **Download/Upload Engine (Phase 7)**, **Browser Events Engine (Phase 8)**, the **MCP Server Integration (Phase 10)**, and the **REST API Engine (Phase 11)**.
+You are joining the project at an exciting time. We have completed Phases 1 through 12, establishing an enterprise-grade **Browser Platform** equipped with an Enhanced Plugin Framework, **Form Automation (Phase 4)**, **Web Scraping (Phase 5)**, **Authentication Engine (Phase 6)**, **Download/Upload Engine (Phase 7)**, **Browser Events Engine (Phase 8)**, the **MCP Server Integration (Phase 10)**, the **REST API Engine (Phase 11)**, and the **Distributed Worker System (Phase 12)**.
 
 This document will walk you through the architectural evolution from Phase 1 to Phase 11.
 
@@ -89,9 +89,20 @@ Phase 11 introduces a FastAPI-based **REST API Engine** (`src/browser_mcp/api/`)
 4. **Event Streaming**: `GET /api/v1/events/stream` bridges internal `BrowserEventManager` to HTTP SSE.
 5. **API Key Authentication**: Configurable auth validation injected via FastAPI dependencies.
 
+## 11. The Distributed Worker System (Phase 12)
+
+Phase 12 evolves the REST API's async execution into a fully distributed **Worker System** (`src/browser_mcp/workers/`), enabling horizontally scalable, independent browser execution nodes backed by Redis.
+
+### Architecture Highlights
+1. **Redis Integration**: The system leverages Redis (`redis.asyncio`) via a `BrokerProvider` abstraction for queueing, DLQ, and atomic job locking.
+2. **Dedicated Workers (`WorkerManager`)**: Worker processes operate completely independently of the REST API. They boot their own `AppContext` and execute jobs in isolated `BrowserSession` instances up to a configured concurrency limit.
+3. **Resilience & Observability**: Includes exponential backoff retries, Dead Letter Queue (DLQ), lease expirations for zombie job recovery, and complete EventBus telemetry (`worker.job.claimed`, `worker.job.completed`).
+4. **Task Scheduler**: Distinguishes scheduled cron triggers (`scheduler/models.py`) from runtime queued jobs, allowing for deferred and recurring automation tasks.
+5. **CLI Integration**: Fully controllable via standard commands (`browser-mcp worker start`, `drain`, `retry`, `purge-dlq`).
+
 ---
 
-## 11. Verification Standard
+## 12. Verification Standard
 
 The codebase is fully verified:
 - **Pyright**: 0 errors, 0 warnings.
