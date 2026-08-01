@@ -10,7 +10,7 @@ services:
       ENTERPRISE_MCP_ENV: development
       ENTERPRISE_MCP_SERVER__TRANSPORTS__PORT: 0
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - ./config:/app/config:ro
     restart: unless-stopped
@@ -31,7 +31,7 @@ services:
       BROWSER_MCP_ENV: development
       BROWSER_MCP_API__PORT: 0
     ports:
-      - "8080:8080"
+      - "8081:8080"
     volumes:
       - ./config:/app/config:ro
       - ui-dist:/app/ui/dist
@@ -45,7 +45,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis-data:/data
     restart: unless-stopped

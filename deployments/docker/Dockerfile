@@ -11,7 +11,7 @@ WORKDIR /app
 # Install the project and its dependencies.
 COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
-RUN uv sync --frozen --no-dev --no-install-project
+RUN uv sync --frozen --no-dev
 
 # Build UI
 FROM node:20-slim AS ui-builder
