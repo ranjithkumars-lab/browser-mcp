@@ -1,10 +1,10 @@
-# Developer Onboarding: Browser MCP (Phases 1-9)
+# Developer Onboarding: Browser MCP (Phases 1-10)
 
 Welcome to the **Browser MCP** project! 
 
-You are joining the project at an exciting time. We have completed Phases 1 through 9, establishing an enterprise-grade **Browser Platform** equipped with an Enhanced Plugin Framework, **Form Automation (Phase 4)**, **Web Scraping (Phase 5)**, **Authentication Engine (Phase 6)**, **Download/Upload Engine (Phase 7)**, and **Browser Events Engine (Phase 8)**.
+You are joining the project at an exciting time. We have completed Phases 1 through 10, establishing an enterprise-grade **Browser Platform** equipped with an Enhanced Plugin Framework, **Form Automation (Phase 4)**, **Web Scraping (Phase 5)**, **Authentication Engine (Phase 6)**, **Download/Upload Engine (Phase 7)**, **Browser Events Engine (Phase 8)**, and the **MCP Server Integration (Phase 10)**.
 
-This document will walk you through the architectural evolution from Phase 1 to Phase 9.
+This document will walk you through the architectural evolution from Phase 1 to Phase 10.
 
 ---
 
@@ -58,23 +58,31 @@ Phase 8 introduced the **Browser Events Engine** (`src/browser_mcp/events/`), fo
 
 ## 8. The Enhanced Plugin Framework & Execution Engine (Phase 9)
 
-Phase 9 elevated the minimal plugin system into an enterprise plugin runtime (`src/browser_mcp/plugins/`).
-
-### Architecture Highlights
-1. **Plugin Runtime (`PluginRuntime`)**: Dedicated isolated runtime encapsulating lifecycle ownership and context injection (`BrowserManager`, `AuthManager`, `TransferManager`, `BrowserEventManager`, etc.).
-2. **Security & Permissions**: Cryptographic signature validation (`SignatureVerifier`), typed permission scopes (`PluginPermission`), and strict sandbox enforcement (`SandboxPolicy`).
-3. **Dependency & Schema Engines**: Dependency resolution graph (`DependencyResolver`) and strict JSON Schema validation for inputs/outputs (`PluginSchemaValidator`).
-4. **Separated Registries**: `InstalledPluginRegistry` (on-disk manifest index) vs `ActivePluginRegistry` (running plugin runtimes).
-5. **Metadata Caching**: Fast in-memory manifest caching (`PluginMetadataStore`).
-6. **MCP Tools**: `browser.plugins.list`, `browser.plugins.info`, `browser.plugins.execute`, `browser.plugins.reload`.
+Phase 9 elevated the minimal plugin system into an enterprise plugin runtime (`src/browser_mcp/plugins/`), including isolated `PluginRuntime`, `SandboxPolicy`, `SignatureVerifier`, and strict JSON Schema validation.
 
 ---
 
-## 9. Verification Standard
+## 9. The MCP Server Integration (Phase 10)
+
+Phase 10 establishes the official **MCP Server** (`src/browser_mcp/server/`) to expose the Browser Core to external AI agents using the standard Model Context Protocol.
+
+### Architecture Highlights
+1. **Server Orchestrator (`BrowserMCPServer`)**: The primary server orchestrating tools, events, and sessions.
+2. **Transport Abstraction (`TransportProvider`)**: Abstracted network layer supporting:
+   - `StreamableHttpTransport` (Primary remote transport).
+   - `StdioTransport` (Local sub-process clients).
+   - `SseTransport` (Legacy compatibility).
+3. **Registry & Capabilities**: `ToolRegistry` managing scoped endpoints, and `CapabilityRegistry` handling protocol handshaking (Tools, Notifications, Resources).
+4. **Notification Routing (`NotificationManager`)**: Bridges internal `BrowserEventManager` to MCP clients with active filtering and batching.
+5. **Deterministic Error Translation**: Enforces mapping from internal `BrowserError` subclasses to standard JSON-RPC MCP errors.
+
+---
+
+## 10. Verification Standard
 
 The codebase is fully verified:
 - **Pyright**: 0 errors, 0 warnings.
-- **Pytest**: 524 passed tests (100% green).
+- **Pytest**: 100% green pass.
 
 
 

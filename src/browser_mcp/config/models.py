@@ -14,6 +14,7 @@ __all__ = [
     "AuthConfig",
     "EventsConfig",
     "PluginsConfig",
+    "ServerConfig",
     "TransferConfig",
     "BrowserConfig",
     "BrowserEngine",
@@ -119,6 +120,19 @@ class PluginsConfig(BaseModel):
     allow_unsigned: bool = True
     max_execution_time_seconds: float = Field(default=30.0, gt=0)
     max_memory_mb: int = Field(default=256, ge=1)
+
+
+class ServerConfig(BaseModel):
+    default_transport: str = "stdio"
+    protocol_version: str = "2025-06"
+    host: str = "127.0.0.1"
+    port: int = Field(default=8000, ge=1, le=65535)
+    request_timeout: float = Field(default=30.0, gt=0)
+    max_connections: int = Field(default=100, ge=1)
+    stream_buffer_size: int = Field(default=1000, ge=1)
+    enable_notifications: bool = True
+    enable_resources: bool = False
+    enable_prompts: bool = False
 
 
 class BrowserConfig(BaseModel):
@@ -251,3 +265,4 @@ class BrowserSettings(BaseSettings):
     transfer: TransferConfig = Field(default_factory=TransferConfig)
     events: EventsConfig = Field(default_factory=EventsConfig)
     plugins: PluginsConfig = Field(default_factory=PluginsConfig)
+    server: ServerConfig = Field(default_factory=ServerConfig)
