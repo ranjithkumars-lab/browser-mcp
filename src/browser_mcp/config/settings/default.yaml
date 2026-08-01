@@ -20,3 +20,20 @@ profiles:
   directory: "~/.browser-mcp/profiles"
   default_profile: temporary
   default_persistent: false
+
+navigation:
+  allowed_domains: []
+  blocked_domains: []
+  allow_redirects: true
+  max_redirects: 10
+  allowed_schemes: ["http", "https", "file"]
+  default_strategy: normal
+  blocked_extensions: []
+  allowed_ports: []
+  max_navigation_depth: null
+
+timeouts:
+  default_timeout_ms: 30000
+  navigation_timeout_ms: 30000
+  interaction_timeout_ms: 10000
+  wait_timeout_ms: 10000

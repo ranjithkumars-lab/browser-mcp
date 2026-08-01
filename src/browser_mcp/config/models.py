@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -14,8 +15,11 @@ __all__ = [
     "BrowserEngine",
     "BrowserProfile",
     "BrowserSettings",
+    "NavigationConfig",
+    "NavigationStrategy",
     "PoolConfig",
     "ProfilesConfig",
+    "TimeoutConfig",
     "ViewportConfig",
 ]
 
@@ -34,6 +38,29 @@ class BrowserProfile(StrEnum):
     TEMPORARY = "temporary"
     PERSISTENT = "persistent"
     INCOGNITO = "incognito"
+
+
+class NavigationStrategy(StrEnum):
+    """Vendor-neutral navigation wait strategies.
+
+    Maps onto Playwright's ``wait_until`` values:
+
+    - ``fast``: wait for ``domcontentloaded``
+    - ``normal``: wait for ``load``
+    - ``complete``: wait for ``networkidle``
+    """
+
+    FAST = "fast"
+    NORMAL = "normal"
+    COMPLETE = "complete"
+
+    def wait_until(self) -> Literal["domcontentloaded", "load", "networkidle"]:
+        """Return the underlying ``wait_until`` value for this strategy."""
+        if self is NavigationStrategy.FAST:
+            return "domcontentloaded"
+        if self is NavigationStrategy.COMPLETE:
+            return "networkidle"
+        return "load"
 
 
 class ViewportConfig(BaseModel):
@@ -76,6 +103,76 @@ class ProfilesConfig(BaseModel):
     default_persistent: bool = False
 
 
+class TimeoutConfig(BaseModel):
+    """Global browser operation timeouts (milliseconds)."""
+
+    default_timeout_ms: int = Field(
+        default=30_000,
+        ge=1,
+        description="Default timeout applied when a caller does not specify one.",
+    )
+    navigation_timeout_ms: int = Field(
+        default=30_000,
+        ge=1,
+        description="Timeout for goto/reload/back/forward operations.",
+    )
+    interaction_timeout_ms: int = Field(
+        default=10_000,
+        ge=1,
+        description="Timeout for clicks, hovers, scrolls and other interactions.",
+    )
+    wait_timeout_ms: int = Field(
+        default=10_000,
+        ge=1,
+        description="Timeout for wait_* operations that do not override it.",
+    )
+
+
+class NavigationConfig(BaseModel):
+    """Enterprise navigation boundaries and defaults.
+
+    ``blocked_extensions``, ``allowed_ports`` and ``max_navigation_depth`` are
+    reserved for future enforcement; they are parsed and validated now but not
+    yet applied by the navigation policy.
+    """
+
+    allowed_domains: list[str] = Field(
+        default_factory=list[str],
+        description="Domains navigation is restricted to; empty allows all.",
+    )
+    blocked_domains: list[str] = Field(
+        default_factory=list[str],
+        description="Domains navigation is never allowed to visit.",
+    )
+    allow_redirects: bool = Field(
+        default=True,
+        description="Whether server-side redirects are followed.",
+    )
+    max_redirects: int = Field(
+        default=10,
+        ge=0,
+        description="Maximum redirect hops permitted during a navigation.",
+    )
+    allowed_schemes: list[str] = Field(
+        default_factory=lambda: ["http", "https", "file"],
+        description="URL schemes navigation may use.",
+    )
+    default_strategy: NavigationStrategy = NavigationStrategy.NORMAL
+    blocked_extensions: list[str] = Field(
+        default_factory=list[str],
+        description="Reserved: file extensions navigation is not allowed to load.",
+    )
+    allowed_ports: list[int] = Field(
+        default_factory=list[int],
+        description="Reserved: ports navigation is restricted to; empty allows all.",
+    )
+    max_navigation_depth: int | None = Field(
+        default=None,
+        ge=1,
+        description="Reserved: maximum navigation depth from the session root.",
+    )
+
+
 class BrowserSettings(BaseSettings):
     """Root browser settings.
 
@@ -97,3 +194,5 @@ class BrowserSettings(BaseSettings):
     browser: BrowserConfig = Field(default_factory=BrowserConfig)
     pool: PoolConfig = Field(default_factory=PoolConfig)
     profiles: ProfilesConfig = Field(default_factory=ProfilesConfig)
+    navigation: NavigationConfig = Field(default_factory=NavigationConfig)
+    timeouts: TimeoutConfig = Field(default_factory=TimeoutConfig)

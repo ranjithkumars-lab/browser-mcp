@@ -15,6 +15,7 @@ business logic — downstream servers fork it and add their own capabilities.
 - [Folder Structure](Folder-Structure.md)
 - [Production Checklist](Production-Checklist.md)
 - [Architecture Decision Records](adr/index.md)
+- [Navigation Engine](navigation/overview.md)
 
 ## Quick Start
 

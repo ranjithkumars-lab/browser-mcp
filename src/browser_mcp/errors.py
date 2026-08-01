@@ -13,9 +13,15 @@ __all__ = [
     "BrowserPoolLimitError",
     "ContextError",
     "ContextNotFoundError",
+    "DownloadError",
+    "FrameError",
+    "InteractionError",
     "NavigationError",
+    "NavigationTimeoutError",
     "PageError",
     "PageNotFoundError",
+    "PolicyViolationError",
+    "PopupError",
     "ProfileError",
     "SessionError",
     "SessionNotFoundError",
@@ -56,6 +62,30 @@ class PageNotFoundError(PageError):
 
 class NavigationError(PageError):
     """Raised when a navigation (goto/reload/back/forward) fails."""
+
+
+class NavigationTimeoutError(NavigationError):
+    """Raised when a navigation or wait operation exceeds its timeout."""
+
+
+class FrameError(NavigationError):
+    """Raised when a frame or iframe operation fails."""
+
+
+class PopupError(NavigationError):
+    """Raised when a popup (new window/tab) cannot be resolved."""
+
+
+class InteractionError(NavigationError):
+    """Raised when a user interaction (click/hover/scroll) fails."""
+
+
+class PolicyViolationError(NavigationError):
+    """Raised when navigation violates a configured navigation policy."""
+
+
+class DownloadError(NavigationError):
+    """Raised when a download cannot be awaited or resolved."""
 
 
 class SessionError(BrowserError):

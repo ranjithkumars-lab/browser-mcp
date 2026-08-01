@@ -114,27 +114,19 @@ class BrowserPool:
         """Register ``handle``, enforcing the browser capacity limit."""
         async with self._lock:
             if handle.browser_id in self._browsers:
-                raise BrowserPoolLimitError(
-                    f"browser '{handle.browser_id}' is already registered"
-                )
+                raise BrowserPoolLimitError(f"browser '{handle.browser_id}' is already registered")
             if len(self._browsers) >= self.max_browsers:
-                raise BrowserPoolLimitError(
-                    f"browser pool capacity reached ({self.max_browsers})"
-                )
+                raise BrowserPoolLimitError(f"browser pool capacity reached ({self.max_browsers})")
             self._browsers[handle.browser_id] = handle
 
     async def add_context(self, handle: ContextHandle) -> None:
         """Register a context under its owning browser."""
         async with self._lock:
             if handle.context_id in self._contexts:
-                raise BrowserPoolLimitError(
-                    f"context '{handle.context_id}' is already registered"
-                )
+                raise BrowserPoolLimitError(f"context '{handle.context_id}' is already registered")
             browser = self._browsers.get(handle.browser_id)
             if browser is None:
-                raise BrowserNotFoundError(
-                    f"browser '{handle.browser_id}' not found for context"
-                )
+                raise BrowserNotFoundError(f"browser '{handle.browser_id}' not found for context")
             if len(browser.state.contexts) >= self.max_contexts_per_browser:
                 raise BrowserPoolLimitError(
                     f"context capacity reached for browser '{handle.browser_id}'"
@@ -146,14 +138,10 @@ class BrowserPool:
         """Register a page under its owning context."""
         async with self._lock:
             if handle.page_id in self._pages:
-                raise BrowserPoolLimitError(
-                    f"page '{handle.page_id}' is already registered"
-                )
+                raise BrowserPoolLimitError(f"page '{handle.page_id}' is already registered")
             context = self._contexts.get(handle.context_id)
             if context is None:
-                raise ContextNotFoundError(
-                    f"context '{handle.context_id}' not found for page"
-                )
+                raise ContextNotFoundError(f"context '{handle.context_id}' not found for page")
             if len(context.state.pages) >= self.max_pages_per_context:
                 raise BrowserPoolLimitError(
                     f"page capacity reached for context '{handle.context_id}'"
@@ -194,9 +182,7 @@ class BrowserPool:
                 return
             context = self._contexts.get(handle.context_id)
             if context is not None:
-                context.state.pages = [
-                    p for p in context.state.pages if p.page_id != page_id
-                ]
+                context.state.pages = [p for p in context.state.pages if p.page_id != page_id]
 
     # -- statistics -----------------------------------------------------
 

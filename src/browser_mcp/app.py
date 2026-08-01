@@ -14,6 +14,14 @@ import structlog
 from browser_mcp.browser.context import ContextManager
 from browser_mcp.browser.factory import BrowserFactory
 from browser_mcp.browser.manager import BrowserManager
+from browser_mcp.browser.navigation.frames import FrameManager
+from browser_mcp.browser.navigation.history import HistoryManager
+from browser_mcp.browser.navigation.interactions import InteractionManager
+from browser_mcp.browser.navigation.manager import NavigationManager
+from browser_mcp.browser.navigation.policy import NavigationPolicy
+from browser_mcp.browser.navigation.state import StateManager
+from browser_mcp.browser.navigation.waiting import WaitingManager
+from browser_mcp.browser.navigation.windows import WindowManager
 from browser_mcp.browser.page import PageManager
 from browser_mcp.browser.pool import BrowserPool
 from browser_mcp.browser.profile import ProfileManager
@@ -22,6 +30,7 @@ from browser_mcp.browser.session import SessionManager
 from browser_mcp.config.loader import load_browser_settings
 from browser_mcp.config.models import BrowserSettings
 from browser_mcp.tools.browser import BrowserToolkit
+from browser_mcp.tools.navigation import NavigationToolkit
 from enterprise_mcp.foundation.app import AppContext
 
 __all__ = ["create_browser_app", "create_browser_context"]
@@ -54,16 +63,34 @@ def create_browser_context(
     pages = PageManager(pool, factory)
     sessions = SessionManager(pool, browsers, contexts, pages)
 
+    events = resolved.events
+    state = StateManager(pool, sessions, browser_settings)
+    policy = NavigationPolicy(browser_settings)
+    frames = FrameManager(state, events, browser_settings)
+    navigation = NavigationManager(state, policy, events, browser_settings)
+    history = HistoryManager(state, events, browser_settings)
+    windows = WindowManager(pool, state, pages, events, browser_settings)
+    interactions = InteractionManager(state, frames, events, browser_settings)
+    waiting = WaitingManager(state, windows, events, browser_settings)
+
     resolved.register_startup_hook(factory.start)
     resolved.register_shutdown_hook(factory.stop)
     resolved.register_shutdown_hook(sessions.stop)
     resolved.register_health_provider(
         "browser_pool", _browser_pool_health(sessions, browser_settings)
     )
+    resolved.register_health_provider("navigation", _navigation_health(state, browser_settings))
 
-    toolkit = BrowserToolkit(sessions)
-    toolkit.register(resolved.tools)
+    lifecycle = BrowserToolkit(sessions)
+    lifecycle.register(resolved.tools)
+    navigation_toolkit = NavigationToolkit(
+        navigation, history, frames, windows, interactions, waiting
+    )
+    navigation_toolkit.register(resolved.tools)
+
     resolved.container.register_instance(sessions, name="browser_sessions")
+    resolved.container.register_instance(state, name="navigation_state")
+    resolved.container.register_instance(navigation, name="navigation_manager")
 
     _LOGGER.info(
         "browser_context_ready",
@@ -84,6 +111,23 @@ def _browser_pool_health(sessions: SessionManager, settings: BrowserSettings) ->
             "playwright_binary": {
                 "installed": check.installed,
                 "detail": check.detail,
+            },
+        }
+
+    return health
+
+
+def _navigation_health(state: StateManager, settings: BrowserSettings) -> Any:
+    async def health() -> dict[str, Any]:
+        return {
+            "metrics": state.metrics(),
+            "navigation": {
+                "default_strategy": settings.navigation.default_strategy.value,
+                "allowed_domains": settings.navigation.allowed_domains,
+                "blocked_domains": settings.navigation.blocked_domains,
+                "allow_redirects": settings.navigation.allow_redirects,
+                "max_redirects": settings.navigation.max_redirects,
+                "allowed_schemes": settings.navigation.allowed_schemes,
             },
         }
 

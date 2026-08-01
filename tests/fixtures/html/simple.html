@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Simple Page</title>
+</head>
+<body>
+  <h1 id="heading">Simple Page</h1>
+
+  <button id="click-me">Click Me</button>
+  <button id="dblclick-me">Double Click Me</button>
+  <button id="rightclick-me">Right Click Me</button>
+  <div id="click-output"></div>
+
+  <a id="home-link" href="simple.html">Home</a>
+  <a id="redirect-link" href="redirect.html">Redirect</a>
+
+  <p id="hover-target">hover me</p>
+  <div id="hover-output"></div>
+
+  <div id="scrollable" style="height:200px; overflow:auto;">
+    <p style="height:600px;">scroll content</p>
+    <button id="inside-scrollable">Inside Scrollable</button>
+  </div>
+
+  <p id="long-content" style="margin-top:2000px;">far away element</p>
+
+  <script>
+    document.getElementById('click-me').addEventListener('click', function () {
+      document.getElementById('click-output').textContent = 'clicked';
+    });
+    document.getElementById('dblclick-me').addEventListener('dblclick', function () {
+      document.getElementById('click-output').textContent = 'double-clicked';
+    });
+    document.getElementById('rightclick-me').addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+      document.getElementById('click-output').textContent = 'right-clicked';
+    });
+    document.getElementById('hover-target').addEventListener('mouseover', function () {
+      document.getElementById('hover-output').textContent = 'hovered';
+    });
+  </script>
+</body>
+</html>

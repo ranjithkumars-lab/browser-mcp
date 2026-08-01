@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable
-from typing import Any, TypeVar, get_type_hints
+from typing import Any, TypeVar, get_type_hints, overload
 
 from enterprise_mcp.tools.metadata import ToolMetadata, ToolParameter
 
@@ -13,6 +13,20 @@ F = TypeVar("F", bound=Callable[..., Any])
 __all__ = ["TOOL_ATTR", "get_tool_metadata", "tool"]
 
 TOOL_ATTR = "_enterprise_mcp_tool_metadata"
+
+
+@overload
+def tool(_func: F, /) -> F: ...  # noqa: UP047
+
+
+@overload
+def tool(
+    *,
+    name: str | None = None,
+    description: str = "",
+    returns: str = "json",
+    version: str = "1.0.0",
+) -> Callable[[F], F]: ...
 
 
 def tool(  # noqa: UP047 - PEP 695 syntax deferred for clarity of the dual usage pattern

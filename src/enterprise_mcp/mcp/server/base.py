@@ -6,7 +6,7 @@ HTTP ASGI application for mounting into the REST interface.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from enterprise_mcp.tools.registry import ToolRegistry
 from enterprise_mcp.transport.base import Transport
@@ -53,7 +53,7 @@ class MCPServer:
                 server_name=self.name,
             )
             self._transports["streamable-http"] = transport
-        return transport
+        return cast(StreamableHTTPTransport, transport)
 
     def asgi_app(self) -> Any:
         """Return the Streamable HTTP ASGI application."""

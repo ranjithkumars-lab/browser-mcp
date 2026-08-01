@@ -151,9 +151,7 @@ class SessionManager:
         browser_id = self.session_browser_id(session_id)
         handle = self._pool.get_context(context_id)
         if handle.browser_id != browser_id:
-            raise SessionError(
-                f"context '{context_id}' does not belong to session '{session_id}'"
-            )
+            raise SessionError(f"context '{context_id}' does not belong to session '{session_id}'")
         await self._contexts.close(context_id)
         return {"session_id": session_id, "context_id": context_id, "closed": True}
 
@@ -168,9 +166,7 @@ class SessionManager:
         browser_id = self.session_browser_id(session_id)
         handle = self._pool.get_context(context_id)
         if handle.browser_id != browser_id:
-            raise SessionError(
-                f"context '{context_id}' does not belong to session '{session_id}'"
-            )
+            raise SessionError(f"context '{context_id}' does not belong to session '{session_id}'")
         state = await self._pages.create(context_id, url=url)
         return {
             "session_id": session_id,
@@ -184,9 +180,7 @@ class SessionManager:
         browser_id = self.session_browser_id(session_id)
         handle = self._pool.get_page(page_id)
         if handle.browser_id != browser_id:
-            raise SessionError(
-                f"page '{page_id}' does not belong to session '{session_id}'"
-            )
+            raise SessionError(f"page '{page_id}' does not belong to session '{session_id}'")
         await self._pages.close(page_id)
         return {"session_id": session_id, "page_id": page_id, "closed": True}
 

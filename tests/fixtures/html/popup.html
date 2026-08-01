@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Popup Page</title>
+</head>
+<body>
+  <h1>Popup Page</h1>
+  <button id="open-popup">Open Popup</button>
+  <script>
+    document.getElementById('open-popup').addEventListener('click', function () {
+      window.open('simple.html', '_blank', 'width=400,height=300');
+    });
+  </script>
+</body>
+</html>

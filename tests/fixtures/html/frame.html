@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Frame Content</title>
+</head>
+<body>
+  <h1 id="frame-heading">Frame Content</h1>
+  <button id="frame-button">Frame Button</button>
+  <p id="frame-output"></p>
+  <script>
+    document.getElementById('frame-button').addEventListener('click', function () {
+      document.getElementById('frame-output').textContent = 'frame clicked';
+    });
+  </script>
+</body>
+</html>

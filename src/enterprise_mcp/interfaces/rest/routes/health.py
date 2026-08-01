@@ -19,9 +19,9 @@ async def _providers_payload(request: Request) -> dict[str, Any]:
     payload: dict[str, Any] = {}
     for name, provider in providers.items():
         try:
-            result = provider()
+            result: Any = provider()
             if isinstance(result, Awaitable):
-                result = await result
+                result = await result  # type: ignore[reportUnknownVariableType]
             payload[name] = result
         except Exception as exc:
             payload[name] = {"error": str(exc)}

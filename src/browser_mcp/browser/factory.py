@@ -134,9 +134,7 @@ class BrowserFactory:
                 f"failed to launch '{engine.value}': {exc}. "
                 + _MISSING_BINARY_HINT.format(engine=engine.value)
             ) from exc
-        self._logger.info(
-            "browser_launched", engine=engine.value, headless=config.headless
-        )
+        self._logger.info("browser_launched", engine=engine.value, headless=config.headless)
         return browser
 
     async def new_context(
@@ -165,9 +163,7 @@ class BrowserFactory:
         options = self._context_options(config)
         options.update(self._launch_options(config))
         try:
-            return await browser_type.launch_persistent_context(
-                str(user_data_dir), **options
-            )
+            return await browser_type.launch_persistent_context(str(user_data_dir), **options)
         except Exception as exc:
             raise ProfileError(
                 f"failed to launch persistent context at '{user_data_dir}': {exc}"
@@ -180,7 +176,7 @@ class BrowserFactory:
         except Exception as exc:
             raise BrowserError(f"failed to open page: {exc}") from exc
 
-    async def close_browser(self, browser: Browser) -> None:
+    async def close_browser(self, browser: Browser | BrowserContext) -> None:
         """Close ``browser`` and release its resources."""
         try:
             await browser.close()

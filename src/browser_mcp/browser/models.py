@@ -67,7 +67,7 @@ class ContextState:
     profile: BrowserProfile
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     status: Literal["open", "closed"] = "open"
-    pages: list[PageState] = field(default_factory=list)
+    pages: list[PageState] = field(default_factory=list[PageState])
 
 
 @dataclass(slots=True)
@@ -80,15 +80,15 @@ class BrowserState:
     profile: BrowserProfile
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     status: Literal["open", "closed"] = "open"
-    contexts: list[ContextState] = field(default_factory=list)
+    contexts: list[ContextState] = field(default_factory=list[ContextState])
 
 
 @dataclass(slots=True)
 class BrowserHandle:
-    """A live Playwright ``Browser`` plus its stable identifier."""
+    """A live Playwright ``Browser`` (or persistent ``BrowserContext``) + its stable identifier."""
 
     browser_id: str
-    browser: Browser
+    browser: Browser | BrowserContext
     state: BrowserState
 
 

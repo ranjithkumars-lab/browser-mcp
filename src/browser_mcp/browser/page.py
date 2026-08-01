@@ -5,9 +5,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from browser_mcp.browser.factory import BrowserFactory
 from browser_mcp.browser.models import PageHandle, PageState, new_page_id
 from browser_mcp.browser.pool import BrowserPool
+
+if TYPE_CHECKING:
+    from playwright.async_api import Page
 
 __all__ = ["PageManager"]
 
@@ -26,9 +31,7 @@ class PageManager:
     async def create(self, context_id: str, *, url: str | None = None) -> PageState:
         """Open a new page in ``context_id`` and optionally navigate to ``url``."""
         context_handle = self._pool.get_context(context_id)
-        page_id = new_page_id()
         page = await self._factory.new_page(context_handle.context)
-        state = PageState(page_id=page_id, context_id=context_id)
         if url:
             try:
                 await page.goto(url)
@@ -37,7 +40,18 @@ class PageManager:
                 from browser_mcp.errors import NavigationError
 
                 raise NavigationError(f"failed to navigate to '{url}': {exc}") from exc
-            state.url = url
+        return await self.register(context_id, page, url=url)
+
+    async def register(self, context_id: str, page: Page, *, url: str | None = None) -> PageState:
+        """Register an existing (e.g. popup) page in ``context_id``.
+
+        The live ``page`` is wrapped in a :class:`PageHandle` and added to the
+        pool so popups and externally-created pages participate in the normal
+        lifecycle and capacity limits.
+        """
+        context_handle = self._pool.get_context(context_id)
+        page_id = new_page_id()
+        state = PageState(page_id=page_id, context_id=context_id, url=url)
         handle = PageHandle(
             page_id=page_id,
             context_id=context_id,

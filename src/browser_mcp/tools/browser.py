@@ -120,8 +120,7 @@ class BrowserToolkit:
     @tool(
         name=f"{TOOL_NAMESPACE}.new_page",
         description=(
-            "Open a new page in a context. Optionally navigate to url. "
-            "Returns the page_id."
+            "Open a new page in a context. Optionally navigate to url. Returns the page_id."
         ),
         returns="json",
     )

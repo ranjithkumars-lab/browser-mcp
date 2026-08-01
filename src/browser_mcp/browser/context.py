@@ -7,6 +7,8 @@ configured profile and per-browser capacity limits.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
+
 from browser_mcp.browser.factory import BrowserFactory
 from browser_mcp.browser.models import (
     ContextHandle,
@@ -17,6 +19,9 @@ from browser_mcp.browser.pool import BrowserPool
 from browser_mcp.browser.profile import ProfileManager
 from browser_mcp.config.models import BrowserProfile, BrowserSettings
 from browser_mcp.errors import ContextError
+
+if TYPE_CHECKING:
+    from playwright.async_api import Browser
 
 __all__ = ["ContextManager"]
 
@@ -55,7 +60,7 @@ class ContextManager:
 
         context_id = new_context_id()
         context = await self._factory.new_context(
-            browser_handle.browser, profile_name, self._settings.browser
+            cast("Browser", browser_handle.browser), profile_name, self._settings.browser
         )
         state = ContextState(
             context_id=context_id,

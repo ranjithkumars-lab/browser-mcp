@@ -16,6 +16,22 @@ for all servers created from the template.
 - All code is OS-independent; paths and processes are handled through the
   standard library.
 
+## Browser Automation
+
+The navigation engine (Phase 2) is built on Playwright for Python.
+
+- **Playwright:** `>=1.62.0` (tested against `1.62.0`). Browser binaries are
+  **not** auto-installed; run `playwright install` first. `browser.doctor` /
+  health checks surface missing binaries.
+- **Browsers:** Chromium (default), Firefox, WebKit — selected via
+  `browser.engine`.
+- **Supported OS:** Windows 10/11, macOS, Linux (same matrix as Playwright).
+- **Minimum Python:** 3.13.
+- **URL schemes:** navigation defaults to `http`, `https`, and `file`
+  (`navigation.allowed_schemes`).
+- **Downloads:** require an HTTP origin (download events do not fire for
+  `file://` URLs) and a configured `browser.downloads_dir`.
+
 ## MCP SDK
 
 - **Supported:** official Python MCP SDK `>=1.2,<2.0`

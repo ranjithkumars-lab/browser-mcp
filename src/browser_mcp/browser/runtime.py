@@ -8,6 +8,7 @@ present so operators can surface a clear error instead of a cryptic traceback.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from browser_mcp.config.models import BrowserEngine
 
@@ -34,11 +35,11 @@ def _resolve_executable(engine: BrowserEngine) -> str | None:
             compute_driver_executable,  # type: ignore[import-untyped]
         )
 
-        driver = compute_driver_executable()
+        driver: Any = compute_driver_executable()
         from playwright._impl._registry import Registry  # type: ignore[import-untyped]
 
-        registry = Registry(driver)
-        return registry.executable_path(engine.value)
+        registry: Any = Registry(driver)  # type: ignore[reportUnknownVariableType]
+        return registry.executable_path(engine.value)  # type: ignore[reportUnknownMemberType]
     except Exception:
         return None
 
