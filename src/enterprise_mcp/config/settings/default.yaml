@@ -1,0 +1,28 @@
+server:
+  name: enterprise-mcp-server
+  environment: development
+  debug: false
+  transports:
+    default: streamable-http
+    host: 0.0.0.0
+    port: 8000
+    streamable_http_enabled: true
+    sse_enabled: false
+    stdio_enabled: false
+  observability:
+    logging:
+      level: INFO
+      format: json
+      include_timestamps: true
+    metrics:
+      enabled: false
+      prefix: enterprise_mcp
+      backend: "null"
+    tracing:
+      enabled: false
+      service_name: enterprise-mcp-server
+      backend: "null"
+      sample_rate: 1.0
+  security:
+    enabled: false
+    auth_provider: none

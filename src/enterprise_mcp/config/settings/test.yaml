@@ -1,0 +1,7 @@
+server:
+  environment: test
+  debug: true
+  observability:
+    logging:
+      level: DEBUG
+      format: console

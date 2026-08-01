@@ -1,0 +1,1 @@
+"""Bundled file templates."""

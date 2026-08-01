@@ -1,0 +1,7 @@
+# Default reviewers for every file.
+*       @your-github-username
+
+# Core areas.
+/src/enterprise_mcp/config/       @your-github-username
+/src/enterprise_mcp/foundation/   @your-github-username
+/docs/                            @your-github-username

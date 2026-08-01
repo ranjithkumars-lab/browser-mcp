@@ -1,0 +1,14 @@
+services:
+  enterprise-mcp:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    image: enterprise-mcp-server:dev
+    command: ["serve", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    environment:
+      ENTERPRISE_MCP_ENV: development
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../src:/app/src:ro
+    restart: unless-stopped

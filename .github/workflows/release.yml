@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Publish release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+
+      - name: Verify version matches tag
+        run: |
+          VERSION=$(uv run python -c "from enterprise_mcp import __version__; print(__version__)")
+          TAG=${GITHUB_REF#refs/tags/v}
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "version mismatch: package=$VERSION tag=$TAG"
+            exit 1
+          fi
+
+      - name: Run tests
+        run: uv sync --all-extras && uv run pytest
+
+      - name: Build
+        run: uv build
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+
+      - name: Publish to PyPI
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: uv publish
+        if: ${{ secrets.PYPI_TOKEN != '' }}
+
+      - name: Build and push Docker image
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          IMAGE=ghcr.io/${{ github.repository }}
+          docker build -f deployments/docker/Dockerfile -t $IMAGE:${{ github.ref_name }} -t $IMAGE:latest .
+          docker push $IMAGE:${{ github.ref_name }}
+          docker push $IMAGE:latest

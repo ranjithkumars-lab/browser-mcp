@@ -1,0 +1,41 @@
+site_name: Enterprise MCP Server Template
+site_description: Production-ready, transport-independent foundation for building enterprise MCP servers.
+repo_url: https://github.com/ranjithkumars-lab/browser-mcp
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - toc:
+      permalink: true
+nav:
+  - Home: index.md
+  - Architecture: Architecture.md
+  - Design Principles: Design-Principles.md
+  - Compatibility: Compatibility.md
+  - Development Rules: Development-Rules.md
+  - Folder Structure: Folder-Structure.md
+  - Production Checklist: Production-Checklist.md
+  - ADRs:
+      - adr/index.md
+      - adr/0001-template-choice.md
+      - adr/0002-technology-stack.md
+      - adr/0003-transport-abstraction.md

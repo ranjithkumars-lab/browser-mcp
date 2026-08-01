@@ -1,0 +1,7 @@
+server:
+  environment: production
+  debug: false
+  observability:
+    logging:
+      level: INFO
+      format: json

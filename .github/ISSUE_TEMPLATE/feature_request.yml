@@ -1,0 +1,27 @@
+name: Feature Request
+description: Suggest a new capability for the Enterprise MCP Server Template.
+title: "[feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Where should this live?
+      options:
+        - Template (generic capability for all servers)
+        - Downstream server (server-specific)
+    validations:
+      required: true
