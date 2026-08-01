@@ -90,3 +90,9 @@ api:
   job_retention_minutes: 60
   max_jobs: 1000
   default_sync_timeout: 5.0
+
+ui:
+  static_directory: ui/dist
+  websocket_path: /api/v1/dashboard/ws
+  reconnect_delay_ms: 1000
+  event_buffer_size: 1000

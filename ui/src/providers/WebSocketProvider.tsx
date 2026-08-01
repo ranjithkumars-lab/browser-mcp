@@ -1,0 +1,2 @@
+import {useEffect,type ReactNode} from "react";import {useQueryRevision} from "./QueryProvider";
+export function WebSocketProvider({children}:{children:ReactNode}){const{invalidate}=useQueryRevision();useEffect(()=>{const ws=new WebSocket((location.protocol==="https:"?"wss://":"ws://")+location.host+"/api/v1/dashboard/ws");ws.onmessage=invalidate;return()=>ws.close()},[invalidate]);return children}

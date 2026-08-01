@@ -16,6 +16,7 @@ __all__ = [
     "PluginsConfig",
     "ServerConfig",
     "ApiConfig",
+    "UiConfig",
     "TransferConfig",
     "BrowserConfig",
     "BrowserEngine",
@@ -150,6 +151,13 @@ class ApiConfig(BaseModel):
     default_sync_timeout: float = Field(default=5, gt=0)
 
 
+class UiConfig(BaseModel):
+    static_directory: str = "ui/dist"
+    websocket_path: str = "/api/v1/dashboard/ws"
+    reconnect_delay_ms: int = Field(default=1000, ge=100)
+    event_buffer_size: int = Field(default=1000, ge=1)
+
+
 class BrowserConfig(BaseModel):
     """Per-browser launch options."""
 
@@ -282,3 +290,4 @@ class BrowserSettings(BaseSettings):
     plugins: PluginsConfig = Field(default_factory=PluginsConfig)
     server: ServerConfig = Field(default_factory=ServerConfig)
     api: ApiConfig = Field(default_factory=ApiConfig)
+    ui: UiConfig = Field(default_factory=UiConfig)

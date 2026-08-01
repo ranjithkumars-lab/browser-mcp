@@ -1,0 +1,2 @@
+import {Component,type ErrorInfo,type ReactNode} from "react";
+export class ErrorBoundaryProvider extends Component<{children:ReactNode},{error:Error|null}>{state={error:null as Error|null};static getDerivedStateFromError(error:Error){return{error}}componentDidCatch(_error:Error,_info:ErrorInfo){}render(){return this.state.error?<div role="alert"><p>{this.state.error.message}</p><button onClick={()=>this.setState({error:null})}>Retry</button></div>:this.props.children}}

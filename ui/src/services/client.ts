@@ -1,0 +1,2 @@
+export class UiError extends Error { constructor(public status:number,message:string){super(message)} }
+export async function request<T>(path:string, init:RequestInit={}, apiKey?:string):Promise<T>{const response=await fetch(path,{...init,headers:{"Content-Type":"application/json",...(apiKey?{"X-API-Key":apiKey}:{}),...init.headers}});if(!response.ok)throw new UiError(response.status,await response.text()||response.statusText);return response.json() as Promise<T>}

@@ -1,0 +1,4 @@
+import { useState } from "react";
+const pages=["Dashboard","Jobs","Workers","Logs","Plugins","Artifacts","Sessions","Downloads","Access","Settings"];
+export function App(){const [page,setPage]=useState("Dashboard");return <main><aside><h1>Browser MCP</h1><nav aria-label="Control center navigation">{pages.map(item=><button key={item} aria-current={page===item?"page":undefined} onClick={()=>setPage(item)}>{item}</button>)}</nav></aside><section><header><h2>{page}</h2><button onClick={()=>document.documentElement.classList.toggle("dark")}>Theme</button></header><OperationalPage name={page}/></section></main>}
+function OperationalPage({name}:{name:string}){return <div className="card"><p>{name} is connected to the Automation Control Center.</p><div className="empty"><strong>No {name.toLowerCase()} yet</strong><span>Data will appear here as Browser MCP activity is recorded.</span></div></div>}
