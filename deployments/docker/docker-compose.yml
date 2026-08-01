@@ -34,7 +34,8 @@ services:
       - ./config:/app/config:ro
       - ui-dist:/app/ui/dist
     restart: unless-stopped
-    command: ["browser-mcp", "api", "serve", "--host", "0.0.0.0", "--port", "8080"]
+    entrypoint: ["browser-mcp"]
+    command: ["api", "serve", "--host", "0.0.0.0", "--port", "8080"]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3).status == 200 else 1)"]
       interval: 30s
@@ -72,7 +73,8 @@ services:
     volumes:
       - ./config:/app/config:ro
     restart: unless-stopped
-    command: ["browser-mcp", "worker", "start", "--queues", "high,default,low", "--concurrency", "2"]
+    entrypoint: ["browser-mcp"]
+    command: ["worker", "start", "--queues", "high,default,low", "--concurrency", "2"]
     depends_on:
       redis:
         condition: service_healthy
