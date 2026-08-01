@@ -15,6 +15,7 @@ __all__ = [
     "EventsConfig",
     "PluginsConfig",
     "ServerConfig",
+    "ApiConfig",
     "TransferConfig",
     "BrowserConfig",
     "BrowserEngine",
@@ -133,6 +134,20 @@ class ServerConfig(BaseModel):
     enable_notifications: bool = True
     enable_resources: bool = False
     enable_prompts: bool = False
+
+
+class ApiConfig(BaseModel):
+    host: str = "0.0.0.0"
+    port: int = Field(default=8080, ge=1, le=65535)
+    api_key: str | None = None
+    request_timeout: float = Field(default=30, gt=0)
+    enable_docs: bool = True
+    enable_redoc: bool = False
+    enable_health: bool = True
+    enable_metrics: bool = True
+    job_retention_minutes: int = Field(default=60, ge=1)
+    max_jobs: int = Field(default=1000, ge=1)
+    default_sync_timeout: float = Field(default=5, gt=0)
 
 
 class BrowserConfig(BaseModel):
@@ -266,3 +281,4 @@ class BrowserSettings(BaseSettings):
     events: EventsConfig = Field(default_factory=EventsConfig)
     plugins: PluginsConfig = Field(default_factory=PluginsConfig)
     server: ServerConfig = Field(default_factory=ServerConfig)
+    api: ApiConfig = Field(default_factory=ApiConfig)

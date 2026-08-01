@@ -1,10 +1,10 @@
-# Developer Onboarding: Browser MCP (Phases 1-10)
+# Developer Onboarding: Browser MCP (Phases 1-11)
 
 Welcome to the **Browser MCP** project! 
 
-You are joining the project at an exciting time. We have completed Phases 1 through 10, establishing an enterprise-grade **Browser Platform** equipped with an Enhanced Plugin Framework, **Form Automation (Phase 4)**, **Web Scraping (Phase 5)**, **Authentication Engine (Phase 6)**, **Download/Upload Engine (Phase 7)**, **Browser Events Engine (Phase 8)**, and the **MCP Server Integration (Phase 10)**.
+You are joining the project at an exciting time. We have completed Phases 1 through 11, establishing an enterprise-grade **Browser Platform** equipped with an Enhanced Plugin Framework, **Form Automation (Phase 4)**, **Web Scraping (Phase 5)**, **Authentication Engine (Phase 6)**, **Download/Upload Engine (Phase 7)**, **Browser Events Engine (Phase 8)**, the **MCP Server Integration (Phase 10)**, and the **REST API Engine (Phase 11)**.
 
-This document will walk you through the architectural evolution from Phase 1 to Phase 10.
+This document will walk you through the architectural evolution from Phase 1 to Phase 11.
 
 ---
 
@@ -78,7 +78,20 @@ Phase 10 establishes the official **MCP Server** (`src/browser_mcp/server/`) to 
 
 ---
 
-## 10. Verification Standard
+## 10. The REST API Engine (Phase 11)
+
+Phase 11 introduces a FastAPI-based **REST API Engine** (`src/browser_mcp/api/`) designed for web applications and microservices.
+
+### Architecture Highlights
+1. **API Engine Orchestrator**: `ApiEngine` delegates logic exclusively to the `AppContext` without duplicating browser engine business logic.
+2. **JobManager & JobExecutionProvider**: Browser automation is inherently asynchronous, so endpoints (e.g., `/api/v1/plugins/run`) return a `202 Accepted` with a Job ID. Jobs follow a strict 7-state lifecycle.
+3. **Browser Core Gateway**: Exposes formal endpoints under `/api/v1/` for Sessions, Navigation, Forms, Downloads, Uploads, and Plugins.
+4. **Event Streaming**: `GET /api/v1/events/stream` bridges internal `BrowserEventManager` to HTTP SSE.
+5. **API Key Authentication**: Configurable auth validation injected via FastAPI dependencies.
+
+---
+
+## 11. Verification Standard
 
 The codebase is fully verified:
 - **Pyright**: 0 errors, 0 warnings.

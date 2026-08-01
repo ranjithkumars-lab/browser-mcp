@@ -77,3 +77,16 @@ server:
   enable_notifications: true
   enable_resources: false
   enable_prompts: false
+
+api:
+  host: 0.0.0.0
+  port: 8080
+  api_key: null
+  request_timeout: 30.0
+  enable_docs: true
+  enable_redoc: false
+  enable_health: true
+  enable_metrics: true
+  job_retention_minutes: 60
+  max_jobs: 1000
+  default_sync_timeout: 5.0
