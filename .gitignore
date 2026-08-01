@@ -34,3 +34,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+
+# UI
+ui/node_modules/
