@@ -1,0 +1,14 @@
+name: "browser.form"
+version: "0.1.0"
+description: "Enterprise form automation and interaction."
+permissions:
+  - "browser.page"
+  - "browser.element"
+category: "automation"
+tools:
+  - "browser.form.fill"
+  - "browser.form.check"
+  - "browser.form.uncheck"
+  - "browser.form.select"
+  - "browser.form.submit"
+entrypoint: "browser_mcp.plugins.forms.tools:FormToolkit"

@@ -29,6 +29,10 @@ can focus on their domain capabilities.
   validation.
 - **Extendable scaffolds** — plugins, middleware, hooks, providers, workers,
   persistence, security, and AI packages with defined extension points.
+- **Plugin framework** — minimal plugin architecture with manifest-based discovery,
+  lifecycle hooks, and a unified `PluginContext`.
+- **Form Automation plugin** — deterministic DOM-based form detection, pre-interaction
+  validation, and structured form tools (`fill`, `check`, `uncheck`, `select`, `submit`).
 - **Observable** — `/health`, `/live`, `/ready`, `/version` endpoints.
 - **Developer tooling** — `uv`, Ruff, Pyright, pytest, pre-commit, Makefile.
 - **Operations** — Docker, docker-compose, Kubernetes manifests, GitHub Actions.
@@ -53,6 +57,8 @@ can focus on their domain capabilities.
 | Hooks           | pre-commit                    |
 | Docs            | MkDocs Material               |
 | Containers      | Docker                        |
+| Plugins         | Built-in framework            |
+| Form Automation | Deterministic DOM + Retry     |
 
 ## Quick Start
 

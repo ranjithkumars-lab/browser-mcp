@@ -6,7 +6,6 @@ import pytest
 from tests.fakes import FakeElement, FakePage
 from tests.helpers import build_runtime
 
-from browser_mcp.browser.elements.engine import ElementEngine
 from browser_mcp.errors import (
     ElementNotFoundError,
     ElementStateError,

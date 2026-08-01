@@ -17,6 +17,8 @@ business logic — downstream servers fork it and add their own capabilities.
 - [Architecture Decision Records](adr/index.md)
 - [Navigation Engine](navigation/overview.md)
 - [Element Engine](elements/overview.md)
+- [Plugins](plugins/creating-plugin.md)
+- [Form Automation](forms/overview.md)
 
 ## Quick Start
 

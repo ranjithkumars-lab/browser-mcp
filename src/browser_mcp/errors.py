@@ -17,6 +17,9 @@ __all__ = [
     "ElementError",
     "ElementNotFoundError",
     "ElementStateError",
+    "FieldNotEditableError",
+    "FieldNotFoundError",
+    "FormError",
     "FrameError",
     "InteractionError",
     "InvalidLocatorStrategyError",
@@ -30,6 +33,8 @@ __all__ = [
     "SessionError",
     "SessionNotFoundError",
     "StaleElementReferenceError",
+    "SubmitError",
+    "ValidationError",
 ]
 
 
@@ -123,3 +128,23 @@ class SessionNotFoundError(SessionError):
 
 class ProfileError(BrowserError):
     """Raised when a profile cannot be resolved or materialized."""
+
+
+class FormError(BrowserError):
+    """Base class for form automation errors."""
+
+
+class ValidationError(FormError):
+    """Raised when form field validation fails."""
+
+
+class FieldNotFoundError(FormError):
+    """Raised when a form field cannot be located in the DOM."""
+
+
+class FieldNotEditableError(FormError):
+    """Raised when a form field is not editable."""
+
+
+class SubmitError(FormError):
+    """Raised when a form submission fails."""

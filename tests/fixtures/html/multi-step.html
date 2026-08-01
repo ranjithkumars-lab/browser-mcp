@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Multi-Step Form</title></head>
+<body>
+<form id="multi-step-form" action="/multi-step" method="post">
+  <div class="step" data-step="1">
+    <label for="step1-name">Name</label>
+    <input type="text" id="step1-name" name="name" />
+    <button type="button" data-next="2">Next</button>
+  </div>
+  <div class="step" data-step="2" style="display:none">
+    <label for="step2-email">Email</label>
+    <input type="email" id="step2-email" name="email" />
+    <button type="button" data-prev="1">Back</button>
+    <button type="button" data-next="3">Next</button>
+  </div>
+  <div class="step" data-step="3" style="display:none">
+    <label for="step3-comments">Comments</label>
+    <textarea id="step3-comments" name="comments"></textarea>
+    <button type="submit">Submit</button>
+  </div>
+</form>
+</body>
+</html>

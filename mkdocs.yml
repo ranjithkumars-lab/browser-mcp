@@ -46,6 +46,14 @@ nav:
       - elements/locators.md
       - elements/tool-reference.md
       - elements/examples.md
+  - Plugins:
+      - plugins/creating-plugin.md
+      - plugins/plugin-lifecycle.md
+      - plugins/plugin-manifest.md
+  - Form Automation:
+      - forms/overview.md
+      - forms/tools.md
+      - forms/examples.md
   - ADRs:
       - adr/index.md
       - adr/0001-template-choice.md

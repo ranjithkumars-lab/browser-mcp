@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Upload Form</title></head>
+<body>
+<form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+  <label for="file-upload">Upload File</label>
+  <input type="file" id="file-upload" name="file" />
+  <label for="description">Description</label>
+  <input type="text" id="description" name="description" placeholder="File description" />
+  <button type="submit">Upload</button>
+</form>
+</body>
+</html>
