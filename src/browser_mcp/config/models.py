@@ -129,7 +129,7 @@ class ServerConfig(BaseModel):
     default_transport: str = "stdio"
     protocol_version: str = "2025-06"
     host: str = "127.0.0.1"
-    port: int = Field(default=8000, ge=1, le=65535)
+    port: int = Field(default=0, ge=0, le=65535)
     request_timeout: float = Field(default=30.0, gt=0)
     max_connections: int = Field(default=100, ge=1)
     stream_buffer_size: int = Field(default=1000, ge=1)
@@ -140,7 +140,7 @@ class ServerConfig(BaseModel):
 
 class ApiConfig(BaseModel):
     host: str = "0.0.0.0"
-    port: int = Field(default=8080, ge=1, le=65535)
+    port: int = Field(default=0, ge=0, le=65535)
     api_key: str | None = None
     request_timeout: float = Field(default=30, gt=0)
     enable_docs: bool = True

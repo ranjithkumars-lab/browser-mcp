@@ -60,15 +60,25 @@ def _overrides(
 
 
 def _run_http(context: AppContext, host: str | None, port: int | None, reload: bool) -> None:
+    import asyncio
+
     import uvicorn
 
-    uvicorn.run(
+    resolved_host = host or context.settings.server.transports.host
+    resolved_port = port or context.settings.server.transports.port
+    config = uvicorn.Config(
         "enterprise_mcp.interfaces.rest.app:create_app",
         factory=True,
-        host=host or context.settings.server.transports.host,
-        port=port or context.settings.server.transports.port,
+        host=resolved_host,
+        port=resolved_port,
         reload=reload,
     )
+    server = uvicorn.Server(config)
+
+    async def _serve() -> None:
+        await server.serve()
+
+    asyncio.run(_serve())
 
 
 def _run_stdio(context: AppContext) -> None:

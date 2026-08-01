@@ -4,7 +4,7 @@ APP_NAME = "enterprise-mcp-server"
 ENV_VAR_PREFIX = "ENTERPRISE_MCP_"
 DEFAULT_ENV = "development"
 DEFAULT_HOST = "0.0.0.0"
-DEFAULT_PORT = 8000
+DEFAULT_PORT = 0
 SUPPORTED_TRANSPORTS = ("streamable-http", "sse", "stdio")
 SUPPORTED_ENVIRONMENTS = ("development", "test", "production")
 
