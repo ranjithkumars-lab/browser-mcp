@@ -32,9 +32,11 @@ def create_app() -> Any:
     """Factory for uvicorn to run the API."""
     from browser_mcp.api.app import create_api_app
     from browser_mcp.app import create_browser_context
+    from browser_mcp.config.loader import load_browser_settings
 
     # Build a fully wired Browser Core context (browser engine, plugins,
     # auth, transfer, events). The API configuration is handled separately
     # within create_api_app.
-    context = create_browser_context()
-    return create_api_app(context, None)
+    browser_settings = load_browser_settings()
+    context = create_browser_context(browser_settings)
+    return create_api_app(context, None, browser_settings)
