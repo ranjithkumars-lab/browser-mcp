@@ -29,8 +29,10 @@ def create_app() -> Any:
     """Factory for uvicorn to run the API."""
     from browser_mcp.api.app import create_api_app
     from enterprise_mcp.foundation.app import AppContext
+    from browser_mcp.config.loader import load_browser_settings
     
+    settings = load_browser_settings()
     # We use AppContext to inject dependencies just like the main enterprise server.
-    context = AppContext()
+    context = AppContext(settings=settings)
     # The API configuration is handled within create_api_app
     return create_api_app(context, None)
