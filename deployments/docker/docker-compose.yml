@@ -1,13 +1,78 @@
 services:
-  enterprise-mcp:
+  # Enterprise MCP Server (stdio/streamable-http transport)
+  mcp-server:
     build:
       context: ../..
       dockerfile: deployments/docker/Dockerfile
     image: enterprise-mcp-server:latest
     environment:
       ENTERPRISE_MCP_ENV: development
+      ENTERPRISE_MCP_SERVER__TRANSPORTS__PORT: 0
     ports:
       - "8000:8000"
     volumes:
       - ./config:/app/config:ro
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      start-period: 10s
+      retries: 3
+
+  # Browser MCP REST API + Control Center UI
+  browser-api:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    image: enterprise-mcp-server:latest
+    environment:
+      BROWSER_MCP_ENV: development
+      BROWSER_MCP_API__PORT: 0
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config:/app/config:ro
+      - ui-dist:/app/ui/dist
+    restart: unless-stopped
+    command: ["browser-mcp", "api", "serve", "--host", "0.0.0.0", "--port", "8080"]
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+
+  # Redis for worker queue (optional)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Distributed Worker (optional)
+  worker:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    image: enterprise-mcp-server:latest
+    environment:
+      BROWSER_MCP_ENV: development
+      REDIS_URI: redis://redis:6379/0
+    volumes:
+      - ./config:/app/config:ro
+    restart: unless-stopped
+    command: ["browser-mcp", "worker", "start", "--queues", "high,default,low", "--concurrency", "2"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      mcp-server:
+        condition: service_healthy
+
+volumes:
+  redis-data:
+  ui-dist:

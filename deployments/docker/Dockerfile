@@ -14,6 +14,16 @@ COPY src ./src
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
+# Build UI
+FROM node:20-slim AS ui-builder
+
+WORKDIR /ui
+COPY ui/package.json ui/package-lock.json ./
+RUN npm ci --production=false
+COPY ui/tsconfig.json ui/vite.config.ts ./
+COPY ui/src ./src
+RUN npm run build
+
 # Final runtime image.
 FROM python:3.13-slim-bookworm AS runtime
 
@@ -22,16 +32,23 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# Copy Python dependencies and source
 COPY --from=base /app/.venv /app/.venv
 COPY src ./src
 COPY pyproject.toml README.md ./
 
+# Copy built UI
+COPY --from=ui-builder /ui/dist ./ui/dist
+
+# Create config directory
+RUN mkdir -p /app/config
+
 # Run as a non-root user.
 RUN groupadd --system app && useradd --system --gid app app \
-    && mkdir -p /app/config && chown -R app:app /app
+    && chown -R app:app /app
 USER app
 
-EXPOSE 8000
+EXPOSE 8000 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)"
