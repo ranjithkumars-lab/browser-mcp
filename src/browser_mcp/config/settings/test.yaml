@@ -1,0 +1,17 @@
+browser:
+  engine: chromium
+  headless: true
+  slow_mo: 0
+  viewport:
+    width: 1280
+    height: 720
+
+pool:
+  max_browsers: 10
+  max_contexts_per_browser: 10
+  max_pages_per_context: 50
+
+profiles:
+  directory: "~/.browser-mcp/profiles"
+  default_profile: temporary
+  default_persistent: false

@@ -1,8 +1,7 @@
 """MCP server composition root.
 
-Binds the protocol, tool registry, and transports. Full protocol behaviour
-is added in a later phase; this class already exposes a valid surface for
-dependency wiring and testing.
+Binds the tool registry and transports together and exposes the Streamable
+HTTP ASGI application for mounting into the REST interface.
 """
 
 from __future__ import annotations
@@ -11,14 +10,21 @@ from typing import Any
 
 from enterprise_mcp.tools.registry import ToolRegistry
 from enterprise_mcp.transport.base import Transport
+from enterprise_mcp.transport.http import StreamableHTTPTransport
 
 __all__ = ["MCPServer"]
 
 
 class MCPServer:
-    """Composes tool registry and transports into an MCP server."""
+    """Composes a tool registry and transports into an MCP server."""
 
-    def __init__(self, *, tools: ToolRegistry | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        tools: ToolRegistry | None = None,
+        name: str = "enterprise-mcp-server",
+    ) -> None:
+        self.name = name
         self.tools = tools or ToolRegistry()
         self._transports: dict[str, Transport] = {}
         self._running = False
@@ -33,6 +39,29 @@ class MCPServer:
     def transports(self) -> dict[str, Transport]:
         """Return attached transports by name."""
         return dict(self._transports)
+
+    def streamable_http_transport(self) -> StreamableHTTPTransport:
+        """Return a Streamable HTTP transport bound to this server's tools.
+
+        The transport is cached on first access so repeated calls share the
+        same FastMCP server instance.
+        """
+        transport = self._transports.get("streamable-http")
+        if transport is None:
+            transport = StreamableHTTPTransport(
+                tools=self.tools,
+                server_name=self.name,
+            )
+            self._transports["streamable-http"] = transport
+        return transport
+
+    def asgi_app(self) -> Any:
+        """Return the Streamable HTTP ASGI application."""
+        return self.streamable_http_transport().asgi_app()
+
+    def mount(self, app: Any, path: str | None = None) -> None:
+        """Mount the Streamable HTTP transport into a FastAPI/Starlette app."""
+        self.streamable_http_transport().mount(app, path)
 
     async def start(self) -> None:
         """Start all attached transports."""

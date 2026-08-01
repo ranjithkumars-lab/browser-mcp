@@ -22,8 +22,8 @@ def create_app(context: AppContext | None = None) -> FastAPI:
     launches.
 
     The lifespan runs the application's startup and shutdown hooks so the
-    configured services (event bus, tool registry, etc.) are available while
-    the API is serving traffic.
+    configured services (event bus, tool registry, MCP server, etc.) are
+    available while the API is serving traffic.
     """
     resolved_context = context if context is not None else AppContext()
 
@@ -50,4 +50,18 @@ def create_app(context: AppContext | None = None) -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(version_router)
+    _mount_mcp_transport(app, resolved_context)
     return app
+
+
+def _mount_mcp_transport(app: FastAPI, context: AppContext) -> None:
+    """Mount the Streamable HTTP MCP transport when it is enabled."""
+    transports = context.settings.server.transports
+    if not transports.streamable_http_enabled:
+        return
+    try:
+        context.mcp.mount(app)
+    except Exception as exc:
+        structlog.get_logger("enterprise_mcp.interfaces.rest").warning(
+            "mcp_mount_failed", error=str(exc)
+        )
