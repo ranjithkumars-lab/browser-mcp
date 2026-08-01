@@ -99,3 +99,12 @@ async def test_elements_health_provider_payload() -> None:
     provider = context.health_providers["elements"]
     payload = await provider()
     assert payload == {"cache": {"cached_elements": 0}}
+
+
+def test_app_context_accepts_browser_settings_without_enterprise_attributes() -> None:
+    """Regression: AppContext must tolerate BrowserSettings whose ServerConfig
+    lacks the enterprise-only ``name`` and ``observability`` attributes."""
+    browser_settings = BrowserSettings()
+    context = AppContext(settings=browser_settings)
+    assert context.mcp.name == "browser-mcp-server"
+    assert context.settings is browser_settings

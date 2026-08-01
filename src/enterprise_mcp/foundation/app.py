@@ -40,12 +40,17 @@ class AppContext:
         self.lifecycle = lifecycle or LifecycleManager()
         self.events = EventBus()
         self.tools = ToolRegistry()
-        self.mcp = MCPServer(tools=self.tools, name=self.settings.server.name)
+        # ``server.name`` and ``server.observability`` are enterprise-only
+        # attributes; fall back to sensible defaults for browser settings.
+        self._server_name = getattr(self.settings.server, "name", "browser-mcp-server")
+        self.mcp = MCPServer(tools=self.tools, name=self._server_name)
         self._health_providers: dict[str, HealthProvider] = {}
         self._started = False
 
         self._register_core_services()
-        configure_logging(self.settings.server.observability.logging)
+        observability = getattr(self.settings.server, "observability", None)
+        if observability is not None:
+            configure_logging(observability.logging)
         self.logger = structlog.get_logger("enterprise_mcp.app")
 
     def _register_core_services(self) -> None:
@@ -86,7 +91,7 @@ class AppContext:
         await self.lifecycle.run_startup()
         await self.mcp.start()
         self._started = True
-        self.logger.info("application_started", name=self.settings.server.name)
+        self.logger.info("application_started", name=self._server_name)
 
     async def stop(self) -> None:
         """Run all registered shutdown hooks."""
@@ -95,4 +100,4 @@ class AppContext:
         await self.mcp.stop()
         await self.lifecycle.run_shutdown()
         self._started = False
-        self.logger.info("application_stopped", name=self.settings.server.name)
+        self.logger.info("application_stopped", name=self._server_name)
