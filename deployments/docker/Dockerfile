@@ -20,6 +20,7 @@ WORKDIR /ui
 COPY ui/package.json ui/package-lock.json ./
 RUN npm ci --production=false
 COPY ui/tsconfig.json ui/vite.config.ts ./
+COPY ui/index.html ./
 COPY ui/src ./src
 RUN npm run build
 
