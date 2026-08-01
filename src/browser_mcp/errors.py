@@ -17,9 +17,11 @@ __all__ = [
     "ElementError",
     "ElementNotFoundError",
     "ElementStateError",
+    "ExtractionError",
     "FieldNotEditableError",
     "FieldNotFoundError",
     "FormError",
+    "FormattingError",
     "FrameError",
     "InteractionError",
     "InvalidLocatorStrategyError",
@@ -27,9 +29,12 @@ __all__ = [
     "NavigationTimeoutError",
     "PageError",
     "PageNotFoundError",
+    "PaginationError",
     "PolicyViolationError",
     "PopupError",
+    "ProductExtractionError",
     "ProfileError",
+    "ScraperError",
     "SessionError",
     "SessionNotFoundError",
     "StaleElementReferenceError",
@@ -148,3 +153,23 @@ class FieldNotEditableError(FormError):
 
 class SubmitError(FormError):
     """Raised when a form submission fails."""
+
+
+class ScraperError(BrowserError):
+    """Base class for all web scraping failures."""
+
+
+class ExtractionError(ScraperError):
+    """Raised when DOM extraction fails (e.g. page evaluation error)."""
+
+
+class FormattingError(ScraperError):
+    """Raised when a result cannot be serialised to the requested format."""
+
+
+class PaginationError(ScraperError):
+    """Raised when pagination beyond the supported limit is requested."""
+
+
+class ProductExtractionError(ScraperError):
+    """Raised when the composite product collector cannot extract any data."""

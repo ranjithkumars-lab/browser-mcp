@@ -28,6 +28,7 @@ markdown_extensions:
       permalink: true
 nav:
   - Home: index.md
+  - Developer Onboarding: implementation-docs/developer_onboarding.md
   - Architecture: Architecture.md
   - Design Principles: Design-Principles.md
   - Compatibility: Compatibility.md

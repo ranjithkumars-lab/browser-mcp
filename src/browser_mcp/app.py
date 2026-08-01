@@ -32,6 +32,9 @@ from browser_mcp.browser.runtime import check_playwright_binaries
 from browser_mcp.browser.session import SessionManager
 from browser_mcp.config.loader import load_browser_settings
 from browser_mcp.config.models import BrowserSettings
+from browser_mcp.plugins.scraper.actions import ScraperActions
+from browser_mcp.plugins.scraper.sizer import PayloadSizer
+from browser_mcp.plugins.scraper.tools import ScraperToolkit
 from browser_mcp.tools.browser import BrowserToolkit
 from browser_mcp.tools.elements import ElementToolkit
 from browser_mcp.tools.navigation import NavigationToolkit
@@ -96,6 +99,10 @@ def create_browser_context(
     navigation_toolkit.register(resolved.tools)
     element_toolkit = ElementToolkit(elements)
     element_toolkit.register(resolved.tools)
+
+    scraper_actions = ScraperActions(state, events, PayloadSizer())
+    scraper_toolkit = ScraperToolkit(scraper_actions)
+    scraper_toolkit.register(resolved.tools)
 
     resolved.container.register_instance(sessions, name="browser_sessions")
     resolved.container.register_instance(state, name="navigation_state")

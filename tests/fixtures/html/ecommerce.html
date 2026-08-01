@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Ecommerce Product — SuperWidget 3000</title>
+  <meta name="description" content="The SuperWidget 3000 is the most advanced widget on the market today.">
+
+  <!-- OpenGraph Product -->
+  <meta property="og:title" content="SuperWidget 3000">
+  <meta property="og:description" content="The SuperWidget 3000 is the most advanced widget on the market today.">
+  <meta property="og:type" content="product">
+  <meta property="og:url" content="https://shop.example.com/products/superwidget-3000">
+  <meta property="og:image" content="/products/superwidget-3000/main.jpg">
+  <meta property="og:price:amount" content="249.99">
+  <meta property="og:price:currency" content="USD">
+
+  <!-- JSON-LD Product -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": "SuperWidget 3000",
+    "description": "The most advanced widget on the market today.",
+    "sku": "SW-3000",
+    "brand": { "name": "WidgetCorp" },
+    "image": "/products/superwidget-3000/main.jpg",
+    "offers": {
+      "@type": "Offer",
+      "url": "https://shop.example.com/products/superwidget-3000",
+      "price": "249.99",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "42"
+    }
+  }
+  </script>
+
+  <!-- Microdata Product (fallback for ProductCollector test) -->
+  <div itemscope itemtype="https://schema.org/Product" id="microdata-product">
+    <span itemprop="name">SuperWidget 3000</span>
+    <span itemprop="description">The most advanced widget on the market today.</span>
+    <span itemprop="sku">SW-3000</span>
+    <div itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+      <span itemprop="price">249.99</span>
+      <span itemprop="priceCurrency">USD</span>
+    </div>
+  </div>
+</head>
+<body>
+  <h1>SuperWidget 3000</h1>
+  <img src="/products/superwidget-3000/main.jpg" alt="SuperWidget 3000" width="500" height="500">
+  <p>The SuperWidget 3000 is the most advanced widget on the market today.</p>
+  <span class="price">$249.99</span>
+  <span class="sku">SW-3000</span>
+</body>
+</html>

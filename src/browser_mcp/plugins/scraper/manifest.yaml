@@ -1,0 +1,16 @@
+name: "browser.scrape"
+version: "0.1.0"
+description: "Structured web scraping and data extraction from live browser pages (text, tables, images, metadata, JSON-LD, links, products)."
+permissions:
+  - "browser.page"
+  - "browser.element"
+category: "extraction"
+tools:
+  - "browser.scrape.text"
+  - "browser.scrape.tables"
+  - "browser.scrape.images"
+  - "browser.scrape.metadata"
+  - "browser.scrape.jsonld"
+  - "browser.scrape.links"
+  - "browser.scrape.products"
+entrypoint: "browser_mcp.plugins.scraper.tools:ScraperToolkit"

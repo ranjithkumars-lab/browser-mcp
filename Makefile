@@ -34,7 +34,7 @@ test: ## Run the test suite
 	$(PYTEST)
 
 test-coverage: ## Run tests with coverage
-	$(PYTEST) --cov=enterprise_mcp --cov-report=html --cov-report=term
+	$(PYTEST) --cov=enterprise_mcp --cov=browser_mcp --cov-report=html --cov-report=term
 
 .PHONY: run doctor config
 run: ## Run the server

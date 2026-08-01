@@ -114,7 +114,7 @@ reportMissingTypeStubs = "warning"
 reportMissingImports = "error"
 
 [tool.coverage.run]
-source = ["enterprise_mcp"]
+source = ["enterprise_mcp", "browser_mcp"]
 omit = ["*/tests/*"]
 
 [tool.coverage.report]

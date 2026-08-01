@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Microdata Fixture Page</title>
+</head>
+<body>
+  <h1>Microdata Fixture</h1>
+
+  <div itemscope itemtype="https://schema.org/Product">
+    <h2 itemprop="name">Vintage Camera</h2>
+    <img itemprop="image" src="/assets/camera.jpg" alt="Vintage Camera">
+    <p itemprop="description">A beautifully restored vintage film camera from the 1970s.</p>
+    <div>
+      <span itemprop="brand" itemscope itemtype="https://schema.org/Brand">
+        <span itemprop="name">RetroCam</span>
+      </span>
+    </div>
+    <link itemprop="sku" href="VC-500">
+    <div itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+      <span itemprop="price" content="89.99">89.99</span>
+      <span itemprop="priceCurrency" content="USD">USD</span>
+      <link itemprop="availability" href="https://schema.org/InStock">
+    </div>
+    <div itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+      <span itemprop="ratingValue">4.7</span>
+      <span itemprop="reviewCount">128</span>
+    </div>
+  </div>
+
+  <div itemscope itemtype="https://schema.org/Product">
+    <h3 itemprop="name">Camera Lens</h3>
+    <p itemprop="description">50mm prime lens.</p>
+    <span itemprop="sku">LN-50</span>
+  </div>
+</body>
+</html>
