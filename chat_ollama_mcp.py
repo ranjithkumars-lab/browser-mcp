@@ -2,7 +2,7 @@ import asyncio
 import json
 import sys
 from mcp import ClientSession
-from mcp.client.streamable_http import streamablehttp_client
+from mcp.client.sse import sse_client
 from ollama import AsyncClient
 
 # Configuration
@@ -13,7 +13,7 @@ MODEL = "gpt-oss:20b"
 async def chat_loop():
     print(f"Connecting to MCP server at {MCP_SERVER_URL}...")
     
-    async with streamablehttp_client(MCP_SERVER_URL) as (read_stream, write_stream, _):
+    async with sse_client(MCP_SERVER_URL) as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             
