@@ -13,7 +13,7 @@ MODEL = "gpt-oss:20b"
 async def chat_loop():
     print(f"Connecting to MCP server at {MCP_SERVER_URL}...")
     
-    async with streamable_http_client(MCP_SERVER_URL) as (read_stream, write_stream, _):
+    async with streamable_http_client(MCP_SERVER_URL) as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             
