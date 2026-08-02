@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from mcp.server.transport_security import TransportSecuritySettings
+
 from enterprise_mcp.tools.registry import ToolRegistry
 from enterprise_mcp.transport.base import Transport
 
@@ -63,6 +65,9 @@ class StreamableHTTPTransport(Transport):
             debug=self._debug,
             json_response=self._json_response,
             streamable_http_path="/",
+            transport_security=TransportSecuritySettings(
+                enable_dns_rebinding_protection=False,
+            ),
         )
         for metadata in self._tools.list():
             func = self._tools.get(metadata.name)
