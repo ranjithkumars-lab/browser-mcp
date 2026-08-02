@@ -14,30 +14,6 @@ from enterprise_mcp.interfaces.rest.routes import health_router, version_router
 __all__ = ["create_app"]
 
 
-class HostHeaderMiddleware:
-    """Middleware to handle Host header validation for proxied requests.
-    
-    This middleware ensures that requests with non-standard Host headers
-    (e.g., from reverse proxies, Docker, or direct IP access) are accepted
-    by setting the Host header to match the server's bound address.
-    """
-    
-    def __init__(self, app, host: str = "0.0.0.0", port: int = 8000):
-        self.app = app
-        self.host = host
-        self.port = port
-    
-    async def __call__(self, scope, receive, send):
-        if scope["type"] == "http":
-            # Set the Host header to match what the server is bound to
-            scope["headers"] = [
-                (name, value) for name, value in scope.get("headers", [])
-                if name.lower() != b"host"
-            ] + [(b"host", f"{self.host}:{self.port}".encode())]
-        
-        await self.app(scope, receive, send)
-
-
 def create_app(context: AppContext | None = None) -> FastAPI:
     """Build the FastAPI application bound to ``context``.
 
@@ -62,9 +38,6 @@ def create_app(context: AppContext | None = None) -> FastAPI:
             await resolved_context.stop()
             logger.info("http_lifespan_stopped")
 
-    host = resolved_context.settings.server.transports.host
-    port = resolved_context.settings.server.transports.port
-    
     app = FastAPI(
         title=resolved_context.settings.server.name,
         version=resolved_context.settings.server.version,
@@ -74,9 +47,6 @@ def create_app(context: AppContext | None = None) -> FastAPI:
         openapi_url="/openapi.json",
     )
     app.state.context = resolved_context
-    
-    # Add Host header middleware to handle proxied requests
-    app.add_middleware(HostHeaderMiddleware, host=host, port=port)
 
     app.include_router(health_router)
     app.include_router(version_router)
