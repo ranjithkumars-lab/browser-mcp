@@ -72,6 +72,7 @@ def _run_http(context: AppContext, host: str | None, port: int | None, reload: b
         host=resolved_host,
         port=resolved_port,
         reload=reload,
+        forwarded_allow_ips="*",
     )
     server = uvicorn.Server(config)
 
