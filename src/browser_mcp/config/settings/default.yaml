@@ -96,3 +96,11 @@ ui:
   websocket_path: /api/v1/dashboard/ws
   reconnect_delay_ms: 1000
   event_buffer_size: 1000
+
+ollama:
+  host: "http://10.0.0.170:11444"
+  model: "gpt-oss:20b"
+  timeout_seconds: 120.0
+  max_tool_steps: 8
+  context_tokens: 16384
+  temperature: 0.0

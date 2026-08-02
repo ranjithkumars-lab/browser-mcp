@@ -31,6 +31,8 @@ services:
     environment:
       BROWSER_MCP_ENV: development
       PLAYWRIGHT_BROWSERS_PATH: /opt/ms-playwright
+      BROWSER_MCP_OLLAMA__HOST: ${BROWSER_MCP_OLLAMA__HOST:-http://10.0.0.170:11444}
+      BROWSER_MCP_OLLAMA__MODEL: ${BROWSER_MCP_OLLAMA__MODEL:-gpt-oss:20b}
     ports:
       - "8081:8080"
     volumes:

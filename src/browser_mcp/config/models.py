@@ -20,6 +20,7 @@ __all__ = [
     "EventsConfig",
     "NavigationConfig",
     "NavigationStrategy",
+    "OllamaConfig",
     "PluginsConfig",
     "PoolConfig",
     "ProfilesConfig",
@@ -159,6 +160,28 @@ class UiConfig(BaseModel):
     event_buffer_size: int = Field(default=1000, ge=1)
 
 
+class OllamaConfig(BaseModel):
+    """Ollama chat agent configuration."""
+
+    host: str = Field(
+        default="http://10.0.0.170:11444",
+        description="Ollama HTTP endpoint used by the chat agent.",
+    )
+    model: str = Field(default="gpt-oss:20b", description="Default chat model name.")
+    timeout_seconds: float = Field(default=120.0, gt=0)
+    max_tool_steps: int = Field(default=8, ge=1, le=32)
+    context_tokens: int = Field(default=16_384, ge=512)
+    temperature: float = Field(default=0.0, ge=0, le=2)
+    system_prompt: str = Field(
+        default=(
+            "You are a helpful assistant operating a browser through MCP tools. "
+            "When the user asks you to inspect, navigate, or interact with web "
+            "pages, use the available browser tools to complete the task, then "
+            "summarize what you did and the observed outcome."
+        )
+    )
+
+
 class BrowserConfig(BaseModel):
     """Per-browser launch options."""
 
@@ -292,3 +315,4 @@ class BrowserSettings(BaseSettings):
     server: ServerConfig = Field(default_factory=ServerConfig)
     api: ApiConfig = Field(default_factory=ApiConfig)
     ui: UiConfig = Field(default_factory=UiConfig)
+    ollama: OllamaConfig = Field(default_factory=OllamaConfig)

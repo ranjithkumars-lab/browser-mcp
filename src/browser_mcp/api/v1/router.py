@@ -2,6 +2,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from browser_mcp.api.chat.routes import router as chat_router
 from browser_mcp.api.dependencies import get_engine
 from browser_mcp.api.v1.routes.dashboard import router as dashboard_router
 from browser_mcp.api.v1.routes.ws import router as ws_router
@@ -9,6 +10,7 @@ from browser_mcp.api.v1.routes.ws import router as ws_router
 router = APIRouter(prefix="/api/v1")
 router.include_router(dashboard_router)
 router.include_router(ws_router)
+router.include_router(chat_router)
 
 EngineDep = Annotated[Any, Depends(get_engine)]
 

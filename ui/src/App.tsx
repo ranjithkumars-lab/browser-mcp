@@ -14,11 +14,13 @@ import { Sessions } from "./pages/Sessions";
 import { Downloads } from "./pages/Downloads";
 import { Access } from "./pages/Access";
 import { Settings } from "./pages/Settings";
+import { Chat } from "./pages/Chat";
 
 const queryClient = new QueryClient();
 
 const pages = [
   { name: "Dashboard", component: Dashboard },
+  { name: "Chat", component: Chat },
   { name: "Jobs", component: Jobs },
   { name: "Workers", component: Workers },
   { name: "Logs", component: Logs },

@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import FastAPI
 
+from browser_mcp.api.chat.agent import ChatAgent
 from browser_mcp.api.engine import ApiEngine
 from browser_mcp.api.jobs.manager import JobManager
 from browser_mcp.api.static import mount_spa
@@ -25,6 +26,7 @@ def create_api_app(
     )
     app.state.api_config = config
     app.state.api_engine = ApiEngine(context, JobManager(config.job_retention_minutes))
+    app.state.chat_agent = ChatAgent(context.tools, browser.ollama)
     app.include_router(router)
     mount_spa(app, browser.ui.static_directory)
     return app
