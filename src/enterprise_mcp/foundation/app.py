@@ -43,7 +43,11 @@ class AppContext:
         # ``server.name`` and ``server.observability`` are enterprise-only
         # attributes; fall back to sensible defaults for browser settings.
         self._server_name = getattr(self.settings.server, "name", "browser-mcp-server")
-        self.mcp = MCPServer(tools=self.tools, name=self._server_name)
+        self._mcp_host = str(
+            getattr(getattr(self.settings.server, "transports", None), "host", None)
+            or "127.0.0.1"
+        )
+        self.mcp = MCPServer(tools=self.tools, name=self._server_name, host=self._mcp_host)
         self._health_providers: dict[str, HealthProvider] = {}
         self._started = False
 

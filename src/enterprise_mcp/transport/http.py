@@ -31,12 +31,14 @@ class StreamableHTTPTransport(Transport):
         tools: ToolRegistry | None = None,
         path: str = DEFAULT_MCP_PATH,
         server_name: str = "enterprise-mcp-server",
+        host: str = "127.0.0.1",
         debug: bool = False,
         json_response: bool = False,
     ) -> None:
         self._tools = tools or ToolRegistry()
         self._path = path
         self._server_name = server_name
+        self._host = host
         self._debug = debug
         self._json_response = json_response
         self._fastmcp: Any = None
@@ -48,6 +50,34 @@ class StreamableHTTPTransport(Transport):
     def path(self) -> str:
         """Return the mount path of this transport."""
         return self._path
+
+    def _transport_security(self) -> TransportSecuritySettings | None:
+        """Return transport-security settings appropriate for the bind host.
+
+        The MCP SDK's DNS rebinding protection only makes sense for loopback
+        binds: it validates the incoming ``Host`` header against a fixed set
+        of localhost values. When the server is bound to a non-loopback
+        address (e.g. ``0.0.0.0`` in Docker/production) a client may reach
+        it through any IP/hostname, so the SDK's validation would reject
+        legitimate requests with ``421 Misdirected Request``. In that case
+        we disable it and rely on the network edge (reverse proxy, firewall,
+        API-key auth) for host verification.
+
+        Returning ``None`` lets the SDK apply its secure loopback defaults.
+        """
+        if self._is_loopback(self._host):
+            return None
+        return TransportSecuritySettings(enable_dns_rebinding_protection=False)
+
+    @staticmethod
+    def _is_loopback(host: str) -> bool:
+        """Return whether the bind ``host`` is a loopback address.
+
+        ``0.0.0.0`` / ``::`` / ``""`` mean "all interfaces" and are treated as
+        non-loopback because clients may reach the server through any network
+        address, defeating the SDK's localhost-only host validation.
+        """
+        return host in ("127.0.0.1", "localhost", "::1", "[::1]")
 
     @property
     def is_running(self) -> bool:
@@ -65,9 +95,7 @@ class StreamableHTTPTransport(Transport):
             debug=self._debug,
             json_response=self._json_response,
             streamable_http_path="/",
-            transport_security=TransportSecuritySettings(
-                enable_dns_rebinding_protection=False,
-            ),
+            transport_security=self._transport_security(),
         )
         for metadata in self._tools.list():
             func = self._tools.get(metadata.name)

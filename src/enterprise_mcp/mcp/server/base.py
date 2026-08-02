@@ -23,8 +23,10 @@ class MCPServer:
         *,
         tools: ToolRegistry | None = None,
         name: str = "enterprise-mcp-server",
+        host: str = "127.0.0.1",
     ) -> None:
         self.name = name
+        self.host = host
         self.tools = tools or ToolRegistry()
         self._transports: dict[str, Transport] = {}
         self._running = False
@@ -51,6 +53,7 @@ class MCPServer:
             transport = StreamableHTTPTransport(
                 tools=self.tools,
                 server_name=self.name,
+                host=self.host,
             )
             self._transports["streamable-http"] = transport
         return cast(StreamableHTTPTransport, transport)
