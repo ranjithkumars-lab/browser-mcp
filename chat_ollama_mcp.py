@@ -10,10 +10,23 @@ MCP_SERVER_URL = "http://192.168.0.168:8001/mcp/"
 OLLAMA_HOST = "http://10.0.0.170:11444"
 MODEL = "gpt-oss:20b"
 
+
+def tool_parameters(tool: object) -> dict:
+    """Return a tool's JSON schema across MCP SDK versions.
+
+    Older SDKs expose ``inputSchema``; newer ones expose ``input_schema``.
+    """
+    for attr in ("input_schema", "inputSchema"):
+        schema = getattr(tool, attr, None)
+        if schema is not None:
+            return schema
+    return {}
+
 async def chat_loop():
     print(f"Connecting to MCP server at {MCP_SERVER_URL}...")
     
-    async with streamable_http_client(MCP_SERVER_URL) as (read_stream, write_stream):
+    async with streamable_http_client(MCP_SERVER_URL) as streams:
+        read_stream, write_stream = streams[0], streams[1]
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             
@@ -27,7 +40,7 @@ async def chat_loop():
                     "function": {
                         "name": tool.name,
                         "description": tool.description,
-                        "parameters": tool.inputSchema
+                        "parameters": tool_parameters(tool)
                     }
                 }
                 for tool in mcp_tools

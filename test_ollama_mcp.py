@@ -1,11 +1,19 @@
 import asyncio
 import json
 from mcp import ClientSession
-from mcp.client.sse import sse_client
+from mcp.client.streamable_http import streamable_http_client
 import ollama
 
+def tool_parameters(tool: object) -> dict:
+    """Return a tool's JSON schema across MCP SDK versions."""
+    for attr in ("input_schema", "inputSchema"):
+        schema = getattr(tool, attr, None)
+        if schema is not None:
+            return schema
+    return {}
+
 async def main():
-    # URL to the browser-mcp server's SSE endpoint.
+    # URL to the browser-mcp server's streamable-http endpoint.
     # Change "localhost" to your server's IP (e.g. 192.168.0.168) if running remotely.
     server_url = "http://localhost:8001/mcp/"
     
@@ -15,7 +23,8 @@ async def main():
     
     print(f"Connecting to MCP server at {server_url}...")
     
-    async with sse_client(server_url) as (read_stream, write_stream):
+    async with streamable_http_client(server_url) as streams:
+        read_stream, write_stream = streams[0], streams[1]
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             print("Connected successfully!")
@@ -32,7 +41,7 @@ async def main():
                     "function": {
                         "name": tool.name,
                         "description": tool.description,
-                        "parameters": tool.inputSchema
+                        "parameters": tool_parameters(tool)
                     }
                 })
             
