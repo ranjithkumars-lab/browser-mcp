@@ -168,7 +168,14 @@ class OllamaConfig(BaseModel):
         description="Ollama HTTP endpoint used by the chat agent.",
     )
     model: str = Field(default="gpt-oss:20b", description="Default chat model name.")
-    timeout_seconds: float = Field(default=120.0, gt=0)
+    timeout_seconds: float = Field(default=300.0, gt=0)
+    keep_alive: str = Field(
+        default="30m",
+        description=(
+            "How long Ollama keeps the model resident after each request "
+            "(e.g. 5m, 30m, -1 for indefinite). Prevents cold-load stalls."
+        ),
+    )
     max_tool_steps: int = Field(default=8, ge=1, le=32)
     context_tokens: int = Field(default=16_384, ge=512)
     temperature: float = Field(default=0.0, ge=0, le=2)

@@ -174,6 +174,7 @@ class ChatAgent:
             "messages": history,
             "tools": tools,
             "stream": True,
+            "keep_alive": self._config.keep_alive,
             "options": {
                 "temperature": self._config.temperature,
                 "num_ctx": self._config.context_tokens,
