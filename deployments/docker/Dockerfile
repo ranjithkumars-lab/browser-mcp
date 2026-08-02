@@ -44,7 +44,7 @@ COPY --from=ui-builder /ui/dist ./ui/dist
 RUN mkdir -p /app/config
 
 # Run as a non-root user.
-RUN groupadd --system app && useradd --system --gid app app \
+RUN groupadd --system app && useradd --system --create-home --gid app app \
     && chown -R app:app /app
 USER app
 
