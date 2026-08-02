@@ -6,7 +6,7 @@ from mcp.client.sse import sse_client
 from ollama import AsyncClient
 
 # Configuration
-MCP_SERVER_URL = "http://localhost:8001/mcp/sse"
+MCP_SERVER_URL = "http://localhost:8001/mcp/"
 OLLAMA_HOST = "http://10.0.0.170:11444"
 MODEL = "gpt-oss:20b"
 

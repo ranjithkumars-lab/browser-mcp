@@ -7,7 +7,7 @@ import ollama
 async def main():
     # URL to the browser-mcp server's SSE endpoint.
     # Change "localhost" to your server's IP (e.g. 192.168.0.168) if running remotely.
-    server_url = "http://localhost:8001/mcp/sse"
+    server_url = "http://localhost:8001/mcp/"
     
     # Define the model to use (Ensure you have pulled a tool-calling capable model like llama3.1)
     # e.g., run `ollama run llama3.1` in your terminal first.
