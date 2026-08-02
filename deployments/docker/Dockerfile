@@ -44,11 +44,18 @@ COPY --from=ui-builder /ui/dist ./ui/dist
 RUN mkdir -p /app/config
 
 # Run as a non-root user.
-RUN groupadd --system app && useradd --system --create-home --gid app app \
+RUN groupadd --system app && useradd --system --create-home --gid app app
+
+# Install Playwright browser binaries + OS deps so the browser tools can
+# actually launch inside the container. Shared location owned by `app`.
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
+RUN /app/.venv/bin/python -m playwright install --with-deps chromium \
+    && chown -R app:app /opt/ms-playwright \
     && chown -R app:app /app
+
 USER app
 
 EXPOSE 8000 8080
 
-ENTRYPOINT ["enterprise-mcp"]
-CMD ["serve", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["browser-mcp"]
+CMD ["mcp", "serve", "--host", "0.0.0.0", "--port", "8000"]

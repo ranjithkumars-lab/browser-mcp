@@ -1,6 +1,7 @@
 import typer
 
 from browser_mcp.api.cli import app as api_app
+from browser_mcp.mcp.cli import app as mcp_app
 from browser_mcp.workers.cli import app as workers_app
 
 app = typer.Typer(
@@ -11,6 +12,7 @@ app = typer.Typer(
 )
 
 app.add_typer(api_app, name="api", help="REST API Engine & UI Server commands.")
+app.add_typer(mcp_app, name="mcp", help="MCP Server (Streamable HTTP) commands.")
 app.add_typer(workers_app, name="worker", help="Distributed Worker Engine commands.")
 
 

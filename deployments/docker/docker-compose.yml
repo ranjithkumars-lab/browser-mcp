@@ -1,33 +1,36 @@
 services:
-  # Enterprise MCP Server (stdio/streamable-http transport)
+  # Browser MCP Server (Streamable HTTP transport) - exposes the browser tools
   mcp-server:
     build:
       context: ../..
       dockerfile: deployments/docker/Dockerfile
-    image: enterprise-mcp-server:latest
+    image: browser-mcp-server:latest
     environment:
-      DOCKER_BUILDKIT: "1"
-      ENTERPRISE_MCP_ENV: development
+      BROWSER_MCP_ENV: development
+      PLAYWRIGHT_BROWSERS_PATH: /opt/ms-playwright
     ports:
       - "8001:8000"
     volumes:
       - ./config:/app/config:ro
     restart: unless-stopped
+    entrypoint: ["browser-mcp"]
+    command: ["mcp", "serve", "--host", "0.0.0.0", "--port", "8000"]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)"]
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 15s
 
   # Browser MCP REST API + Control Center UI
   browser-api:
     build:
       context: ../..
       dockerfile: deployments/docker/Dockerfile
-    image: enterprise-mcp-server:latest
+    image: browser-mcp-server:latest
     environment:
-      DOCKER_BUILDKIT: "1"
       BROWSER_MCP_ENV: development
+      PLAYWRIGHT_BROWSERS_PATH: /opt/ms-playwright
     ports:
       - "8081:8080"
     volumes:
@@ -65,10 +68,10 @@ services:
     build:
       context: ../..
       dockerfile: deployments/docker/Dockerfile
-    image: enterprise-mcp-server:latest
+    image: browser-mcp-server:latest
     environment:
-      DOCKER_BUILDKIT: "1"
       BROWSER_MCP_ENV: development
+      PLAYWRIGHT_BROWSERS_PATH: /opt/ms-playwright
       REDIS_URI: redis://redis:6379/0
     volumes:
       - ./config:/app/config:ro
