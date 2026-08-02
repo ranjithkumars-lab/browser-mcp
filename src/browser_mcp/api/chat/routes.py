@@ -26,10 +26,12 @@ def _sse(event: str, payload: dict[str, Any]) -> str:
 
 @router.get("/chat/config")
 async def chat_config(agent: AgentDep) -> ChatConfigResponse:
+    definitions = agent.tool_definitions()
     return ChatConfigResponse(
         host=agent._config.host,
         model=agent._config.model,
-        tools=len(agent.tool_definitions()),
+        tools=len(definitions),
+        tool_names=[d["function"]["name"] for d in definitions],
     )
 
 

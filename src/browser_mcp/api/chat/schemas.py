@@ -22,3 +22,4 @@ class ChatConfigResponse(BaseModel):
     host: str
     model: str
     tools: int
+    tool_names: list[str] = Field(default_factory=list[str])

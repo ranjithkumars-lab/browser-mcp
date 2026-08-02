@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getChatConfig, chatStream, type ChatMessage } from "../services/chat";
+import { Icon } from "../components/Icon";
+import { Markdown } from "../utils/markdown";
 
 type Turn =
   | { kind: "user"; content: string }
@@ -40,7 +42,7 @@ export function Chat() {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  useEffect(scrollToBottom, [turns, scrollToBottom]);
+  useEffect(scrollToBottom, [turns, busy, scrollToBottom]);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -89,13 +91,16 @@ export function Chat() {
           ]);
         } else if (event.type === "error") {
           setError(event.detail);
+        } else if (event.type === "done") {
+          setTurns((prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.kind === "assistant" && last.streaming) {
+              return [...prev.slice(0, -1), { kind: "assistant", content: last.content, streaming: false }];
+            }
+            return prev;
+          });
         }
       }
-      setTurns((prev) => {
-        const streaming = prev[prev.length - 1]?.kind === "assistant";
-        const next = streaming ? prev.slice(0, -1) : prev;
-        return [...next, { kind: "assistant", content: assistantContent }];
-      });
     } catch (err) {
       const message = err instanceof DOMException && err.name === "AbortError"
         ? "Stopped."
@@ -109,110 +114,178 @@ export function Chat() {
     }
   }, [busy, input, model, turns]);
 
-  if (loadingConfig) return <div className="card">Loading chat...</div>;
-  if (configError) return <div className="card">Failed to load chat configuration</div>;
+  if (loadingConfig) {
+    return (
+      <div className="card" aria-busy="true">
+        <div className="skeleton" style={{ height: "1.25rem", width: "12rem", marginBottom: "0.75rem" }} />
+        <div className="skeleton" style={{ height: "4rem" }} />
+        <div className="skeleton" style={{ height: "2.5rem", marginTop: "0.75rem" }} />
+      </div>
+    );
+  }
+  if (configError) {
+    return (
+      <div className="alert alert-error" role="alert">
+        Failed to load chat configuration. Check that the API server is reachable.
+      </div>
+    );
+  }
+
+  const lastTurn = turns[turns.length - 1];
+  const streamingAssistant = lastTurn?.kind === "assistant" && lastTurn.streaming === true;
 
   return (
-    <div className="card chat-card">
-      <div className="chat-head">
-        <h3>Ollama Chat</h3>
-        <label className="chat-model">
-          Model
-          <input
-            list="ollama-models"
-            value={activeModel}
-            placeholder="model"
-            aria-label="Ollama model"
-            onChange={(e) => setModel(e.target.value)}
-          />
-          <datalist id="ollama-models">
-            {config ? <option value={config.model} /> : null}
-          </datalist>
-        </label>
-      </div>
-      <p className="muted">
-        {config ? `${config.tools} browser tools available via ${config.host}` : ""}
-      </p>
-
-      {turns.length === 0 ? (
-        <div className="empty">
-          <p>Ask the agent to browse, scrape, or automate the web.</p>
+    <div className="chat-layout">
+      <div className="card chat-card">
+        <div className="chat-head">
+          <div>
+            <div className="card-title">Ollama Chat</div>
+            <div className="card-sub">{config ? `${config.tools} browser tools available via ${config.host}` : ""}</div>
+          </div>
+          <label className="chat-model">
+            Model
+            <input
+              className="input"
+              list="ollama-models"
+              value={activeModel}
+              placeholder="model"
+              aria-label="Ollama model"
+              onChange={(e) => setModel(e.target.value)}
+            />
+            <datalist id="ollama-models">
+              {config ? <option value={config.model} /> : null}
+            </datalist>
+          </label>
         </div>
-      ) : (
-        <div className="chat-thread" aria-live="polite">
-          {turns.map((turn, index) => {
-            if (turn.kind === "user") {
+
+        {turns.length === 0 && !busy ? (
+          <div className="state" style={{ margin: "var(--space-5)", marginTop: "var(--space-7)" }}>
+            <div className="state-icon"><Icon name="chat" style={{ width: "2.5rem", height: "2.5rem" }} /></div>
+            <div className="state-title">Ask the agent to browse the web</div>
+            <div className="state-sub">
+              The agent can navigate pages, take snapshots, search the web, extract data, and run browser automations.
+            </div>
+          </div>
+        ) : (
+          <div className="chat-thread" aria-live="polite">
+            {turns.map((turn, index) => {
+              if (turn.kind === "user") {
+                return (
+                  <div key={index} className="chat-msg chat-user">
+                    <div className="chat-bubble">{turn.content}</div>
+                  </div>
+                );
+              }
+              if (turn.kind === "assistant") {
+                return (
+                  <div key={index} className="chat-msg chat-agent">
+                    <div className="chat-role">Assistant</div>
+                    <div className="chat-bubble">
+                      {turn.streaming && !turn.content ? (
+                        <div className="typing"><span /><span /><span /></div>
+                      ) : (
+                        <Markdown text={turn.content} />
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+              if (turn.kind === "tool_call") {
+                return (
+                  <div key={index} className="tool-row">
+                    <div className="tool-name">
+                      {turn.name} <code>tool call</code>
+                    </div>
+                    <pre className="tool-args">{jsonText(turn.arguments)}</pre>
+                  </div>
+                );
+              }
               return (
-                <div key={index} className="chat-msg chat-user">
-                  <div>{turn.content}</div>
+                <div key={index} className={`tool-row${turn.error ? " error" : ""}`} role={turn.error ? "alert" : undefined}>
+                  <div className="tool-name">
+                    {turn.name} <code>{turn.error ? "error" : "result"}</code>
+                  </div>
+                  <pre className="tool-out">{truncate(turn.content)}</pre>
                 </div>
               );
-            }
-            if (turn.kind === "assistant") {
-              return (
-                <div key={index} className="chat-msg chat-agent">
-                  <pre className="chat-pre">{turn.content || (turn.streaming ? "\u2026" : "")}</pre>
-                </div>
-              );
-            }
-            if (turn.kind === "tool_call") {
-              return (
-                <div key={index} className="chat-tool">
-                  <strong>{turn.name}</strong>
-                  <code>{jsonText(turn.arguments)}</code>
-                </div>
-              );
-            }
-            return (
-              <div key={index} className="chat-tool" role={turn.error ? "alert" : undefined}>
-                <strong>{turn.name}</strong>
-                <pre>{truncate(turn.content)}</pre>
+            })}
+
+            {busy && !streamingAssistant && (
+              <div className="chat-msg chat-agent">
+                <div className="chat-role">Assistant</div>
+                <div className="chat-bubble"><div className="typing"><span /><span /><span /></div></div>
               </div>
-            );
-          })}
-          <div ref={scrollRef} />
-        </div>
-      )}
+            )}
+            <div ref={scrollRef} />
+          </div>
+        )}
 
-      {busy && <div className="muted">Agent is working\u2026</div>}
-      {error && <div className="chat-error" role="alert">{error}</div>}
+        {error && <div className="alert alert-error" role="alert">{error}</div>}
 
-      <form
-        className="chat-compose"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void send();
-        }}
-      >
-        <textarea
-          rows={3}
-          value={input}
-          placeholder="Describe a browser task\u2026"
-          aria-label="Message"
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              void send();
-            }
+        <form
+          className="chat-compose"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void send();
           }}
-        />
-        <div className="chat-actions">
-          {busy ? (
-            <button
-              type="button"
-              className="danger"
-              onClick={() => abortRef.current?.abort()}
-            >
-              Stop
-            </button>
-          ) : (
-            <button type="submit" disabled={!input.trim()}>
-              Send
-            </button>
-          )}
+        >
+          <textarea
+            rows={3}
+            value={input}
+            placeholder="Describe a browser task\u2026"
+            aria-label="Message"
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void send();
+              }
+            }}
+          />
+          <div className="chat-actions">
+            {busy ? (
+              <button type="button" className="btn btn-danger" onClick={() => abortRef.current?.abort()}>
+                Stop
+              </button>
+            ) : (
+              <button type="submit" className="btn btn-primary" disabled={!input.trim()}>
+                Send
+              </button>
+            )}
+            <span className="chat-hint">Enter to send &middot; Shift+Enter for a new line</span>
+          </div>
+        </form>
+      </div>
+
+      <div className="chat-side">
+        <div className="card">
+          <div className="card-title">Ollama</div>
+          <div className="card-sub">Server model for the agent loop</div>
+          <div style={{ marginTop: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+            <div>
+              <span className="badge badge-accent">{config?.model ?? "gpt-oss:20b"}</span>
+            </div>
+            <div>
+              <span className="badge badge-muted">{config?.host ?? ""}</span>
+            </div>
+            <div>
+              <span className="badge badge-info">{config?.tools ?? 0} tools</span>
+            </div>
+          </div>
         </div>
-      </form>
+        <div className="card">
+          <div className="card-title">Available tools</div>
+          <div className="card-sub">Injected into every agent run</div>
+          <div className="tools-panel">
+            {(config?.tool_names ?? []).map((name) => (
+              <div className="tool-item" key={name}>
+                <code>{name}</code>
+                <span className="badge badge-muted">tool</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

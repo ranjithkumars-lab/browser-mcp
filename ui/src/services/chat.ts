@@ -17,6 +17,7 @@ export interface ChatConfig {
   host: string;
   model: string;
   tools: number;
+  tool_names: string[];
 }
 
 export const getChatConfig = () => request<ChatConfig>("/api/v1/chat/config");

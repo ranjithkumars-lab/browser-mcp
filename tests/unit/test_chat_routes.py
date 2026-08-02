@@ -52,6 +52,7 @@ def test_chat_config_reports_tool_count() -> None:
     assert payload["host"] == "http://ollama.local"
     assert payload["model"] == "test-model"
     assert payload["tools"] == 1
+    assert payload["tool_names"] == ["echo"]
 
 
 def test_chat_stream_emits_sse_frames() -> None:

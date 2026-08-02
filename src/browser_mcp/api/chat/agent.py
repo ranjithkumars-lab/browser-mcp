@@ -109,23 +109,33 @@ class ChatAgent:
 
         while True:
             steps += 1
+            tool_calls: list[dict[str, Any]] = []
+            step_text = ""
             try:
-                content_parts, tool_calls = await self._complete(
+                async for delta, raw_calls in self._chat_stream(
                     resolved_model, history, tools
-                )
+                ):
+                    if delta:
+                        step_text += delta
+                        final_text += delta
+                        yield {"type": "text", "delta": delta}
+                    if raw_calls:
+                        tool_calls.extend(raw_calls)
             except (httpx.HTTPError, json.JSONDecodeError) as exc:
                 _LOGGER.error("chat_agent_request_failed", error=str(exc))
                 yield {"type": "error", "detail": str(exc)}
                 return
 
-            for part in content_parts:
-                final_text += part
-                yield {"type": "text", "delta": part}
-
             if not tool_calls:
                 break
 
-            history.append({"role": "assistant", "content": "".join(content_parts)})
+            history.append(
+                {
+                    "role": "assistant",
+                    "content": step_text,
+                    "tool_calls": tool_calls,
+                }
+            )
             for tool_call in tool_calls:
                 function = cast(dict[str, Any], tool_call.get("function") or {})
                 name = str(function.get("name", ""))
@@ -155,10 +165,10 @@ class ChatAgent:
 
         yield {"type": "done", "content": final_text, "steps": steps}
 
-    async def _complete(
+    async def _chat_stream(
         self, model: str, history: list[dict[str, Any]], tools: list[dict[str, Any]]
-    ) -> tuple[list[str], list[dict[str, Any]]]:
-        """Call Ollama and return content deltas plus any tool calls."""
+    ) -> AsyncIterator[tuple[str, list[dict[str, Any]]]]:
+        """Yield ``(content_delta, tool_calls)`` as Ollama streams them."""
         payload: dict[str, Any] = {
             "model": model,
             "messages": history,
@@ -169,8 +179,6 @@ class ChatAgent:
                 "num_ctx": self._config.context_tokens,
             },
         }
-        content_parts: list[str] = []
-        tool_calls: list[dict[str, Any]] = []
         async with self._client.stream(
             "POST", f"{self._config.host.rstrip('/')}/api/chat", json=payload
         ) as response:
@@ -181,12 +189,13 @@ class ChatAgent:
                 chunk = cast(dict[str, Any], json.loads(line))
                 message = cast(dict[str, Any], chunk.get("message") or {})
                 content = message.get("content")
-                if isinstance(content, str) and content:
-                    content_parts.append(content)
-                raw_tool_calls: Any = message.get("tool_calls")
-                if isinstance(raw_tool_calls, list):
-                    tool_calls.extend(cast(list[dict[str, Any]], raw_tool_calls))
-        return content_parts, tool_calls
+                raw_calls: Any = message.get("tool_calls")
+                calls = (
+                    cast(list[dict[str, Any]], raw_calls)
+                    if isinstance(raw_calls, list)
+                    else []
+                )
+                yield (content if isinstance(content, str) else ""), calls
 
     @staticmethod
     def _serialize(result: Any) -> str:
