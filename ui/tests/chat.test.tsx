@@ -74,11 +74,11 @@ describe("Chat", () => {
     fireEvent.click(screen.getByText("Send"));
 
     expect((await screen.findAllByText("browser.goto")).length).toBeGreaterThan(0);
-    expect(await screen.findByText("loaded")).toBeTruthy();
+    expect(await screen.findByText("result")).toBeTruthy();
     await waitFor(() => expect(chatService.chatStream).toHaveBeenCalled());
   });
 
-  it("renders an inline screenshot for browser.screenshot results", async () => {
+  it("renders a file link for browser.screenshot results", async () => {
     const content = JSON.stringify({
       screenshot_path: "C:/shots/page_abc.png",
       mime_type: "image/png",
@@ -100,8 +100,8 @@ describe("Chat", () => {
     fireEvent.change(textarea, { target: { value: "screenshot" } });
     fireEvent.click(screen.getByText("Send"));
 
-    const image = await screen.findByAltText("browser screenshot");
-    expect(image.getAttribute("src")).toBe("/api/v1/screenshots/page_abc.png");
+    const link = await screen.findByRole("link", { name: /open screenshot file/i });
+    expect(link.getAttribute("href")).toBe("/api/v1/screenshots/page_abc.png");
   });
 
   it("shows an error message when the stream fails", async () => {

@@ -429,8 +429,8 @@ tbody tr:hover { background: var(--surface-2); }
 .tool-row.error { border-left-color: var(--danger); }
 .tool-name { font-weight: 600; display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary); }
 .tool-name code { font-size: var(--text-xs); color: var(--muted); }
-.tool-shot { max-width: 100%; max-height: 18rem; border-radius: var(--radius-sm); border: 1px solid var(--border); object-fit: contain; background: var(--surface-1); }
-.tool-args, .tool-out { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted); max-height: 10rem; overflow-y: auto; }
+.tool-file { font-size: var(--text-xs); color: var(--accent); text-decoration: underline; }
+.tool-args { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted); max-height: 10rem; overflow-y: auto; }
 
 .chat-compose {
   display: flex;

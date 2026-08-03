@@ -18,10 +18,6 @@ function jsonText(value: Record<string, unknown>): string {
   }
 }
 
-function truncate(value: string, max = 600): string {
-  return value.length > max ? `${value.slice(0, max)}\u2026` : value;
-}
-
 const USER_ID_KEY = "browser-mcp-user-id";
 
 function currentUserId(): string {
@@ -233,12 +229,13 @@ export function Chat() {
                     {turn.name} <code>{turn.error ? "error" : "result"}</code>
                   </div>
                   {!turn.error && turn.name === "browser.screenshot" && (() => {
-                    const src = screenshotUrl(turn.content);
-                    return src ? (
-                      <img className="tool-shot" src={src} alt="browser screenshot" />
+                    const url = screenshotUrl(turn.content);
+                    return url ? (
+                      <a className="tool-file" href={url} target="_blank" rel="noopener noreferrer">
+                        Open screenshot file
+                      </a>
                     ) : null;
                   })()}
-                  <pre className="tool-out">{truncate(turn.content)}</pre>
                 </div>
               );
             })}
