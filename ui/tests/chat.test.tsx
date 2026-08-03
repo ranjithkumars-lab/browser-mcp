@@ -78,6 +78,32 @@ describe("Chat", () => {
     await waitFor(() => expect(chatService.chatStream).toHaveBeenCalled());
   });
 
+  it("renders an inline screenshot for browser.screenshot results", async () => {
+    const content = JSON.stringify({
+      screenshot_path: "C:/shots/page_abc.png",
+      mime_type: "image/png",
+      width: 1280,
+      height: 720,
+    });
+    async function* stream() {
+      yield { type: "tool_result", name: "browser.screenshot", content, error: false };
+      yield { type: "done", content: "Done", steps: 1 };
+    }
+    vi.mocked(chatService.chatStream).mockImplementation(async function* () {
+      yield* stream();
+    });
+
+    renderChat();
+    await screen.findByText(/54 browser tools available/);
+
+    const textarea = screen.getByLabelText("Message");
+    fireEvent.change(textarea, { target: { value: "screenshot" } });
+    fireEvent.click(screen.getByText("Send"));
+
+    const image = await screen.findByAltText("browser screenshot");
+    expect(image.getAttribute("src")).toBe("/api/v1/screenshots/page_abc.png");
+  });
+
   it("shows an error message when the stream fails", async () => {
     vi.mocked(chatService.chatStream).mockImplementation(async function* () {
       yield { type: "error", detail: "connection refused" };

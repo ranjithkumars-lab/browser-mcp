@@ -16,6 +16,10 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(default_factory=list[ChatMessage])
     model: str | None = None
+    user_id: str | None = Field(
+        default=None,
+        description="Optional identifier of the chat user requesting the run.",
+    )
 
 
 class ChatConfigResponse(BaseModel):

@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import json
+
 import httpx
 import pytest
 from fastapi.testclient import TestClient
 
 from browser_mcp.api.chat.agent import ChatAgent
+from browser_mcp.api.screenshots import ScreenshotStore
 from browser_mcp.api.v1.router import router as v1_router
 from browser_mcp.config.models import OllamaConfig
 from enterprise_mcp.tools.decorators import tool
@@ -40,6 +43,7 @@ def _app_client() -> TestClient:
     )
     app = FastAPI()
     app.state.chat_agent = agent
+    app.state.screenshot_store = ScreenshotStore()
     app.include_router(v1_router)
     return TestClient(app)
 
@@ -76,3 +80,53 @@ def test_chat_stream_accepts_model_override() -> None:
         json={"messages": [], "model": "other-model"},
     )
     assert response.status_code == 200
+
+
+def test_chat_stream_records_screenshot_tool_result(tmp_path) -> None:
+    target = tmp_path / "captured.png"
+    target.write_bytes(b"png-bytes")
+    payload = {
+        "screenshot_path": str(target),
+        "session_id": "s1",
+        "page_id": "p1",
+        "url": "https://example.com/",
+        "title": "Example",
+        "mime_type": "image/png",
+    }
+
+    class FakeAgent:
+        def tool_definitions(self):
+            return []
+
+        async def stream(self, messages, model=None):
+            content = json.dumps(payload)
+            yield {
+                "type": "tool_result",
+                "name": "browser.screenshot",
+                "content": content,
+                "error": False,
+            }
+            yield {"type": "done", "content": "", "steps": 1}
+
+    from fastapi import FastAPI
+
+    from browser_mcp.api.v1.router import router as v1_router
+
+    app = FastAPI()
+    app.state.chat_agent = FakeAgent()
+    app.state.screenshot_store = ScreenshotStore()
+    app.include_router(v1_router)
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/chat/stream",
+        json={"messages": [{"role": "user", "content": "screenshot"}], "user_id": "user-42"},
+    )
+    assert response.status_code == 200
+    store = app.state.screenshot_store
+    record = store.get("captured.png")
+    assert record is not None
+    assert record.user_id == "user-42"
+    assert record.session_id == "s1"
+    assert record.page_id == "p1"
+    assert record.title == "Example"

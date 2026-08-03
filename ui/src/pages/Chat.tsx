@@ -22,6 +22,32 @@ function truncate(value: string, max = 600): string {
   return value.length > max ? `${value.slice(0, max)}\u2026` : value;
 }
 
+const USER_ID_KEY = "browser-mcp-user-id";
+
+function currentUserId(): string {
+  try {
+    const existing = localStorage.getItem(USER_ID_KEY);
+    if (existing) return existing;
+    const id = crypto.randomUUID();
+    localStorage.setItem(USER_ID_KEY, id);
+    return id;
+  } catch {
+    return "anonymous";
+  }
+}
+
+function screenshotUrl(content: string): string | null {
+  try {
+    const data = JSON.parse(content) as Record<string, unknown>;
+    const path = typeof data?.screenshot_path === "string" ? data.screenshot_path : "";
+    if (!path) return null;
+    const filename = path.split(/[\\/]/).pop();
+    return filename ? `/api/v1/screenshots/${encodeURIComponent(filename)}` : null;
+  } catch {
+    return null;
+  }
+}
+
 export function Chat() {
   const { data: config, isLoading: loadingConfig, error: configError } = useQuery({
     queryKey: ["chat-config"],
@@ -35,6 +61,7 @@ export function Chat() {
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const userId = currentUserId();
 
   const activeModel = model ?? config?.model ?? "";
 
@@ -69,7 +96,7 @@ export function Chat() {
     let assistantContent = "";
 
     try {
-      for await (const event of chatStream(messages, model || undefined, controller.signal)) {
+      for await (const event of chatStream(messages, model || undefined, userId, controller.signal)) {
         if (event.type === "text") {
           assistantContent += event.delta;
           setTurns((prev) => {
@@ -205,6 +232,12 @@ export function Chat() {
                   <div className="tool-name">
                     {turn.name} <code>{turn.error ? "error" : "result"}</code>
                   </div>
+                  {!turn.error && turn.name === "browser.screenshot" && (() => {
+                    const src = screenshotUrl(turn.content);
+                    return src ? (
+                      <img className="tool-shot" src={src} alt="browser screenshot" />
+                    ) : null;
+                  })()}
                   <pre className="tool-out">{truncate(turn.content)}</pre>
                 </div>
               );

@@ -37,12 +37,13 @@ function parseSseBlock(block: string): ChatEvent | null {
 export async function* chatStream(
   messages: ChatMessage[],
   model?: string,
+  userId?: string,
   signal?: AbortSignal,
 ): AsyncGenerator<ChatEvent> {
   const response = await fetch("/api/v1/chat/stream", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, model }),
+    body: JSON.stringify({ messages, model, user_id: userId }),
     signal,
   });
   if (!response.ok || !response.body) {
