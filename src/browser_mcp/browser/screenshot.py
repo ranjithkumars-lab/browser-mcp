@@ -5,12 +5,18 @@ and captures a PNG or JPEG image of either the full viewport, the full
 scrollable page, or an element matched by a CSS selector. The image is written
 to the configured screenshot directory and metadata (path, size, dimensions,
 format) is returned to the caller.
+
+Every successful capture is also recorded in a :class:`ScreenshotStore` so any
+transport (MCP tool, REST job, chat agent) can serve the artifact afterwards.
+The returned ``screenshot_path`` is always absolute.
 """
 
 from __future__ import annotations
 
 import struct
+import threading
 import time
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -22,10 +28,75 @@ from browser_mcp.browser.navigation.state import StateManager
 from browser_mcp.config.models import BrowserSettings
 from browser_mcp.errors import ScreenshotError
 
-__all__ = ["ScreenshotManager"]
+__all__ = ["ScreenshotManager", "ScreenshotRecord", "ScreenshotStore"]
 
 ScreenshotFormat = Literal["png", "jpeg"]
 _MIME_TYPES: dict[str, str] = {"png": "image/png", "jpeg": "image/jpeg"}
+
+
+@dataclass
+class ScreenshotRecord:
+    """A single captured screenshot and its owning chat user."""
+
+    filename: str
+    path: str
+    user_id: str | None = None
+    session_id: str | None = None
+    page_id: str | None = None
+    url: str | None = None
+    title: str | None = None
+    mime_type: str = "image/png"
+    width: int | None = None
+    height: int | None = None
+    captured_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "filename": self.filename,
+            "path": self.path,
+            "user_id": self.user_id,
+            "session_id": self.session_id,
+            "page_id": self.page_id,
+            "url": self.url,
+            "title": self.title,
+            "mime_type": self.mime_type,
+            "width": self.width,
+            "height": self.height,
+            "captured_at": self.captured_at,
+        }
+
+
+class ScreenshotStore:
+    """Thread-safe registry of captured screenshots keyed by filename."""
+
+    def __init__(self, max_records: int = 1000) -> None:
+        self._records: dict[str, ScreenshotRecord] = {}
+        self._lock = threading.Lock()
+        self._max_records = max_records
+
+    def record(self, record: ScreenshotRecord) -> None:
+        with self._lock:
+            if len(self._records) >= self._max_records and record.filename not in self._records:
+                oldest = next(iter(self._records))
+                self._records.pop(oldest, None)
+            self._records[record.filename] = record
+
+    def get(self, filename: str) -> ScreenshotRecord | None:
+        with self._lock:
+            return self._records.get(filename)
+
+    def list(self, user_id: str | None = None) -> list[dict[str, object]]:
+        with self._lock:
+            records = self._records.values()
+            if user_id is not None:
+                records = [record for record in records if record.user_id == user_id]
+            ordered = sorted(records, key=lambda record: record.captured_at, reverse=True)
+            return [record.as_dict() for record in ordered]
+
+    @staticmethod
+    def filename_from_path(path: str) -> str:
+        """Return the basename of a screenshot path (safe for URL lookups)."""
+        return Path(path).name
 
 
 class ScreenshotManager:
@@ -34,7 +105,13 @@ class ScreenshotManager:
     def __init__(self, state: StateManager, settings: BrowserSettings) -> None:
         self._state = state
         self._settings = settings
+        self._store = ScreenshotStore()
         self._logger = structlog.get_logger("browser_mcp.screenshot")
+
+    @property
+    def store(self) -> ScreenshotStore:
+        """Registry of every screenshot this manager has captured."""
+        return self._store
 
     # -- public API -----------------------------------------------------
 
@@ -120,7 +197,7 @@ class ScreenshotManager:
             duration_ms=duration_ms,
         )
 
-        return {
+        result = {
             "session_id": session_id,
             "page_id": page_id,
             "url": page.url,
@@ -137,6 +214,20 @@ class ScreenshotManager:
             "height": height,
             "duration_ms": duration_ms,
         }
+        self._store.record(
+            ScreenshotRecord(
+                filename=filepath.name,
+                path=str(filepath),
+                session_id=session_id,
+                page_id=page_id,
+                url=page.url,
+                title=await page.title(),
+                mime_type=_MIME_TYPES[resolved_format],
+                width=width,
+                height=height,
+            )
+        )
+        return result
 
     # -- helpers --------------------------------------------------------
 
@@ -150,6 +241,9 @@ class ScreenshotManager:
 
     def _build_path(self, directory: str, output_format: str, page_id: str) -> Path:
         path = Path(directory).expanduser()
+        if not path.is_absolute():
+            path = Path.cwd() / path
+        path = path.resolve()
         path.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         filename = f"{page_id}_{timestamp}_{uuid4().hex[:8]}.{output_format}"

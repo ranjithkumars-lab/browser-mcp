@@ -15,6 +15,21 @@ from browser_mcp.api.v1.router import router
 from browser_mcp.config.models import ApiConfig, BrowserSettings
 
 
+def _screenshot_store(context: Any) -> ScreenshotStore:
+    """Return the shared screenshot store from the wired browser context.
+
+    The :class:`ScreenshotManager` records every capture (MCP tool, REST job,
+    chat agent) into its own store; the API serves from that same store so all
+    screenshots are reachable at ``/api/v1/screenshots``.
+    """
+    if context is not None and context.container.has("screenshot_manager"):
+        manager = context.container.resolve("screenshot_manager")
+        store = getattr(manager, "store", None)
+        if store is not None:
+            return store
+    return ScreenshotStore()
+
+
 def _run_browser_lifespan(context: Any) -> Any:
     """Wrap ``context.start()``/``context.stop()`` in a FastAPI lifespan.
 
@@ -51,7 +66,7 @@ def create_api_app(
     app.state.api_config = config
     app.state.api_engine = ApiEngine(context, JobManager(config.job_retention_minutes))
     app.state.chat_agent = ChatAgent(context.tools, browser.ollama)
-    app.state.screenshot_store = ScreenshotStore()
+    app.state.screenshot_store = _screenshot_store(context)
     app.include_router(router)
     mount_spa(app, browser.ui.static_directory)
     return app

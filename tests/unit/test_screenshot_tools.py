@@ -182,6 +182,37 @@ class TestScreenshotManager:
         )
         assert Path(result["screenshot_path"]).parent == custom
 
+    @pytest.mark.asyncio
+    async def test_capture_relative_directory_yields_absolute_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        manager, runtime = await _build_manager(tmp_path)
+        runtime["page"].screenshot_bytes = PNG_1X1
+        monkeypatch.chdir(tmp_path)
+        result = await ScreenshotToolkit(manager).screenshot(
+            runtime["session_id"],
+            runtime["page_handle"].page_id,
+            directory="screenshots",
+        )
+        path = Path(result["screenshot_path"])
+        assert path.is_absolute()
+        assert path.parent == (tmp_path / "screenshots").resolve()
+        assert path.exists()
+
+    @pytest.mark.asyncio
+    async def test_capture_is_recorded_in_manager_store(self, tmp_path: Path) -> None:
+        manager, runtime = await _build_manager(tmp_path)
+        runtime["page"].screenshot_bytes = PNG_1X1
+        result = await ScreenshotToolkit(manager).screenshot(
+            runtime["session_id"], runtime["page_handle"].page_id
+        )
+        record = manager.store.get(Path(result["screenshot_path"]).name)
+        assert record is not None
+        assert record.path == result["screenshot_path"]
+        assert record.session_id == runtime["session_id"]
+        assert record.url == "https://example.com"
+        assert record.mime_type == "image/png"
+
 
 class TestImageDimensions:
     def test_png_dimensions(self) -> None:
