@@ -38,6 +38,7 @@ __all__ = [
     "ProductExtractionError",
     "ProfileError",
     "ScraperError",
+    "ScreenshotError",
     "SessionError",
     "SessionExpiredError",
     "SessionNotFoundError",
@@ -164,6 +165,10 @@ class SubmitError(FormError):
 
 class ScraperError(BrowserError):
     """Base class for all web scraping failures."""
+
+
+class ScreenshotError(BrowserError):
+    """Raised when a screenshot cannot be captured or persisted."""
 
 
 class ExtractionError(ScraperError):

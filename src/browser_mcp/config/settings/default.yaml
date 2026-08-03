@@ -47,6 +47,12 @@ transfer:
   collision_strategy: auto_rename
   cleanup_policy: on_failure
 
+screenshot:
+  directory: "~/.browser-mcp/screenshots"
+  default_format: png
+  default_full_page: false
+  default_quality: null
+
 events:
   max_history_size: 1000
   max_queue_size: 10000

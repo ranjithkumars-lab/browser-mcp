@@ -24,6 +24,7 @@ __all__ = [
     "PluginsConfig",
     "PoolConfig",
     "ProfilesConfig",
+    "ScreenshotConfig",
     "ServerConfig",
     "TimeoutConfig",
     "TransferConfig",
@@ -124,6 +125,29 @@ class PluginsConfig(BaseModel):
     allow_unsigned: bool = True
     max_execution_time_seconds: float = Field(default=30.0, gt=0)
     max_memory_mb: int = Field(default=256, ge=1)
+
+
+class ScreenshotConfig(BaseModel):
+    """Screenshot capture settings."""
+
+    directory: str = Field(
+        default="~/.browser-mcp/screenshots",
+        description="Directory where captured screenshots are stored.",
+    )
+    default_format: str = Field(
+        default="png",
+        description="Default image format: 'png' or 'jpeg'.",
+    )
+    default_full_page: bool = Field(
+        default=False,
+        description="Default value for the full-page screenshot flag.",
+    )
+    default_quality: int | None = Field(
+        default=None,
+        ge=1,
+        le=100,
+        description="Default JPEG quality (1-100).",
+    )
 
 
 class ServerConfig(BaseModel):
@@ -331,6 +355,7 @@ class BrowserSettings(BaseSettings):
     timeouts: TimeoutConfig = Field(default_factory=TimeoutConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
     transfer: TransferConfig = Field(default_factory=TransferConfig)
+    screenshot: ScreenshotConfig = Field(default_factory=ScreenshotConfig)
     events: EventsConfig = Field(default_factory=EventsConfig)
     plugins: PluginsConfig = Field(default_factory=PluginsConfig)
     server: ServerConfig = Field(default_factory=ServerConfig)

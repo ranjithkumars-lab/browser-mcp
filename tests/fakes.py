@@ -74,6 +74,9 @@ class FakeLocator:
         self.wait_for_error: Exception | None = None
         self.last_wait_state: str | None = None
         self.evaluate_result: Any = None
+        self.screenshot_error: Exception | None = None
+        self.last_screenshot: dict[str, Any] | None = None
+        self.screenshot_bytes: bytes = b"fake-locator-png"
 
     @property
     def element(self) -> FakeElement | None:
@@ -103,6 +106,12 @@ class FakeLocator:
 
     async def evaluate(self, expression: str, arg: Any = None) -> Any:
         return self.evaluate_result
+
+    async def screenshot(self, **kwargs: Any) -> bytes:
+        if self.screenshot_error is not None:
+            raise self.screenshot_error
+        self.last_screenshot = kwargs
+        return self.screenshot_bytes
 
     # -- queries --------------------------------------------------------
 
@@ -364,6 +373,9 @@ class FakePage:
         self.reload_error: Exception | None = None
         self.wait_for_url_error: Exception | None = None
         self.wait_for_load_state_error: Exception | None = None
+        self.screenshot_error: Exception | None = None
+        self.last_screenshot: dict[str, Any] | None = None
+        self.screenshot_bytes: bytes = b"fake-page-png"
 
     @property
     def url(self) -> str:
@@ -422,6 +434,12 @@ class FakePage:
     async def evaluate(self, expression: str, arg: Any = None) -> Any:
         self.evaluations.append((expression, arg))
         return None
+
+    async def screenshot(self, **kwargs: Any) -> bytes:
+        if self.screenshot_error is not None:
+            raise self.screenshot_error
+        self.last_screenshot = kwargs
+        return self.screenshot_bytes
 
     async def bring_to_front(self) -> None:
         return None

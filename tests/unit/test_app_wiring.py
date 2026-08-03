@@ -54,6 +54,7 @@ def test_registers_navigation_and_lifecycle_tools() -> None:
     assert f"{TOOL_NAMESPACE}.create_session" in names
     assert {f"{TOOL_NAMESPACE}.{name}" for name in NAV_TOOL_NAMES} <= names
     assert {"browser.element.find", "browser.element.text", "browser.element.state"} <= names
+    assert "browser.screenshot" in names
     assert len(names) >= 20 + 3 + 6
 
 
@@ -68,6 +69,7 @@ def test_registers_container_instances() -> None:
     assert context.container.has("navigation_state")
     assert context.container.has("navigation_manager")
     assert context.container.has("element_engine")
+    assert context.container.has("screenshot_manager")
     assert context.container.resolve("navigation_state") is not None
     assert context.container.resolve("element_engine") is not None
 

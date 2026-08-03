@@ -38,6 +38,7 @@ from browser_mcp.browser.page import PageManager
 from browser_mcp.browser.pool import BrowserPool
 from browser_mcp.browser.profile import ProfileManager
 from browser_mcp.browser.runtime import check_playwright_binaries
+from browser_mcp.browser.screenshot import ScreenshotManager
 from browser_mcp.browser.session import SessionManager
 from browser_mcp.config.loader import load_browser_settings
 from browser_mcp.config.models import BrowserSettings
@@ -55,6 +56,7 @@ from browser_mcp.plugins.tools import PluginToolkit
 from browser_mcp.tools.browser import BrowserToolkit
 from browser_mcp.tools.elements import ElementToolkit
 from browser_mcp.tools.navigation import NavigationToolkit
+from browser_mcp.tools.screenshot import ScreenshotToolkit
 from browser_mcp.transfer.downloads.integrity import ChecksumVerifier
 from browser_mcp.transfer.downloads.manager import DownloadManager
 from browser_mcp.transfer.downloads.naming import FileNamingStrategy
@@ -190,6 +192,10 @@ def create_browser_context(
     element_toolkit = ElementToolkit(elements)
     element_toolkit.register(resolved.tools)
 
+    screenshot_manager = ScreenshotManager(state, browser_settings)
+    screenshot_toolkit = ScreenshotToolkit(screenshot_manager)
+    screenshot_toolkit.register(resolved.tools)
+
     scraper_actions = ScraperActions(state, events, PayloadSizer())
     scraper_toolkit = ScraperToolkit(scraper_actions)
     scraper_toolkit.register(resolved.tools)
@@ -204,6 +210,7 @@ def create_browser_context(
     resolved.container.register_instance(state, name="navigation_state")
     resolved.container.register_instance(navigation, name="navigation_manager")
     resolved.container.register_instance(elements, name="element_engine")
+    resolved.container.register_instance(screenshot_manager, name="screenshot_manager")
 
     _LOGGER.info(
         "browser_context_ready",
