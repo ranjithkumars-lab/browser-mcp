@@ -103,5 +103,4 @@ ollama:
   timeout_seconds: 300.0
   keep_alive: "30m"
   max_tool_steps: 8
-  context_tokens: 16384
   temperature: 0.0

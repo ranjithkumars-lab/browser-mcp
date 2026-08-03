@@ -177,7 +177,15 @@ class OllamaConfig(BaseModel):
         ),
     )
     max_tool_steps: int = Field(default=8, ge=1, le=32)
-    context_tokens: int = Field(default=16_384, ge=512)
+    context_tokens: int | None = Field(
+        default=None,
+        ge=512,
+        description=(
+            "Ollama num_ctx. Leave unset to use the model's already-loaded "
+            "context (avoids an Ollama reload, which can hang on large models "
+            "hosted on a remote server)."
+        ),
+    )
     temperature: float = Field(default=0.0, ge=0, le=2)
     system_prompt: str = Field(
         default=(

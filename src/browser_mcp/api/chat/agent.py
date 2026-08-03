@@ -177,9 +177,10 @@ class ChatAgent:
             "keep_alive": self._config.keep_alive,
             "options": {
                 "temperature": self._config.temperature,
-                "num_ctx": self._config.context_tokens,
             },
         }
+        if self._config.context_tokens is not None:
+            payload["options"]["num_ctx"] = self._config.context_tokens
         async with self._client.stream(
             "POST", f"{self._config.host.rstrip('/')}/api/chat", json=payload
         ) as response:
