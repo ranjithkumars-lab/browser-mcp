@@ -45,7 +45,8 @@ class ScraperToolkit:
         name=f"{TOOL_NAMESPACE}.text",
         description=(
             "Extract visible text from the page body. Optionally restrict "
-            "extraction to elements matching a CSS selector."
+            "extraction to elements matching a CSS selector. output_format is "
+            "one of: 'json', 'markdown', 'text', 'csv', 'html'."
         ),
         returns="json",
     )

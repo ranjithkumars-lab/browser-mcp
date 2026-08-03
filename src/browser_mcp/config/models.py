@@ -190,9 +190,15 @@ class OllamaConfig(BaseModel):
     system_prompt: str = Field(
         default=(
             "You are a helpful assistant operating a browser through MCP tools. "
-            "When the user asks you to inspect, navigate, or interact with web "
-            "pages, use the available browser tools to complete the task, then "
-            "summarize what you did and the observed outcome."
+            "To work on a web page, first call browser.create_session, then "
+            "browser.create_context (on the returned session_id), then "
+            "browser.new_page (with that context_id; optionally pass a url to "
+            "navigate). Reuse the exact session_id/context_id/page_id returned "
+            "by the tools in every later call. To read page content use "
+            "browser.scrape.text with output_format 'markdown' (or 'text'). "
+            "Do not invent tool names or IDs that were not returned to you. "
+            "Call the tools with the exact parameter names shown in their "
+            "schemas. Then summarize what you did and the observed outcome."
         )
     )
 

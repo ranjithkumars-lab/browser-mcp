@@ -13,6 +13,7 @@ from browser_mcp.plugins.scraper.formatters.csv import CsvFormatter
 from browser_mcp.plugins.scraper.formatters.html import HtmlFormatter
 from browser_mcp.plugins.scraper.formatters.json import JsonFormatter
 from browser_mcp.plugins.scraper.formatters.markdown import MarkdownFormatter
+from browser_mcp.plugins.scraper.formatters.text import TextFormatter
 
 __all__ = [
     "BaseFormatter",
@@ -20,6 +21,7 @@ __all__ = [
     "HtmlFormatter",
     "JsonFormatter",
     "MarkdownFormatter",
+    "TextFormatter",
 ]
 
 FORMATTERS: dict[str, type[BaseFormatter]] = {
@@ -27,6 +29,7 @@ FORMATTERS: dict[str, type[BaseFormatter]] = {
     "csv": CsvFormatter,
     "markdown": MarkdownFormatter,
     "html": HtmlFormatter,
+    "text": TextFormatter,
 }
 
 

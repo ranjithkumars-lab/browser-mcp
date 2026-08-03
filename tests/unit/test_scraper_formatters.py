@@ -13,6 +13,7 @@ from browser_mcp.plugins.scraper.formatters.csv import CsvFormatter
 from browser_mcp.plugins.scraper.formatters.html import HtmlFormatter
 from browser_mcp.plugins.scraper.formatters.json import JsonFormatter
 from browser_mcp.plugins.scraper.formatters.markdown import MarkdownFormatter
+from browser_mcp.plugins.scraper.formatters.text import TextFormatter
 from browser_mcp.plugins.scraper.formatters.xml import XmlFormatter
 from browser_mcp.plugins.scraper.formatters.yaml import YamlFormatter
 from browser_mcp.plugins.scraper.models import (
@@ -58,6 +59,10 @@ class TestFormatterRegistry:
         fmt = get_formatter("html")
         assert isinstance(fmt, HtmlFormatter)
 
+    def test_get_formatter_text(self) -> None:
+        fmt = get_formatter("text")
+        assert isinstance(fmt, TextFormatter)
+
     def test_get_formatter_unsupported(self) -> None:
         with pytest.raises(FormattingError, match="unsupported output format"):
             get_formatter("xml")
@@ -71,6 +76,7 @@ class TestFormatterRegistry:
         assert CsvFormatter().format_name == "csv"
         assert MarkdownFormatter().format_name == "markdown"
         assert HtmlFormatter().format_name == "html"
+        assert TextFormatter().format_name == "text"
 
 
 # ---------------------------------------------------------------------------
@@ -166,6 +172,22 @@ class TestMarkdownFormatter:
         result = MarkdownFormatter().format([m1, m2])
         assert "first" in result
         assert "second" in result
+
+
+# ---------------------------------------------------------------------------
+# TextFormatter
+# ---------------------------------------------------------------------------
+
+
+class TestTextFormatter:
+    def test_format_simple_model(self) -> None:
+        model = TextResult(meta=_META, text="hello", word_count=1, char_count=5)
+        result = TextFormatter().format([model])
+        assert "text: hello" in result
+        assert "word_count: 1" in result
+
+    def test_format_empty(self) -> None:
+        assert TextFormatter().format([]) == ""
 
 
 # ---------------------------------------------------------------------------
