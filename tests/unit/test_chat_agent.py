@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from typing import Any
+
 import httpx
 import pytest
 
@@ -146,3 +149,69 @@ async def test_stream_handles_http_error() -> None:
     ]
     assert events[0]["type"] == "error"
     assert events[0]["detail"]
+
+
+async def test_stream_forces_summary_when_tool_calls_have_no_text() -> None:
+    calls: list[dict[str, Any]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        calls.append(body)
+        if "tools" not in body:
+            return httpx.Response(
+                200,
+                text='{"message":{"content":"The sum is 5.","role":"assistant"},"done":true}\n',
+            )
+        return httpx.Response(
+            200,
+            text=(
+                '{"message":{"content":"","role":"assistant","tool_calls":'
+                '[{"function":{"name":"add","arguments":{"a":2,"b":3}}}]},'
+                '"done":true}\n'
+            ),
+        )
+
+    config = OllamaConfig(max_tool_steps=2)
+    agent = _agent(_registry(), handler, config)
+    events = [
+        event
+        async for event in agent.stream([ChatMessage(role="user", content="sum")])
+    ]
+    assert [e["type"] for e in events] == [
+        "tool_call",
+        "tool_result",
+        "tool_call",
+        "tool_result",
+        "text",
+        "done",
+    ]
+    assert events[4]["delta"] == "The sum is 5."
+    assert events[5]["content"] == "The sum is 5."
+    assert events[5]["steps"] == 2
+    assert len(calls) == 3
+    assert "tools" not in calls[2]
+
+
+async def test_stream_does_not_force_summary_when_text_present() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            text=(
+                '{"message":{"content":"Partial answer:","role":"assistant","tool_calls":'
+                '[{"function":{"name":"add","arguments":{"a":1,"b":1}}}]},'
+                '"done":true}\n'
+            ),
+        )
+
+    config = OllamaConfig(max_tool_steps=1)
+    agent = _agent(_registry(), handler, config)
+    events = [
+        event
+        async for event in agent.stream([ChatMessage(role="user", content="sum")])
+    ]
+    assert events[0]["type"] == "text"
+    assert events[0]["delta"] == "Partial answer:"
+    assert events[1]["type"] == "tool_call"
+    assert events[2]["type"] == "tool_result"
+    assert events[-1]["type"] == "done"
+    assert events[-1]["content"] == "Partial answer:"

@@ -7,16 +7,8 @@ import { Markdown } from "../utils/markdown";
 type Turn =
   | { kind: "user"; content: string }
   | { kind: "assistant"; content: string; streaming?: boolean }
-  | { kind: "tool_call"; name: string; arguments: Record<string, unknown> }
+  | { kind: "tool_call"; name: string }
   | { kind: "tool_result"; name: string; content: string; error: boolean };
-
-function jsonText(value: Record<string, unknown>): string {
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return String(value);
-  }
-}
 
 const USER_ID_KEY = "browser-mcp-user-id";
 
@@ -105,7 +97,7 @@ export function Chat() {
         } else if (event.type === "tool_call") {
           setTurns((prev) => [
             ...prev,
-            { kind: "tool_call", name: event.name, arguments: event.arguments },
+            { kind: "tool_call", name: event.name },
           ]);
         } else if (event.type === "tool_result") {
           setTurns((prev) => [
@@ -219,7 +211,6 @@ export function Chat() {
                     <div className="tool-name">
                       {turn.name} <code>tool call</code>
                     </div>
-                    <pre className="tool-args">{jsonText(turn.arguments)}</pre>
                   </div>
                 );
               }

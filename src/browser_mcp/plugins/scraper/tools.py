@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from browser_mcp.plugins.scraper.actions import ScraperActions
+from browser_mcp.tools.aliases import register_underscore_alias
 from enterprise_mcp.tools.decorators import tool
 
 __all__ = ["ScraperToolkit", "build_scraper_tools"]
@@ -218,7 +219,9 @@ class ScraperToolkit:
         """Register every tool in this toolkit with ``registry``."""
         registry_register = registry.register
         for name in _TOOL_METHODS:
-            registry_register(getattr(self, name))
+            method = getattr(self, name)
+            registry_register(method)
+            register_underscore_alias(registry, method, TOOL_NAMESPACE, name)
 
 
 _TOOL_METHODS = frozenset({"text", "tables", "images", "metadata", "jsonld", "links", "products"})

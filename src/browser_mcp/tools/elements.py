@@ -12,8 +12,8 @@ from datetime import UTC, datetime
 from typing import Any
 
 from browser_mcp.browser.elements.engine import ElementEngine
-from enterprise_mcp.tools.decorators import get_tool_metadata, tool
-from enterprise_mcp.tools.metadata import ToolMetadata
+from browser_mcp.tools.aliases import register_underscore_alias
+from enterprise_mcp.tools.decorators import tool
 
 __all__ = ["ElementToolkit", "build_element_tools"]
 
@@ -190,27 +190,7 @@ class ElementToolkit:
         for name in _TOOL_METHODS:
             method = getattr(self, name)
             registry_register(method)
-            _register_underscore_alias(registry, method, name)
-
-
-def _register_underscore_alias(registry: Any, method: Callable[..., Any], name: str) -> None:
-    """Register an ``browser.element_find``-style alias for a dotted tool name.
-
-    LLM clients frequently guess underscore tool names (matching lifecycle tools
-    like ``browser.list_frames``) instead of the dotted ``browser.element.find``.
-    Registering both spellings keeps the agent loop working either way.
-    """
-    metadata = get_tool_metadata(method)
-    if metadata is None:
-        return
-    alias = ToolMetadata(
-        name=f"{TOOL_NAMESPACE}_{name}",
-        description=(f"Alias for '{metadata.name}'. {metadata.description}"),
-        parameters=metadata.parameters,
-        returns=metadata.returns,
-        version=metadata.version,
-    )
-    registry.register(method, metadata=alias)
+            register_underscore_alias(registry, method, TOOL_NAMESPACE, name)
 
 
 _TOOL_METHODS = frozenset({"find", "find_all", "state", "text", "html", "attribute"})

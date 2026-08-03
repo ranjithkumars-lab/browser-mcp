@@ -35,7 +35,21 @@ class TestScraperToolkit:
         registry = MagicMock()
         registry.register = MagicMock()
         toolkit.register(registry)
-        assert registry.register.call_count == 7
+        assert registry.register.call_count == 14
+
+    def test_register_adds_underscore_aliases(self) -> None:
+        toolkit = ScraperToolkit(MagicMock())
+        registry = MagicMock()
+        registry.register = MagicMock()
+        toolkit.register(registry)
+        names = [
+            call.kwargs.get("metadata").name
+            for call in registry.register.call_args_list
+            if call.kwargs.get("metadata") is not None
+        ]
+        assert "browser.scrape_text" in names
+        assert "browser.scrape_tables" in names
+        assert "browser.scrape_products" in names
 
     @pytest.mark.asyncio
     async def test_text_tool_success(self) -> None:

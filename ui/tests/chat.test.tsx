@@ -75,6 +75,7 @@ describe("Chat", () => {
 
     expect((await screen.findAllByText("browser.goto")).length).toBeGreaterThan(0);
     expect(await screen.findByText("result")).toBeTruthy();
+    expect(screen.queryByText('{"url":"https://x"}')).toBeNull();
     await waitFor(() => expect(chatService.chatStream).toHaveBeenCalled());
   });
 

@@ -200,7 +200,7 @@ class OllamaConfig(BaseModel):
             "(e.g. 5m, 30m, -1 for indefinite). Prevents cold-load stalls."
         ),
     )
-    max_tool_steps: int = Field(default=8, ge=1, le=32)
+    max_tool_steps: int = Field(default=16, ge=1, le=64)
     context_tokens: int | None = Field(
         default=None,
         ge=512,
@@ -214,15 +214,20 @@ class OllamaConfig(BaseModel):
     system_prompt: str = Field(
         default=(
             "You are a helpful assistant operating a browser through MCP tools. "
-            "To work on a web page, first call browser.create_session, then "
-            "browser.create_context (on the returned session_id), then "
-            "browser.new_page (with that context_id; optionally pass a url to "
-            "navigate). Reuse the exact session_id/context_id/page_id returned "
-            "by the tools in every later call. To read page content use "
-            "browser.scrape.text with output_format 'markdown' (or 'text'). "
+            "Only call browser tools when the user explicitly asks you to "
+            "browse, inspect, or interact with a web page. For greetings, "
+            "general questions, or anything that does not require browsing, "
+            "reply directly without calling any tools. To work on a web page, "
+            "first call browser.create_session, then browser.create_context "
+            "(on the returned session_id), then browser.new_page (with that "
+            "context_id; optionally pass a url to navigate). Reuse the exact "
+            "session_id/context_id/page_id returned by the tools in every later "
+            "call. To read page content use browser.scrape.text (or "
+            "browser.scrape_text) with output_format 'markdown' (or 'text'). "
             "Do not invent tool names or IDs that were not returned to you. "
             "Call the tools with the exact parameter names shown in their "
-            "schemas. Then summarize what you did and the observed outcome."
+            "schemas. Always end your turn with a plain-text summary of what "
+            "you did and the observed outcome."
         )
     )
 

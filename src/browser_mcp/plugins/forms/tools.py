@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from browser_mcp.plugins.forms.actions import FormActions
+from browser_mcp.tools.aliases import register_underscore_alias
 from enterprise_mcp.tools.decorators import tool
 
 __all__ = ["FormToolkit"]
@@ -150,7 +151,9 @@ class FormToolkit:
         """Register every tool in this toolkit with ``registry``."""
         registry_register = registry.register
         for name in _TOOL_METHODS:
-            registry_register(getattr(self, name))
+            method = getattr(self, name)
+            registry_register(method)
+            register_underscore_alias(registry, method, TOOL_NAMESPACE, name)
 
 
 _TOOL_METHODS = frozenset({"fill", "check", "uncheck", "select", "submit"})

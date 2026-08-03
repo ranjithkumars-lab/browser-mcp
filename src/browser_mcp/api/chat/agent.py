@@ -106,6 +106,7 @@ class ChatAgent:
         ]
         steps = 0
         final_text = ""
+        used_tools = False
 
         while True:
             steps += 1
@@ -129,6 +130,7 @@ class ChatAgent:
             if not tool_calls:
                 break
 
+            used_tools = True
             history.append(
                 {
                     "role": "assistant",
@@ -160,8 +162,13 @@ class ChatAgent:
                 )
 
             if steps >= self._config.max_tool_steps:
-                yield {"type": "done", "content": final_text, "steps": steps}
-                return
+                break
+
+        if used_tools and not final_text.strip():
+            async for delta in self._forced_summary(resolved_model, history):
+                if delta:
+                    final_text += delta
+                    yield {"type": "text", "delta": delta}
 
         yield {"type": "done", "content": final_text, "steps": steps}
 
@@ -172,13 +179,14 @@ class ChatAgent:
         payload: dict[str, Any] = {
             "model": model,
             "messages": history,
-            "tools": tools,
             "stream": True,
             "keep_alive": self._config.keep_alive,
             "options": {
                 "temperature": self._config.temperature,
             },
         }
+        if tools:
+            payload["tools"] = tools
         if self._config.context_tokens is not None:
             payload["options"]["num_ctx"] = self._config.context_tokens
         async with self._client.stream(
@@ -198,6 +206,30 @@ class ChatAgent:
                     else []
                 )
                 yield (content if isinstance(content, str) else ""), calls
+
+    async def _forced_summary(
+        self, model: str, history: list[dict[str, Any]]
+    ) -> AsyncIterator[str]:
+        """Request a plain-text wrap-up when tool calls produced no text.
+
+        The agent loop normally ends when the model answers without tools. If a
+        task exhausted ``max_tool_steps`` (or the model emitted tool calls with
+        no accompanying text), this asks the model one final time to summarize,
+        without offering any tools, so the user always receives a response.
+        """
+        prompt = {
+            "role": "user",
+            "content": (
+                "Continue. Summarize in plain text what the browser tools did "
+                "and what the user should know next. Do not call any tools."
+            ),
+        }
+        try:
+            async for delta, _calls in self._chat_stream(model, [*history, prompt], []):
+                if delta:
+                    yield delta
+        except (httpx.HTTPError, json.JSONDecodeError) as exc:
+            _LOGGER.error("chat_agent_summary_failed", error=str(exc))
 
     @staticmethod
     def _serialize(result: Any) -> str:
