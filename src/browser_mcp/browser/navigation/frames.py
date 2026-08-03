@@ -22,7 +22,20 @@ from enterprise_mcp.events.types import DomainEvent
 if TYPE_CHECKING:
     from playwright.async_api import Page as PlaywrightPage
 
-__all__ = ["FrameManager"]
+__all__ = ["FrameManager", "normalize_frame_id"]
+
+
+def normalize_frame_id(frame_id: str | None) -> str | None:
+    """Return ``None`` for empty or whitespace-only frame ids.
+
+    Tools accept ``frame_id`` as an optional string; LLM clients commonly send
+    ``""`` for "no specific frame". Normalizing it to ``None`` makes such calls
+    target the page's main frame instead of failing with ``frame '' not found``.
+    """
+    if frame_id is None:
+        return None
+    stripped = frame_id.strip()
+    return stripped or None
 
 
 class FrameManager:

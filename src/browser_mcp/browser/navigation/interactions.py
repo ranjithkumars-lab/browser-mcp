@@ -15,7 +15,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING, Any, Literal
 
-from browser_mcp.browser.navigation.frames import FrameManager
+from browser_mcp.browser.navigation.frames import FrameManager, normalize_frame_id
 from browser_mcp.browser.navigation.state import StateManager
 from browser_mcp.browser.navigation.timeouts import resolve_timeout
 from browser_mcp.config.models import BrowserSettings
@@ -77,6 +77,7 @@ class InteractionManager:
         delay_ms: int | None = None,
     ) -> dict[str, Any]:
         """Click the element matching ``selector`` (or ``element_id``)."""
+        frame_id = normalize_frame_id(frame_id)
         locator = await self._resolve_locator(session_id, page_id, selector, element_id, frame_id)
         timeout = resolve_timeout(self._settings, "interaction", timeout_ms)
         start = time.monotonic()
@@ -108,6 +109,7 @@ class InteractionManager:
         delay_ms: int | None = None,
     ) -> dict[str, Any]:
         """Double-click the element matching ``selector`` (or ``element_id``)."""
+        frame_id = normalize_frame_id(frame_id)
         locator = await self._resolve_locator(session_id, page_id, selector, element_id, frame_id)
         timeout = resolve_timeout(self._settings, "interaction", timeout_ms)
         start = time.monotonic()
@@ -133,6 +135,7 @@ class InteractionManager:
         timeout_ms: int | None = None,
     ) -> dict[str, Any]:
         """Right-click (context menu) the element matching ``selector``."""
+        frame_id = normalize_frame_id(frame_id)
         locator = await self._resolve_locator(session_id, page_id, selector, element_id, frame_id)
         timeout = resolve_timeout(self._settings, "interaction", timeout_ms)
         start = time.monotonic()
@@ -158,6 +161,7 @@ class InteractionManager:
         timeout_ms: int | None = None,
     ) -> dict[str, Any]:
         """Hover the element matching ``selector`` (or ``element_id``)."""
+        frame_id = normalize_frame_id(frame_id)
         locator = await self._resolve_locator(session_id, page_id, selector, element_id, frame_id)
         timeout = resolve_timeout(self._settings, "interaction", timeout_ms)
         start = time.monotonic()
@@ -184,6 +188,7 @@ class InteractionManager:
         frame_id: str | None = None,
     ) -> dict[str, Any]:
         """Scroll the viewport of ``page_id`` to the absolute position (``x``, ``y``)."""
+        frame_id = normalize_frame_id(frame_id)
         target = await self._scroll_target(session_id, page_id, frame_id)
         start = time.monotonic()
         try:
@@ -214,6 +219,7 @@ class InteractionManager:
         frame_id: str | None = None,
     ) -> dict[str, Any]:
         """Scroll the viewport of ``page_id`` by (``delta_x``, ``delta_y``)."""
+        frame_id = normalize_frame_id(frame_id)
         target = await self._scroll_target(session_id, page_id, frame_id)
         start = time.monotonic()
         try:
@@ -246,6 +252,7 @@ class InteractionManager:
         align: ScrollAlign = "center",
     ) -> dict[str, Any]:
         """Scroll the element matching ``selector`` into the viewport."""
+        frame_id = normalize_frame_id(frame_id)
         locator = await self._resolve_locator(session_id, page_id, selector, element_id, frame_id)
         timeout = resolve_timeout(self._settings, "interaction", timeout_ms)
         start = time.monotonic()
@@ -291,6 +298,7 @@ class InteractionManager:
         return f"selector '{selector}'"
 
     async def _scroll_target(self, session_id: str, page_id: str, frame_id: str | None) -> Any:
+        frame_id = normalize_frame_id(frame_id)
         if frame_id is not None:
             return await self._frames.frame_object_for(session_id, page_id, frame_id)
         return self._frames.page_object(session_id, page_id)

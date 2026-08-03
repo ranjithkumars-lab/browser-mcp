@@ -23,7 +23,9 @@ async def test_registers_all_six_tools() -> None:
     registry = ToolRegistry()
     _toolkit(await build_runtime()).register(registry)
     names = {m.name for m in registry.list()}
-    assert names == {f"{TOOL_NAMESPACE}.{name}" for name in EXPECTED_TOOLS}
+    dotted = {f"{TOOL_NAMESPACE}.{name}" for name in EXPECTED_TOOLS}
+    underscored = {f"{TOOL_NAMESPACE}_{name}" for name in EXPECTED_TOOLS}
+    assert names == dotted | underscored
 
 
 async def test_build_element_tools_returns_tool_calls() -> None:
@@ -67,6 +69,33 @@ async def test_find_tool_invalid_strategy_error() -> None:
     )
     assert result["success"] is False
     assert "strategy" in result["error"]
+
+
+async def test_find_tool_accepts_empty_frame_id() -> None:
+    runtime = await build_runtime()
+    result = await _toolkit(runtime).find(
+        runtime["session_id"],
+        runtime["page_handle"].page_id,
+        "css",
+        "#heading",
+        frame_id="",
+    )
+    assert result["success"] is True
+    assert result["frame_id"] is None
+
+
+async def test_registry_resolves_underscore_alias() -> None:
+    runtime = await build_runtime()
+    registry = ToolRegistry()
+    _toolkit(runtime).register(registry)
+    result = await registry.call(
+        "browser.element_find",
+        session_id=runtime["session_id"],
+        page_id=runtime["page_handle"].page_id,
+        strategy="css",
+        value="#heading",
+    )
+    assert result["success"] is True
 
 
 async def test_find_all_tool_success() -> None:

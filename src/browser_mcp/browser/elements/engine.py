@@ -23,7 +23,7 @@ from browser_mcp.browser.elements.locators.registry import LocatorRegistry
 from browser_mcp.browser.elements.models import LocatorModel, LocatorStrategyName
 from browser_mcp.browser.elements.properties import ElementProperties
 from browser_mcp.browser.elements.state import ElementState
-from browser_mcp.browser.navigation.frames import FrameManager
+from browser_mcp.browser.navigation.frames import FrameManager, normalize_frame_id
 from browser_mcp.browser.navigation.state import StateManager
 from browser_mcp.browser.navigation.timeouts import resolve_timeout
 from browser_mcp.config.models import BrowserSettings
@@ -116,6 +116,7 @@ class ElementEngine:
         strict: bool = True,
     ) -> dict[str, Any]:
         """Resolve a locator to a cached ``element_id`` and return its record."""
+        frame_id = normalize_frame_id(frame_id)
         model = LocatorModel.model_validate(
             {"strategy": strategy, "value": value, "timeout": timeout_ms, "strict": strict}
         )
@@ -166,6 +167,7 @@ class ElementEngine:
         timeout_ms: int | None = None,
     ) -> dict[str, Any]:
         """Resolve every match to a cached ``element_id``."""
+        frame_id = normalize_frame_id(frame_id)
         model = LocatorModel.model_validate(
             {"strategy": strategy, "value": value, "timeout": timeout_ms, "strict": False}
         )
@@ -325,6 +327,7 @@ class ElementEngine:
         strict: bool = True,
     ) -> Any:
         """Return a locator handle for ``strategy``/``value`` (no caching)."""
+        frame_id = normalize_frame_id(frame_id)
         model = LocatorModel.model_validate(
             {"strategy": strategy, "value": value, "timeout": timeout_ms, "strict": strict}
         )
@@ -356,6 +359,7 @@ class ElementEngine:
     # -- internals ------------------------------------------------------
 
     async def _target(self, session_id: str, page_id: str, frame_id: str | None) -> Any:
+        frame_id = normalize_frame_id(frame_id)
         if frame_id is not None:
             return await self._frames.frame_object_for(session_id, page_id, frame_id)
         return self._frames.page_object(session_id, page_id)
