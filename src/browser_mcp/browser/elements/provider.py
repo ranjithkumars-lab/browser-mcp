@@ -117,6 +117,48 @@ class LocatorProvider(ABC):
     ) -> None:
         """Wait until ``locator`` reaches ``state`` within ``timeout`` ms."""
 
+    # -- actions --------------------------------------------------------
+
+    @abstractmethod
+    async def fill(self, locator: LocatorHandle, value: str, timeout: int | None = None) -> None:
+        """Replace the value of an editable element with ``value``."""
+
+    @abstractmethod
+    async def clear(self, locator: LocatorHandle, timeout: int | None = None) -> None:
+        """Clear the value of an editable element."""
+
+    @abstractmethod
+    async def press(self, locator: LocatorHandle, key: str, timeout: int | None = None) -> None:
+        """Press a key (e.g. ``Enter``, ``Tab``) while ``locator`` is focused."""
+
+    @abstractmethod
+    async def press_sequentially(
+        self, locator: LocatorHandle, text: str, delay_ms: int | None = None
+    ) -> None:
+        """Type ``text`` into ``locator`` one key at a time (``delay_ms`` apart)."""
+
+    @abstractmethod
+    async def select_option(
+        self, locator: LocatorHandle, value: str, timeout: int | None = None
+    ) -> None:
+        """Select the ``<option>`` matching ``value`` in a ``<select>`` element."""
+
+    @abstractmethod
+    async def check(self, locator: LocatorHandle, timeout: int | None = None) -> None:
+        """Check a checkbox or radio button."""
+
+    @abstractmethod
+    async def uncheck(self, locator: LocatorHandle, timeout: int | None = None) -> None:
+        """Uncheck a checkbox or radio button."""
+
+    @abstractmethod
+    async def input_value(self, locator: LocatorHandle) -> str:
+        """Return the current value of an input, textarea or select."""
+
+    @abstractmethod
+    async def focus(self, locator: LocatorHandle, timeout: int | None = None) -> None:
+        """Move keyboard focus to ``locator``."""
+
 
 class PlaywrightLocatorProvider(LocatorProvider):
     """Playwright-backed implementation of :class:`LocatorProvider`.
@@ -190,3 +232,32 @@ class PlaywrightLocatorProvider(LocatorProvider):
     ) -> None:
         target = locator.first if strict is False else locator
         await target.wait_for(state=state, timeout=timeout)  # type: ignore
+
+    async def fill(self, locator: Locator, value: str, timeout: int | None = None) -> None:
+        await locator.fill(value, timeout=timeout)
+
+    async def clear(self, locator: Locator, timeout: int | None = None) -> None:
+        await locator.clear(timeout=timeout)
+
+    async def press(self, locator: Locator, key: str, timeout: int | None = None) -> None:
+        await locator.press(key, timeout=timeout)
+
+    async def press_sequentially(
+        self, locator: Locator, text: str, delay_ms: int | None = None
+    ) -> None:
+        await locator.press_sequentially(text, delay=delay_ms)
+
+    async def select_option(self, locator: Locator, value: str, timeout: int | None = None) -> None:
+        await locator.select_option(value, timeout=timeout)
+
+    async def check(self, locator: Locator, timeout: int | None = None) -> None:
+        await locator.check(timeout=timeout)
+
+    async def uncheck(self, locator: Locator, timeout: int | None = None) -> None:
+        await locator.uncheck(timeout=timeout)
+
+    async def input_value(self, locator: Locator) -> str:
+        return await locator.input_value()
+
+    async def focus(self, locator: Locator, timeout: int | None = None) -> None:
+        await locator.focus(timeout=timeout)

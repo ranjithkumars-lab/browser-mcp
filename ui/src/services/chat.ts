@@ -8,7 +8,7 @@ export interface ChatMessage {
 
 export type ChatEvent =
   | { type: "text"; delta: string }
-  | { type: "tool_call"; name: string; arguments: Record<string, unknown> }
+  | { type: "tool_call"; name: string }
   | { type: "tool_result"; name: string; content: string; error: boolean }
   | { type: "done"; content: string; steps: number }
   | { type: "error"; detail: string };

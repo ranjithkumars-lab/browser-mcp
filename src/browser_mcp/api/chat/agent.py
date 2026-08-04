@@ -93,7 +93,7 @@ class ChatAgent:
         Emitted events (``{"type": ...}``):
 
         - ``text``: ``{"delta": str}`` streamed assistant text.
-        - ``tool_call``: ``{"name": str, "arguments": dict}`` before execution.
+        - ``tool_call``: ``{"name": str}`` before execution.
         - ``tool_result``: ``{"name": str, "content": str, "error": bool}``.
         - ``done``: ``{"content": str, "steps": int}`` terminal event.
         - ``error``: ``{"detail": str}`` fatal failure.
@@ -143,7 +143,7 @@ class ChatAgent:
                 name = str(function.get("name", ""))
                 raw_arguments: Any = function.get("arguments") or {}
                 arguments = cast(dict[str, Any], raw_arguments)
-                yield {"type": "tool_call", "name": name, "arguments": arguments}
+                yield {"type": "tool_call", "name": name}
                 try:
                     result = await self._tools.call(name, **arguments)
                     content = self._serialize(result)

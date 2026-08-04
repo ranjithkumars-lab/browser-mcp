@@ -12,14 +12,32 @@ from enterprise_mcp.tools.registry import ToolRegistry
 
 pytestmark = pytest.mark.unit
 
-EXPECTED_TOOLS = frozenset({"find", "find_all", "state", "text", "html", "attribute"})
+EXPECTED_TOOLS = frozenset(
+    {
+        "find",
+        "find_all",
+        "state",
+        "text",
+        "html",
+        "attribute",
+        "fill",
+        "type",
+        "clear",
+        "press",
+        "select_option",
+        "check",
+        "uncheck",
+        "input_value",
+        "focus",
+    }
+)
 
 
 def _toolkit(runtime: dict) -> ElementToolkit:
     return ElementToolkit(runtime["engine"])
 
 
-async def test_registers_all_six_tools() -> None:
+async def test_registers_all_fifteen_tools() -> None:
     registry = ToolRegistry()
     _toolkit(await build_runtime()).register(registry)
     names = {m.name for m in registry.list()}

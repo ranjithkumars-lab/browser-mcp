@@ -22,6 +22,7 @@ from uuid import uuid4
 from browser_mcp.browser.elements.locators.registry import LocatorRegistry
 from browser_mcp.browser.elements.models import LocatorModel, LocatorStrategyName
 from browser_mcp.browser.elements.properties import ElementProperties
+from browser_mcp.browser.elements.provider import LocatorHandle
 from browser_mcp.browser.elements.state import ElementState
 from browser_mcp.browser.navigation.frames import FrameManager, normalize_frame_id
 from browser_mcp.browser.navigation.state import StateManager
@@ -46,6 +47,26 @@ __all__ = ["ElementEngine", "ElementRef"]
 def new_element_id() -> str:
     """Return a new unique element identifier."""
     return f"element_{uuid4().hex[:12]}"
+
+
+def _locator_hint(value: str) -> str:
+    """Return an actionable suggestion when a locator fails to match.
+
+    Guards against the most common agent failure mode: guessing selector names
+    for login/input controls instead of discovering them first. The hint steers
+    the agent toward reading the page structure and using the form tools.
+    """
+    lowered = value.lower()
+    if any(tag in lowered for tag in ("input", "button", "login", "password", "email", "form")):
+        return (
+            "Hint: inspect the page with browser.scrape.text first, then resolve "
+            "fields with browser.element.find using their id/type, or use "
+            "browser.form.fill (field='...') which matches by name/id/placeholder/label."
+        )
+    return (
+        "Hint: confirm the selector against the live DOM using browser.scrape.text "
+        "or browser.element.find_all, and prefix raw selectors with strategy='css'."
+    )
 
 
 @dataclass(slots=True)
@@ -136,7 +157,7 @@ class ElementEngine:
             await self._emit_not_found(session_id, handle, page_id, frame_id, model)
             raise ElementNotFoundError(
                 f"element '{model.strategy}:{model.value}' not found on page '{page_id}' "
-                f"within {timeout}ms"
+                f"within {timeout}ms. {_locator_hint(model.value)}"
             ) from exc
 
         ref = self._cache(
@@ -183,7 +204,7 @@ class ElementEngine:
             await self._emit_not_found(session_id, handle, page_id, frame_id, model)
             raise ElementNotFoundError(
                 f"no element matched '{model.strategy}:{model.value}' on page '{page_id}' "
-                f"within {timeout}ms"
+                f"within {timeout}ms. {_locator_hint(model.value)}"
             ) from exc
 
         count = await self._provider.count(locator)
@@ -313,6 +334,206 @@ class ElementEngine:
         )
         return payload
 
+    # -- input actions --------------------------------------------------
+
+    async def fill(
+        self,
+        session_id: str,
+        page_id: str,
+        element_id: str,
+        value: str,
+        *,
+        timeout_ms: int | None = None,
+    ) -> dict[str, Any]:
+        """Replace the value of ``element_id`` with ``value``."""
+        async def _fill(locator: LocatorHandle, timeout: int | None) -> None:
+            await self._provider.fill(locator, value, timeout)
+        return await self._act(
+            "fill",
+            session_id,
+            page_id,
+            element_id,
+            _fill,
+            timeout_ms=timeout_ms,
+            extra={"value": value},
+        )
+
+    async def type_text(
+        self,
+        session_id: str,
+        page_id: str,
+        element_id: str,
+        text: str,
+        *,
+        delay_ms: int | None = None,
+        timeout_ms: int | None = None,
+    ) -> dict[str, Any]:
+        """Type ``text`` into ``element_id`` one key at a time."""
+        timeout = resolve_timeout(self._settings, "interaction", timeout_ms)
+        ref = self._require_ref(element_id, page_id)
+        locator = self._resolve_locator(ref)
+        start = time.monotonic()
+        try:
+            await self._provider.press_sequentially(locator, text, delay_ms=delay_ms)
+        except Exception as exc:
+            raise ElementStateError(
+                f"failed to type into element '{element_id}': {exc}"
+            ) from exc
+        return {
+            **ref.payload(),
+            "action": "type",
+            "text": text,
+            "delay_ms": delay_ms,
+            "timeout_ms": timeout,
+            "duration_ms": self._duration_ms(start),
+        }
+
+    async def clear(
+        self,
+        session_id: str,
+        page_id: str,
+        element_id: str,
+        *,
+        timeout_ms: int | None = None,
+    ) -> dict[str, Any]:
+        """Clear the value of ``element_id``."""
+        async def _clear(locator: LocatorHandle, timeout: int | None) -> None:
+            await self._provider.clear(locator, timeout)
+        return await self._act(
+            "clear",
+            session_id,
+            page_id,
+            element_id,
+            _clear,
+            timeout_ms=timeout_ms,
+        )
+
+    async def press(
+        self,
+        session_id: str,
+        page_id: str,
+        element_id: str,
+        key: str,
+        *,
+        timeout_ms: int | None = None,
+    ) -> dict[str, Any]:
+        """Press a keyboard ``key`` (e.g. ``Enter``) on ``element_id``."""
+        async def _press(locator: LocatorHandle, timeout: int | None) -> None:
+            await self._provider.press(locator, key, timeout)
+        return await self._act(
+            "press",
+            session_id,
+            page_id,
+            element_id,
+            _press,
+            timeout_ms=timeout_ms,
+            extra={"key": key},
+        )
+
+    async def select_option(
+        self,
+        session_id: str,
+        page_id: str,
+        element_id: str,
+        value: str,
+        *,
+        timeout_ms: int | None = None,
+    ) -> dict[str, Any]:
+        """Select the option ``value`` in the ``<select>`` ``element_id``."""
+        async def _select_option(locator: LocatorHandle, timeout: int | None) -> None:
+            await self._provider.select_option(locator, value, timeout)
+        return await self._act(
+            "select_option",
+            session_id,
+            page_id,
+            element_id,
+            _select_option,
+            timeout_ms=timeout_ms,
+            extra={"value": value},
+        )
+
+    async def check(
+        self,
+        session_id: str,
+        page_id: str,
+        element_id: str,
+        *,
+        timeout_ms: int | None = None,
+    ) -> dict[str, Any]:
+        """Check the checkbox/radio ``element_id``."""
+        async def _check(locator: LocatorHandle, timeout: int | None) -> None:
+            await self._provider.check(locator, timeout)
+        return await self._act(
+            "check",
+            session_id,
+            page_id,
+            element_id,
+            _check,
+            timeout_ms=timeout_ms,
+        )
+
+    async def uncheck(
+        self,
+        session_id: str,
+        page_id: str,
+        element_id: str,
+        *,
+        timeout_ms: int | None = None,
+    ) -> dict[str, Any]:
+        """Uncheck the checkbox/radio ``element_id``."""
+        async def _uncheck(locator: LocatorHandle, timeout: int | None) -> None:
+            await self._provider.uncheck(locator, timeout)
+        return await self._act(
+            "uncheck",
+            session_id,
+            page_id,
+            element_id,
+            _uncheck,
+            timeout_ms=timeout_ms,
+        )
+
+    async def input_value(
+        self,
+        session_id: str,
+        page_id: str,
+        element_id: str,
+    ) -> dict[str, Any]:
+        """Return the current value of ``element_id``."""
+        ref = self._require_ref(element_id, page_id)
+        locator = self._resolve_locator(ref)
+        start = time.monotonic()
+        try:
+            value = await self._provider.input_value(locator)
+        except Exception as exc:
+            raise ElementStateError(
+                f"failed to read input value of element '{element_id}': {exc}"
+            ) from exc
+        return {
+            **ref.payload(),
+            "value": value,
+            "duration_ms": self._duration_ms(start),
+        }
+
+    async def focus(
+        self,
+        session_id: str,
+        page_id: str,
+        element_id: str,
+        *,
+        timeout_ms: int | None = None,
+    ) -> dict[str, Any]:
+        """Move keyboard focus to ``element_id``."""
+        async def _focus(locator: LocatorHandle, timeout: int | None) -> None:
+            await self._provider.focus(locator, timeout)
+        return await self._act(
+            "focus",
+            session_id,
+            page_id,
+            element_id,
+            _focus,
+            timeout_ms=timeout_ms,
+        )
+
     # -- resolution helpers (used by InteractionManager) ---------------
 
     async def resolve_locator(
@@ -363,6 +584,48 @@ class ElementEngine:
         if frame_id is not None:
             return await self._frames.frame_object_for(session_id, page_id, frame_id)
         return self._frames.page_object(session_id, page_id)
+
+    async def _act(
+        self,
+        action: str,
+        session_id: str,
+        page_id: str,
+        element_id: str,
+        op: Any,
+        *,
+        timeout_ms: int | None,
+        extra: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        timeout = resolve_timeout(self._settings, "interaction", timeout_ms)
+        ref = self._require_ref(element_id, page_id)
+        locator = self._resolve_locator(ref)
+        start = time.monotonic()
+        try:
+            await op(locator, timeout)
+        except Exception as exc:
+            raise ElementStateError(
+                f"failed to {action} element '{element_id}': {exc}"
+            ) from exc
+        payload: dict[str, Any] = {
+            **ref.payload(),
+            "action": action,
+            "timeout_ms": timeout,
+            "duration_ms": self._duration_ms(start),
+        }
+        if extra:
+            payload.update(extra)
+        await self._events.publish(
+            DomainEvent(
+                event_name="element.action.completed",
+                payload={
+                    "action": action,
+                    "element_id": element_id,
+                    "session_id": session_id,
+                    "page_id": page_id,
+                },
+            )
+        )
+        return payload
 
     def _cache(
         self,

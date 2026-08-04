@@ -54,6 +54,22 @@ class FakeElement:
         return self.attrs.get("data-outer-html") or f"<{self.tag}>{self.text}</{self.tag}>"
 
 
+class FakeKeyboard:
+    """Minimal page keyboard mirroring ``page.keyboard``."""
+
+    def __init__(self) -> None:
+        self.typed: list[str] = []
+        self.pressed: list[str] = []
+        self.last_delay_ms: int | None = None
+
+    async def type(self, text: str, delay: int | None = None) -> None:
+        self.typed.append(text)
+        self.last_delay_ms = delay
+
+    async def press(self, key: str) -> None:
+        self.pressed.append(key)
+
+
 class FakeLocator:
     """Minimal locator recording performed actions and supporting queries."""
 
@@ -77,6 +93,16 @@ class FakeLocator:
         self.screenshot_error: Exception | None = None
         self.last_screenshot: dict[str, Any] | None = None
         self.screenshot_bytes: bytes = b"fake-locator-png"
+        self.filled: list[str] = []
+        self.cleared: int = 0
+        self.pressed_keys: list[str] = []
+        self.typed_text: list[str] = []
+        self.typed_delays: list[int | None] = []
+        self.selected_values: list[str] = []
+        self.checked_count: int = 0
+        self.unchecked_count: int = 0
+        self.focused_count: int = 0
+        self.fail_actions: list[str] = []
 
     @property
     def element(self) -> FakeElement | None:
@@ -113,6 +139,68 @@ class FakeLocator:
         self.last_screenshot = kwargs
         return self.screenshot_bytes
 
+    async def _maybe_fail(self, action: str) -> None:
+        if self.fail_next or action in self.fail_actions:
+            raise RuntimeError(f"locator {action} failed")
+
+    async def fill(self, value: str, timeout: int | None = None) -> None:
+        await self._maybe_fail("fill")
+        element = self._require()
+        if not element.editable:
+            raise RuntimeError(f"element '{self.selector}' is not editable")
+        self.filled.append(value)
+        element.attrs["value"] = value
+
+    async def clear(self, timeout: int | None = None) -> None:
+        await self._maybe_fail("clear")
+        element = self._require()
+        if not element.editable:
+            raise RuntimeError(f"element '{self.selector}' is not editable")
+        self.cleared += 1
+        element.attrs.pop("value", None)
+
+    async def press(self, key: str, timeout: int | None = None) -> None:
+        await self._maybe_fail("press")
+        self.pressed_keys.append(key)
+
+    async def press_sequentially(self, text: str, delay: int | None = None) -> None:
+        await self._maybe_fail("press_sequentially")
+        element = self._require()
+        if not element.editable:
+            raise RuntimeError(f"element '{self.selector}' is not editable")
+        self.typed_text.append(text)
+        self.typed_delays.append(delay)
+        element.attrs["value"] = text
+
+    async def select_option(self, value: str, timeout: int | None = None) -> None:
+        await self._maybe_fail("select_option")
+        self.selected_values.append(value)
+        self._require().attrs["value"] = value
+
+    async def check(self, timeout: int | None = None) -> None:
+        await self._maybe_fail("check")
+        element = self._require()
+        if not element.enabled:
+            raise RuntimeError(f"element '{self.selector}' is disabled")
+        element.checked = True
+        self.checked_count += 1
+
+    async def uncheck(self, timeout: int | None = None) -> None:
+        await self._maybe_fail("uncheck")
+        element = self._require()
+        if not element.enabled:
+            raise RuntimeError(f"element '{self.selector}' is disabled")
+        element.checked = False
+        self.unchecked_count += 1
+
+    async def input_value(self) -> str:
+        await self._maybe_fail("input_value")
+        return self._require().attrs.get("value", "")
+
+    async def focus(self, timeout: int | None = None) -> None:
+        await self._maybe_fail("focus")
+        self.focused_count += 1
+
     # -- queries --------------------------------------------------------
 
     async def count(self) -> int:
@@ -122,6 +210,7 @@ class FakeLocator:
         element = self.elements[index] if index < len(self.elements) else None
         return FakeLocator(self.selector, frame=self.frame, elements=[element] if element else [])
 
+    @property
     def first(self) -> FakeLocator:
         return self.nth(0)
 
@@ -244,8 +333,39 @@ class FakeLocatorProvider:
         *,
         strict: bool | None = None,
     ) -> None:
-        target = locator.first() if strict is False else locator
+        target = locator.first if strict is False else locator
         await target.wait_for(state=state, timeout=timeout)
+
+    async def fill(self, locator: FakeLocator, value: str, timeout: int | None = None) -> None:
+        await locator.fill(value, timeout=timeout)
+
+    async def clear(self, locator: FakeLocator, timeout: int | None = None) -> None:
+        await locator.clear(timeout=timeout)
+
+    async def press(self, locator: FakeLocator, key: str, timeout: int | None = None) -> None:
+        await locator.press(key, timeout=timeout)
+
+    async def press_sequentially(
+        self, locator: FakeLocator, text: str, delay_ms: int | None = None
+    ) -> None:
+        await locator.press_sequentially(text, delay=delay_ms)
+
+    async def select_option(
+        self, locator: FakeLocator, value: str, timeout: int | None = None
+    ) -> None:
+        await locator.select_option(value, timeout=timeout)
+
+    async def check(self, locator: FakeLocator, timeout: int | None = None) -> None:
+        await locator.check(timeout=timeout)
+
+    async def uncheck(self, locator: FakeLocator, timeout: int | None = None) -> None:
+        await locator.uncheck(timeout=timeout)
+
+    async def input_value(self, locator: FakeLocator) -> str:
+        return await locator.input_value()
+
+    async def focus(self, locator: FakeLocator, timeout: int | None = None) -> None:
+        await locator.focus(timeout=timeout)
 
 
 class FakeRequest:
@@ -361,6 +481,7 @@ class FakePage:
         self._download_listeners: list[Any] = []
         self._locators: dict[str, FakeLocator] = {}
         self._elements_by_selector: dict[str, list[FakeElement]] = {}
+        self.keyboard = FakeKeyboard()
         self.last_goto: tuple[str, dict[str, Any]] | None = None
         self.last_reload: dict[str, Any] | None = None
         self.last_wait_for_load_state: tuple[str, Any] | None = None

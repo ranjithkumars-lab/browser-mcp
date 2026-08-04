@@ -273,6 +273,72 @@ class InteractionManager:
             "duration_ms": round((time.monotonic() - start) * 1000, 3),
         }
 
+    # -- keyboard ------------------------------------------------------
+
+    async def keyboard_type(
+        self,
+        session_id: str,
+        page_id: str,
+        text: str,
+        *,
+        delay_ms: int | None = None,
+        timeout_ms: int | None = None,
+    ) -> dict[str, Any]:
+        """Type ``text`` at the page level (no element focus required)."""
+        timeout = resolve_timeout(self._settings, "interaction", timeout_ms)
+        page = self._frames.page_object(session_id, page_id)
+        start = time.monotonic()
+        try:
+            await page.keyboard.type(text, delay=delay_ms)
+        except Exception as exc:
+            raise InteractionError(
+                f"failed to type text on page '{page_id}': {exc}"
+            ) from exc
+        payload: dict[str, Any] = {
+            "action": "keyboard_type",
+            "session_id": session_id,
+            "page_id": page_id,
+            "text": text,
+            "delay_ms": delay_ms,
+            "timeout_ms": timeout,
+            "duration_ms": round((time.monotonic() - start) * 1000, 3),
+        }
+        await self._events.publish(
+            DomainEvent(event_name="interaction.completed", payload=dict(payload))
+        )
+        return payload
+
+    async def keyboard_press(
+        self,
+        session_id: str,
+        page_id: str,
+        key: str,
+        *,
+        timeout_ms: int | None = None,
+    ) -> dict[str, Any]:
+        """Press a key (e.g. ``Enter``, ``Tab``) at the page level."""
+        timeout = resolve_timeout(self._settings, "interaction", timeout_ms)
+        page = self._frames.page_object(session_id, page_id)
+        start = time.monotonic()
+        try:
+            await page.keyboard.press(key)
+        except Exception as exc:
+            raise InteractionError(
+                f"failed to press key '{key}' on page '{page_id}': {exc}"
+            ) from exc
+        payload: dict[str, Any] = {
+            "action": "keyboard_press",
+            "session_id": session_id,
+            "page_id": page_id,
+            "key": key,
+            "timeout_ms": timeout,
+            "duration_ms": round((time.monotonic() - start) * 1000, 3),
+        }
+        await self._events.publish(
+            DomainEvent(event_name="interaction.completed", payload=dict(payload))
+        )
+        return payload
+
     # -- internals -----------------------------------------------------
 
     async def _resolve_locator(

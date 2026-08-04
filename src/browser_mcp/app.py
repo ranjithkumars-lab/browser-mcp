@@ -24,6 +24,7 @@ from browser_mcp.browser.context import ContextManager
 from browser_mcp.browser.elements.engine import ElementEngine
 from browser_mcp.browser.elements.locators.registry import LocatorRegistry
 from browser_mcp.browser.elements.provider import PlaywrightLocatorProvider
+from browser_mcp.browser.elements.state import ElementState
 from browser_mcp.browser.factory import BrowserFactory
 from browser_mcp.browser.manager import BrowserManager
 from browser_mcp.browser.navigation.frames import FrameManager
@@ -48,6 +49,10 @@ from browser_mcp.events.provider import InMemoryEventProvider
 from browser_mcp.events.router import EventRouter
 from browser_mcp.events.store import EventHistoryStore
 from browser_mcp.events.tools import EventsToolkit
+from browser_mcp.plugins.forms.actions import FormActions
+from browser_mcp.plugins.forms.detector import FormDetector
+from browser_mcp.plugins.forms.tools import FormToolkit
+from browser_mcp.plugins.forms.validator import FormValidator
 from browser_mcp.plugins.manager import PluginLifecycleManager
 from browser_mcp.plugins.scraper.actions import ScraperActions
 from browser_mcp.plugins.scraper.sizer import PayloadSizer
@@ -55,6 +60,7 @@ from browser_mcp.plugins.scraper.tools import ScraperToolkit
 from browser_mcp.plugins.tools import PluginToolkit
 from browser_mcp.tools.browser import BrowserToolkit
 from browser_mcp.tools.elements import ElementToolkit
+from browser_mcp.tools.keyboard import KeyboardToolkit
 from browser_mcp.tools.navigation import NavigationToolkit
 from browser_mcp.tools.screenshot import ScreenshotToolkit
 from browser_mcp.transfer.downloads.integrity import ChecksumVerifier
@@ -191,6 +197,8 @@ def create_browser_context(
     navigation_toolkit.register(resolved.tools)
     element_toolkit = ElementToolkit(elements)
     element_toolkit.register(resolved.tools)
+    keyboard_toolkit = KeyboardToolkit(interactions)
+    keyboard_toolkit.register(resolved.tools)
 
     screenshot_manager = ScreenshotManager(state, browser_settings)
     screenshot_toolkit = ScreenshotToolkit(screenshot_manager)
@@ -199,6 +207,15 @@ def create_browser_context(
     scraper_actions = ScraperActions(state, events, PayloadSizer())
     scraper_toolkit = ScraperToolkit(scraper_actions)
     scraper_toolkit.register(resolved.tools)
+
+    form_provider = PlaywrightLocatorProvider()
+    form_element_state = ElementState(form_provider)
+    form_detector = FormDetector(form_provider)
+    form_actions = FormActions(
+        form_detector, FormValidator(form_element_state), form_element_state, events
+    )
+    form_toolkit = FormToolkit(form_actions, frames.page_object)
+    form_toolkit.register(resolved.tools)
 
     auth_toolkit = AuthToolkit(auth_manager, pool, sessions)
     auth_toolkit.register(resolved.tools)

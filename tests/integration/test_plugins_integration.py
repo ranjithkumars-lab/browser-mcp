@@ -125,7 +125,7 @@ class TestFormToolkitRegistration:
         from browser_mcp.plugins.forms.tools import FormToolkit
 
         actions = MagicMock()
-        toolkit = FormToolkit(actions)
+        toolkit = FormToolkit(actions, lambda session_id, page_id: None)
 
         registry = MagicMock()
         registry.register = MagicMock()

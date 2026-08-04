@@ -58,7 +58,7 @@ describe("Chat", () => {
 
   it("renders tool call and result events", async () => {
     async function* stream() {
-      yield { type: "tool_call", name: "browser.goto", arguments: { url: "https://x" } };
+      yield { type: "tool_call", name: "browser.goto" };
       yield { type: "tool_result", name: "browser.goto", content: "loaded", error: false };
       yield { type: "done", content: "Done", steps: 2 };
     }

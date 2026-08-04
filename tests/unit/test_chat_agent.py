@@ -110,8 +110,8 @@ async def test_stream_executes_tool_and_continues() -> None:
     assert events[0] == {
         "type": "tool_call",
         "name": "add",
-        "arguments": {"a": 2, "b": 3},
     }
+    assert "arguments" not in events[0]
     assert events[1]["type"] == "tool_result"
     assert events[1]["content"] == "5"
     assert events[2] == {"type": "text", "delta": "5"}

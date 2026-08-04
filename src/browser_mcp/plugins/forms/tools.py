@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import inspect
+from collections.abc import Callable
 from typing import Any
 
 from browser_mcp.plugins.forms.actions import FormActions
@@ -16,8 +18,20 @@ TOOL_NAMESPACE = "browser.form"
 class FormToolkit:
     """Factory of form automation MCP tools."""
 
-    def __init__(self, actions: FormActions) -> None:
+    def __init__(
+        self,
+        actions: FormActions,
+        page_resolver: Callable[[str, str], Any],
+    ) -> None:
         self._actions = actions
+        self._page_resolver = page_resolver
+
+    async def _page(self, session_id: str, page_id: str) -> Any:
+        """Resolve the live Playwright page for ``session_id``/``page_id``."""
+        resolved = self._page_resolver(session_id, page_id)
+        if inspect.isawaitable(resolved):
+            return await resolved
+        return resolved
 
     @tool(
         name=f"{TOOL_NAMESPACE}.fill",
@@ -38,8 +52,9 @@ class FormToolkit:
         selector: str | None = None,
     ) -> dict[str, Any]:
         """Fill a text field."""
+        page = await self._page(session_id, page_id)
         return await self._actions.fill(
-            page=None,
+            page=page,
             session_id=session_id,
             browser_id="",
             context_id="",
@@ -63,8 +78,9 @@ class FormToolkit:
         selector: str | None = None,
     ) -> dict[str, Any]:
         """Check a checkbox or radio."""
+        page = await self._page(session_id, page_id)
         return await self._actions.check(
-            page=None,
+            page=page,
             session_id=session_id,
             browser_id="",
             context_id="",
@@ -87,8 +103,9 @@ class FormToolkit:
         selector: str | None = None,
     ) -> dict[str, Any]:
         """Uncheck a checkbox or radio."""
+        page = await self._page(session_id, page_id)
         return await self._actions.uncheck(
-            page=None,
+            page=page,
             session_id=session_id,
             browser_id="",
             context_id="",
@@ -112,8 +129,9 @@ class FormToolkit:
         selector: str | None = None,
     ) -> dict[str, Any]:
         """Select an option."""
+        page = await self._page(session_id, page_id)
         return await self._actions.select(
-            page=None,
+            page=page,
             session_id=session_id,
             browser_id="",
             context_id="",
@@ -137,8 +155,9 @@ class FormToolkit:
         selector: str | None = None,
     ) -> dict[str, Any]:
         """Submit a form."""
+        page = await self._page(session_id, page_id)
         return await self._actions.submit(
-            page=None,
+            page=page,
             session_id=session_id,
             browser_id="",
             context_id="",
