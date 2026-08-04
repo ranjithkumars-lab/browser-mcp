@@ -24,15 +24,25 @@ function currentUserId(): string {
   }
 }
 
-function screenshotUrl(content: string): string | null {
+type ScreenshotMeta = {
+  url: string | null;
+  caption: string | null;
+};
+
+function screenshotMeta(content: string): ScreenshotMeta {
   try {
     const data = JSON.parse(content) as Record<string, unknown>;
     const path = typeof data?.screenshot_path === "string" ? data.screenshot_path : "";
-    if (!path) return null;
-    const filename = path.split(/[\\/]/).pop();
-    return filename ? `/api/v1/screenshots/${encodeURIComponent(filename)}` : null;
+    const filename = path ? String(path.split(/[\\/]/).pop()) : "";
+    const url = filename ? `/api/v1/screenshots/${encodeURIComponent(filename)}` : null;
+    const title = typeof data?.title === "string" && data.title ? data.title : null;
+    const pageUrl = typeof data?.url === "string" && data.url ? data.url : null;
+    return {
+      url,
+      caption: title ?? pageUrl ?? `Screenshot${data?.format ? ` (${data.format})` : ""}`,
+    };
   } catch {
-    return null;
+    return { url: null, caption: null };
   }
 }
 
@@ -220,11 +230,26 @@ export function Chat() {
                     {turn.name} <code>{turn.error ? "error" : "result"}</code>
                   </div>
                   {!turn.error && turn.name === "browser.screenshot" && (() => {
-                    const url = screenshotUrl(turn.content);
-                    return url ? (
-                      <a className="tool-file" href={url} target="_blank" rel="noopener noreferrer">
-                        Open screenshot file
-                      </a>
+                    const meta = screenshotMeta(turn.content);
+                    return meta.url ? (
+                      <figure className="tool-screenshot">
+                        <a
+                          href={meta.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Open full-size screenshot in a new tab"
+                        >
+                          <img loading="lazy" src={meta.url} alt={meta.caption ?? "Screenshot"} />
+                        </a>
+                        {meta.caption ? (
+                          <figcaption className="tool-screenshot-caption">
+                            <span className="tool-screenshot-caption-text">{meta.caption}</span>
+                            <a className="tool-file" href={meta.url} target="_blank" rel="noopener noreferrer">
+                              Open screenshot file
+                            </a>
+                          </figcaption>
+                        ) : null}
+                      </figure>
                     ) : null;
                   })()}
                 </div>

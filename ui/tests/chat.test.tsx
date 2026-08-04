@@ -79,12 +79,15 @@ describe("Chat", () => {
     await waitFor(() => expect(chatService.chatStream).toHaveBeenCalled());
   });
 
-  it("renders a file link for browser.screenshot results", async () => {
+  it("renders inline screenshot with caption and a file link for browser.screenshot results", async () => {
     const content = JSON.stringify({
       screenshot_path: "C:/shots/page_abc.png",
       mime_type: "image/png",
       width: 1280,
       height: 720,
+      title: "Nasha Mukt YUVA | MYBharat",
+      url: "https://mybharat.gov.in/nasha_mukt/delegate_registration",
+      format: "png",
     });
     async function* stream() {
       yield { type: "tool_result", name: "browser.screenshot", content, error: false };
@@ -100,6 +103,10 @@ describe("Chat", () => {
     const textarea = screen.getByLabelText("Message");
     fireEvent.change(textarea, { target: { value: "screenshot" } });
     fireEvent.click(screen.getByText("Send"));
+
+    const image = await screen.findByRole("img", { name: "Nasha Mukt YUVA | MYBharat" });
+    expect(image.getAttribute("src")).toBe("/api/v1/screenshots/page_abc.png");
+    expect(screen.getByText("Nasha Mukt YUVA | MYBharat")).toBeDefined();
 
     const link = await screen.findByRole("link", { name: /open screenshot file/i });
     expect(link.getAttribute("href")).toBe("/api/v1/screenshots/page_abc.png");

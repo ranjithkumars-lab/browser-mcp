@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -65,8 +66,13 @@ async def screenshots(
 @router.get("/screenshots/{filename}")
 async def screenshot_file(filename: str, store: ScreenshotStoreDep) -> FileResponse:
     """Serve a captured screenshot file by its basename."""
+    if not filename or filename != Path(filename).name:
+        raise HTTPException(status_code=400, detail="invalid screenshot filename")
     record = store.get(filename)
     if record is None:
         raise HTTPException(status_code=404, detail="screenshot not found")
-    path = record.path
-    return FileResponse(path, media_type=record.mime_type)
+    return FileResponse(
+        record.path,
+        media_type=record.mime_type,
+        headers={"Cache-Control": "public, max-age=3600, stale-while-revalidate=86400"},
+    )
