@@ -7,7 +7,7 @@ logic backed by Playwright locators and the shared :class:`RetryPolicy`.
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import Any, cast
 
 from browser_mcp.browser.elements.state import ElementState
 from browser_mcp.foundation.retry import RetryConfig, RetryPolicy
@@ -17,6 +17,46 @@ from enterprise_mcp.events.bus import EventBus
 from enterprise_mcp.events.types import DomainEvent
 
 __all__ = ["FormActions"]
+
+# Runs in the browser: enumerate every form control with its identifying
+# attributes so callers can pick a selector without guessing. Expressed as an
+# IIFE so it is a valid ``page.evaluate`` expression string.
+_FIELD_ENUM_EXPR = r"""
+(() => {
+  const fields = [];
+  for (const el of document.querySelectorAll('input, textarea, select, button')) {
+    const id = el.getAttribute('id') || null;
+    const name = el.getAttribute('name') || null;
+    const type = el.getAttribute('type') || el.tagName.toLowerCase();
+    const placeholder = el.getAttribute('placeholder') || null;
+    let label = null;
+    if (id) {
+      for (const lab of document.querySelectorAll('label')) {
+        if (lab.getAttribute('for') === id) {
+          label = (lab.textContent || '').trim() || null;
+          break;
+        }
+      }
+    }
+    if (!label && el.closest) {
+      const wrapper = el.closest('label');
+      if (wrapper) label = (wrapper.textContent || '').trim() || null;
+    }
+    const rects = el.getClientRects();
+    const visible = rects.length > 0 && (el.offsetWidth > 0 || el.offsetHeight > 0);
+    fields.push({
+      tag: el.tagName.toLowerCase(),
+      id: id,
+      name: name,
+      type: type,
+      placeholder: placeholder,
+      label: label,
+      visible: visible
+    });
+  }
+  return fields;
+})()
+"""
 
 
 def _form_event(name: str, **payload: Any) -> DomainEvent:
@@ -310,6 +350,54 @@ class FormActions:
                 duration_ms=_duration(start),
                 error=str(exc),
                 message=f"Failed to submit form: {exc}",
+            )
+
+    async def identify_fields(
+        self,
+        page: Any,
+        session_id: str,
+        browser_id: str,
+        context_id: str,
+        page_id: str,
+    ) -> dict[str, Any]:
+        """List every form control on ``page`` with its identifying attributes."""
+        start = time.monotonic()
+        await self._event_bus.publish(_form_event("form.started", action="fields"))
+
+        try:
+            raw: object = await page.evaluate(_FIELD_ENUM_EXPR)
+            fields: list[Any] = cast(list[Any], raw) if isinstance(raw, list) else []
+            count = len(fields)
+            await self._event_bus.publish(
+                _form_event("form.fields.listed", count=count, session_id=session_id)
+            )
+            result = _make_result(
+                success=True,
+                session_id=session_id,
+                browser_id=browser_id,
+                context_id=context_id,
+                page_id=page_id,
+                duration_ms=_duration(start),
+                message=f"Found {count} form fields",
+            )
+            result["count"] = count
+            result["fields"] = fields
+            return result
+        except Exception as exc:
+            await self._event_bus.publish(
+                _form_event(
+                    "form.field.failed", field="fields", error=str(exc), session_id=session_id
+                )
+            )
+            return _make_result(
+                success=False,
+                session_id=session_id,
+                browser_id=browser_id,
+                context_id=context_id,
+                page_id=page_id,
+                duration_ms=_duration(start),
+                error=str(exc),
+                message=f"Failed to list form fields: {exc}",
             )
 
     async def _resolve(

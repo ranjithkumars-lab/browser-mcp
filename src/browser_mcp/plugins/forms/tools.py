@@ -142,6 +142,26 @@ class FormToolkit:
         )
 
     @tool(
+        name=f"{TOOL_NAMESPACE}.fields",
+        description=(
+            "List every form control (input, textarea, select, button) on the "
+            "page with its id, name, type, placeholder and associated label, "
+            "so callers can resolve fields without guessing selectors."
+        ),
+        returns="json",
+    )
+    async def fields(self, session_id: str, page_id: str) -> dict[str, Any]:
+        """List the page's form fields."""
+        page = await self._page(session_id, page_id)
+        return await self._actions.identify_fields(
+            page=page,
+            session_id=session_id,
+            browser_id="",
+            context_id="",
+            page_id=page_id,
+        )
+
+    @tool(
         name=f"{TOOL_NAMESPACE}.submit",
         description="Submit a form. Optionally target a submit button.",
         returns="json",
@@ -175,4 +195,4 @@ class FormToolkit:
             register_underscore_alias(registry, method, TOOL_NAMESPACE, name)
 
 
-_TOOL_METHODS = frozenset({"fill", "check", "uncheck", "select", "submit"})
+_TOOL_METHODS = frozenset({"fill", "check", "uncheck", "select", "submit", "fields"})

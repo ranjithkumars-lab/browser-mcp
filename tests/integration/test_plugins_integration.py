@@ -131,7 +131,7 @@ class TestFormToolkitRegistration:
         registry.register = MagicMock()
         toolkit.register(registry)
 
-        assert registry.register.call_count == 10
+        assert registry.register.call_count == 12
 
 
 class TestFormActionsWithMockPage:

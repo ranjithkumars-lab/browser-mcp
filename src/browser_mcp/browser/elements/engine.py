@@ -59,8 +59,8 @@ def _locator_hint(value: str) -> str:
     lowered = value.lower()
     if any(tag in lowered for tag in ("input", "button", "login", "password", "email", "form")):
         return (
-            "Hint: inspect the page with browser.scrape.text first, then resolve "
-            "fields with browser.element.find using their id/type, or use "
+            "Hint: discover the real field ids with browser.form.fields (no guessing), "
+            "or resolve them with browser.element.find using their id/type, or use "
             "browser.form.fill (field='...') which matches by name/id/placeholder/label."
         )
     return (

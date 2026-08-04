@@ -464,6 +464,62 @@ async def test_complex_form_plugin_fill_and_submit(tmp_path: Path) -> None:
     assert runtime["page"].locator("#email").filled == ["Administrator"]
 
 
+async def test_complex_form_fields_discovery_then_fill(tmp_path: Path) -> None:
+    runtime = await _build_env(tmp_path)
+    runtime["page"].evaluate_result = [
+        {
+            "tag": "input",
+            "id": "login_email",
+            "name": None,
+            "type": "text",
+            "placeholder": "jane@example.com",
+            "label": "Email",
+            "visible": True,
+        },
+        {
+            "tag": "input",
+            "id": "login_password",
+            "name": None,
+            "type": "password",
+            "placeholder": "•••••",
+            "label": "Password",
+            "visible": True,
+        },
+        {
+            "tag": "button",
+            "id": None,
+            "name": None,
+            "type": "submit",
+            "placeholder": None,
+            "label": "Login",
+            "visible": True,
+        },
+    ]
+    listed = await runtime["registry"].call(
+        "browser.form.fields",
+        session_id=_sid(runtime),
+        page_id=_page_id(runtime),
+    )
+    assert listed["success"] is True, listed
+    assert listed["count"] == 3
+    ids = [f["id"] for f in listed["fields"]]
+    assert "login_email" in ids
+    assert "login_password" in ids
+
+    _editable_input(runtime, "#login_email")
+    _editable_input(runtime, "#login_password")
+    email_id = await _find_element_id(runtime, "css", "#login_email")
+    filled = await runtime["registry"].call(
+        "browser.element.fill",
+        session_id=_sid(runtime),
+        page_id=_page_id(runtime),
+        element_id=email_id,
+        value="Administrator",
+    )
+    assert filled["success"] is True, filled
+    assert runtime["page"].locator("#login_email").filled == ["Administrator"]
+
+
 async def test_complex_multi_step_navigation(tmp_path: Path) -> None:
     runtime = await _build_env(tmp_path)
     steps: list[str] = []

@@ -497,6 +497,7 @@ class FakePage:
         self.screenshot_error: Exception | None = None
         self.last_screenshot: dict[str, Any] | None = None
         self.screenshot_bytes: bytes = b"fake-page-png"
+        self.evaluate_result: Any = None
 
     @property
     def url(self) -> str:
@@ -554,7 +555,7 @@ class FakePage:
 
     async def evaluate(self, expression: str, arg: Any = None) -> Any:
         self.evaluations.append((expression, arg))
-        return None
+        return self.evaluate_result
 
     async def screenshot(self, **kwargs: Any) -> bytes:
         if self.screenshot_error is not None:

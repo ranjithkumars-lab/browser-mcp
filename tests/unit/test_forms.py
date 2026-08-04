@@ -446,3 +446,88 @@ class TestFormActionsEvents:
         event_names = [call[0][0].event_name for call in event_bus.publish.call_args_list]
         assert "form.started" in event_names
         assert "form.field.failed" in event_names
+
+
+class TestFormActionsFields:
+    @pytest.mark.asyncio
+    async def test_identify_fields_success(self) -> None:
+        detector = MagicMock()
+        validator = MagicMock()
+        state = MagicMock()
+        event_bus = MagicMock()
+        event_bus.publish = AsyncMock()
+
+        actions = FormActions(detector, validator, state, event_bus)
+        page = MagicMock()
+        page.evaluate = AsyncMock(
+            return_value=[
+                {
+                    "tag": "input",
+                    "id": "login_email",
+                    "name": None,
+                    "type": "text",
+                    "placeholder": "jane@example.com",
+                    "label": "Email",
+                    "visible": True,
+                },
+                {
+                    "tag": "input",
+                    "id": "login_password",
+                    "name": None,
+                    "type": "password",
+                    "placeholder": "•••••",
+                    "label": "Password",
+                    "visible": True,
+                },
+            ]
+        )
+
+        result = await actions.identify_fields(
+            page=page, session_id="s1", browser_id="b1", context_id="c1", page_id="p1"
+        )
+        assert result["success"] is True
+        assert result["count"] == 2
+        assert result["fields"][0]["id"] == "login_email"
+        assert result["fields"][1]["id"] == "login_password"
+        event_names = [call[0][0].event_name for call in event_bus.publish.call_args_list]
+        assert "form.started" in event_names
+        assert "form.fields.listed" in event_names
+
+    @pytest.mark.asyncio
+    async def test_identify_fields_evaluation_error(self) -> None:
+        detector = MagicMock()
+        validator = MagicMock()
+        state = MagicMock()
+        event_bus = MagicMock()
+        event_bus.publish = AsyncMock()
+
+        actions = FormActions(detector, validator, state, event_bus)
+        page = MagicMock()
+        page.evaluate = AsyncMock(side_effect=RuntimeError("js boom"))
+
+        result = await actions.identify_fields(
+            page=page, session_id="s1", browser_id="b1", context_id="c1", page_id="p1"
+        )
+        assert result["success"] is False
+        assert "js boom" in result["error"]
+        event_names = [call[0][0].event_name for call in event_bus.publish.call_args_list]
+        assert "form.field.failed" in event_names
+
+    @pytest.mark.asyncio
+    async def test_identify_fields_non_list_result(self) -> None:
+        detector = MagicMock()
+        validator = MagicMock()
+        state = MagicMock()
+        event_bus = MagicMock()
+        event_bus.publish = AsyncMock()
+
+        actions = FormActions(detector, validator, state, event_bus)
+        page = MagicMock()
+        page.evaluate = AsyncMock(return_value=None)
+
+        result = await actions.identify_fields(
+            page=page, session_id="s1", browser_id="b1", context_id="c1", page_id="p1"
+        )
+        assert result["success"] is True
+        assert result["count"] == 0
+        assert result["fields"] == []
