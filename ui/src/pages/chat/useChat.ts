@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chatStream, type ChatMessage } from "../../services/chat";
-import type { Turn } from "./types";
 
 const USER_ID_KEY = "browser-mcp-user-id";
 

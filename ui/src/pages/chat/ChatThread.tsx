@@ -3,7 +3,7 @@ import { Icon } from "../../components/Icon";
 import { MessageRenderer } from "./MessageRenderer";
 import { EmptyState } from "./EmptyState";
 import { AutomationTimeline } from "./AutomationTimeline";
-import type { ChatMessage, ProgressMessage, StatusMessage, ToolMessage } from "./types";
+import type { ProgressMessage, StatusMessage, ToolMessage } from "./types";
 import { LocalChatMessage } from "./useChat";
 
 interface ChatThreadProps {
@@ -46,7 +46,7 @@ export const ChatThread = memo(({ turns, busy, onPrompt }: ChatThreadProps) => {
   }
 
   // Group timeline events
-  const renderedElements = [];
+  const renderedElements: React.ReactNode[] = [];
   let currentTimelineGroup: (ProgressMessage | StatusMessage | ToolMessage)[] = [];
 
   const flushTimeline = (keyPrefix: string) => {

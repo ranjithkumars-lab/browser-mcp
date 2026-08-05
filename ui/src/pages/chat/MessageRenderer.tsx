@@ -4,7 +4,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { Icon } from "../../components/Icon";
 import type { LocalChatMessage } from "./useChat";
-import { ArtifactRenderer } from "./ArtifactRenderer";
+
 import { AssistantStatus } from "./AssistantStatus";
 
 export const MessageRenderer = memo(({ turn, isLast }: { turn: LocalChatMessage; isLast: boolean }) => {
@@ -70,7 +70,7 @@ export const MessageRenderer = memo(({ turn, isLast }: { turn: LocalChatMessage;
               </div>
             ) : (
               <a href={turn.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 border border-gray-200 p-3 rounded-lg bg-white shadow-sm hover:bg-gray-50 transition w-max">
-                <Icon name="download" className="w-5 h-5 text-blue-500" />
+                <Icon name="downloads" className="w-5 h-5 text-blue-500" />
                 <span className="font-medium text-gray-700">Download File</span>
               </a>
             )}

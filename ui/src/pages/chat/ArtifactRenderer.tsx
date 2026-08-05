@@ -1,5 +1,8 @@
 import { memo } from "react";
-import type { ScreenshotMeta } from "./types";
+export interface ScreenshotMeta {
+  url: string | null;
+  caption: string | null;
+}
 
 export function parseScreenshotMeta(content: string): ScreenshotMeta {
   try {

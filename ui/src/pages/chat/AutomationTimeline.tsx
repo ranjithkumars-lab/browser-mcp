@@ -1,6 +1,6 @@
 import React from "react";
 import { ProgressMessage, StatusMessage, ToolMessage } from "./types";
-import Icon from "../../components/Icon";
+import { Icon } from "../../components/Icon";
 
 interface AutomationTimelineProps {
   events: (ProgressMessage | StatusMessage | ToolMessage)[];
@@ -12,7 +12,7 @@ export const AutomationTimeline: React.FC<AutomationTimelineProps> = ({ events }
   return (
     <div className="flex flex-col gap-2 p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm mb-4">
       <div className="font-semibold text-gray-700 flex items-center gap-2 mb-2">
-        <Icon name="Activity" className="w-4 h-4 text-blue-500" />
+        <Icon name="play" className="w-4 h-4 text-blue-500" />
         Automation Progress
       </div>
       <div className="flex flex-col gap-3 relative pl-4 border-l border-gray-300 ml-2">
