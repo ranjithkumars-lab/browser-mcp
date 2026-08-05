@@ -17,9 +17,11 @@ import httpx
 import structlog
 
 from browser_mcp.api.chat.schemas import ChatMessage
-from browser_mcp.config.models import OllamaConfig
+from browser_mcp.config.models import OllamaConfig, ChatConfig
 from enterprise_mcp.tools.metadata import ToolMetadata
 from enterprise_mcp.tools.registry import ToolRegistry
+from browser_mcp.api.chat.prompts import PromptManager
+from browser_mcp.api.artifacts import ArtifactManager
 
 __all__ = ["ChatAgent"]
 
@@ -57,10 +59,15 @@ class ChatAgent:
         self,
         tools: ToolRegistry,
         config: OllamaConfig,
+        chat_config: ChatConfig,
+        artifact_manager: ArtifactManager | None = None,
         client: httpx.AsyncClient | None = None,
     ) -> None:
         self._tools = tools
         self._config = config
+        self._chat_config = chat_config
+        self._prompt_manager = PromptManager(self._chat_config)
+        self._artifact_manager = artifact_manager
         self._client = client or httpx.AsyncClient(
             timeout=httpx.Timeout(self._config.timeout_seconds)
         )
@@ -101,7 +108,7 @@ class ChatAgent:
         resolved_model = model or self._config.model
         tools = self.tool_definitions()
         history: list[dict[str, Any]] = [
-            {"role": "system", "content": self._config.system_prompt},
+            {"role": "system", "content": self._prompt_manager.build_system_prompt()},
             *[message.model_dump(exclude_none=True) for message in messages],
         ]
         steps = 0
@@ -147,6 +154,8 @@ class ChatAgent:
                 try:
                     result = await self._tools.call(name, **arguments)
                     content = self._serialize(result)
+                    if self._artifact_manager:
+                        content = self._artifact_manager.process_tool_result(name, content)
                     error = False
                 except Exception as exc:
                     content = f"Error: {exc}"
@@ -217,13 +226,7 @@ class ChatAgent:
         no accompanying text), this asks the model one final time to summarize,
         without offering any tools, so the user always receives a response.
         """
-        prompt = {
-            "role": "user",
-            "content": (
-                "Continue. Summarize in plain text what the browser tools did "
-                "and what the user should know next. Do not call any tools."
-            ),
-        }
+        prompt = self._prompt_manager.build_summary_prompt()
         try:
             async for delta, _calls in self._chat_stream(model, [*history, prompt], []):
                 if delta:

@@ -14,10 +14,11 @@ interface InlinePart {
   bold?: boolean;
   italic?: boolean;
   link?: string;
+  image?: { url: string; alt: string };
 }
 
 const INLINE_RE =
-  /(`[^`]+`)|(\*\*[^*]+\*\*)|(\*[^*]+\*)|(\[[^\]]+\]\([^)]+\))/g;
+  /(`[^`]+`)|(\*\*[^*]+\*\*)|(\*[^*]+\*)|(!\[[^\]]*\]\([^)]+\))|(\[[^\]]+\]\([^)]+\))/g;
 
 function parseInline(raw: string): InlinePart[] {
   const parts: InlinePart[] = [];
@@ -31,6 +32,17 @@ function parseInline(raw: string): InlinePart[] {
     else if (match[3]) parts.push({ text: match[3].slice(1, -1), italic: true });
     else if (match[4]) {
       const inner = match[4];
+      const close = inner.lastIndexOf("](");
+      parts.push({
+        text: inner,
+        image: {
+          alt: inner.slice(2, close),
+          url: inner.slice(close + 2, -1)
+        }
+      });
+    }
+    else if (match[5]) {
+      const inner = match[5];
       const close = inner.lastIndexOf("](");
       parts.push({
         text: inner.slice(1, close),
@@ -49,6 +61,18 @@ function renderInline(text: string, keyPrefix: string): ReactNode {
     if (part.code) node = <code key={i}>{escapeHtml(part.text)}</code>;
     else if (part.bold) node = <strong key={i}>{part.text}</strong>;
     else if (part.italic) node = <em key={i}>{part.text}</em>;
+    else if (part.image) {
+      const url = part.image.url.startsWith("artifact:") 
+        ? `/api/v1/artifacts/${part.image.url.replace("artifact:", "")}` 
+        : part.image.url;
+      node = (
+        <figure className="tool-screenshot" key={i}>
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            <img src={url} alt={part.image.alt} loading="lazy" />
+          </a>
+        </figure>
+      );
+    }
     else if (part.link) node = <a key={i} href={part.link} target="_blank" rel="noreferrer">{part.text}</a>;
     else node = escapeHtml(part.text);
     return <Fragment key={`${keyPrefix}-${i}`}>{node}</Fragment>;

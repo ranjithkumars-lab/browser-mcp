@@ -30,6 +30,8 @@ __all__ = [
     "TransferConfig",
     "UiConfig",
     "ViewportConfig",
+    "ChatConfig",
+    "ArtifactConfig",
 ]
 
 
@@ -211,25 +213,23 @@ class OllamaConfig(BaseModel):
         ),
     )
     temperature: float = Field(default=0.0, ge=0, le=2)
-    system_prompt: str = Field(
-        default=(
-            "You are a helpful assistant operating a browser through MCP tools. "
-            "Only call browser tools when the user explicitly asks you to "
-            "browse, inspect, or interact with a web page. For greetings, "
-            "general questions, or anything that does not require browsing, "
-            "reply directly without calling any tools. To work on a web page, "
-            "first call browser.create_session, then browser.create_context "
-            "(on the returned session_id), then browser.new_page (with that "
-            "context_id; optionally pass a url to navigate). Reuse the exact "
-            "session_id/context_id/page_id returned by the tools in every later "
-            "call. To read page content use browser.scrape.text (or "
-            "browser.scrape_text) with output_format 'markdown' (or 'text'). "
-            "Do not invent tool names or IDs that were not returned to you. "
-            "Call the tools with the exact parameter names shown in their "
-            "schemas. Always end your turn with a plain-text summary of what "
-            "you did and the observed outcome."
-        )
-    )
+
+
+class ChatConfig(BaseModel):
+    """Chat UI and Response Pipeline configuration."""
+    
+    response_style: str = Field(default="conversational")
+    compact_responses: bool = Field(default=True)
+    max_history_turns: int = Field(default=20, ge=1)
+    artifact_preview: bool = Field(default=True)
+
+
+class ArtifactConfig(BaseModel):
+    """Artifact storage and lifecycle configuration."""
+    
+    retention_hours: int = Field(default=24, ge=1)
+    cleanup_policy: str = Field(default="on_expiration")
+    max_preview_size_mb: int = Field(default=5, ge=1)
 
 
 class BrowserConfig(BaseModel):
@@ -367,3 +367,5 @@ class BrowserSettings(BaseSettings):
     api: ApiConfig = Field(default_factory=ApiConfig)
     ui: UiConfig = Field(default_factory=UiConfig)
     ollama: OllamaConfig = Field(default_factory=OllamaConfig)
+    chat: ChatConfig = Field(default_factory=ChatConfig)
+    artifacts: ArtifactConfig = Field(default_factory=ArtifactConfig)

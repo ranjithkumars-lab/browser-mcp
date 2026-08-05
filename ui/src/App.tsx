@@ -132,7 +132,7 @@ function Shell() {
             <Icon name={dark ? "sun" : "moon"} />
           </button>
         </header>
-        <main className="content">
+        <main className={`content ${page === "Chat" ? "content-chat" : ""}`}>
           <PageComponent />
         </main>
       </div>

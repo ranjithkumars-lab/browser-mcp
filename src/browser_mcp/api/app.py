@@ -7,9 +7,11 @@ from typing import Any
 from fastapi import FastAPI
 
 from browser_mcp.api.chat.agent import ChatAgent
+from browser_mcp.api.dependencies import get_engine
 from browser_mcp.api.engine import ApiEngine
 from browser_mcp.api.jobs.manager import JobManager
 from browser_mcp.api.screenshots import ScreenshotStore
+from browser_mcp.api.artifacts import ArtifactManager
 from browser_mcp.api.static import mount_spa
 from browser_mcp.api.v1.router import router
 from browser_mcp.config.models import ApiConfig, BrowserSettings
@@ -63,10 +65,14 @@ def create_api_app(
         redoc_url="/redoc" if config.enable_redoc else None,
         lifespan=_run_browser_lifespan(context),
     )
-    app.state.api_config = config
-    app.state.api_engine = ApiEngine(context, JobManager(config.job_retention_minutes))
-    app.state.chat_agent = ChatAgent(context.tools, browser.ollama)
-    app.state.screenshot_store = _screenshot_store(context)
+    screenshot_store = _screenshot_store(context)
+    app.state.screenshot_store = screenshot_store
+    
+    artifact_manager = ArtifactManager(screenshot_store)
+    app.state.artifact_manager = artifact_manager
+    
+    app.state.chat_agent = ChatAgent(context.tools, browser.ollama, browser.chat, artifact_manager)
+    
     app.include_router(router)
     mount_spa(app, browser.ui.static_directory)
     return app

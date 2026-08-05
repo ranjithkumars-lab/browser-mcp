@@ -32,6 +32,13 @@ type ScreenshotMeta = {
 function screenshotMeta(content: string): ScreenshotMeta {
   try {
     const data = JSON.parse(content) as Record<string, unknown>;
+    const artifactId = typeof data?.artifact_id === "string" ? data.artifact_id : null;
+    if (artifactId) {
+      return {
+        url: `/api/v1/artifacts/${encodeURIComponent(artifactId)}`,
+        caption: typeof data?.filename === "string" ? data.filename : "Screenshot",
+      };
+    }
     const path = typeof data?.screenshot_path === "string" ? data.screenshot_path : "";
     const filename = path ? String(path.split(/[\\/]/).pop()) : "";
     const url = filename ? `/api/v1/screenshots/${encodeURIComponent(filename)}` : null;
@@ -161,30 +168,9 @@ export function Chat() {
 
   return (
     <div className="chat-layout">
-      <div className="card chat-card">
-        <div className="chat-head">
-          <div>
-            <div className="card-title">Ollama Chat</div>
-            <div className="card-sub">{config ? `${config.tools} browser tools available via ${config.host}` : ""}</div>
-          </div>
-          <label className="chat-model">
-            Model
-            <input
-              className="input"
-              list="ollama-models"
-              value={activeModel}
-              placeholder="model"
-              aria-label="Ollama model"
-              onChange={(e) => setModel(e.target.value)}
-            />
-            <datalist id="ollama-models">
-              {config ? <option value={config.model} /> : null}
-            </datalist>
-          </label>
-        </div>
-
+      <div className="chat-main">
         {turns.length === 0 && !busy ? (
-          <div className="state" style={{ margin: "var(--space-5)", marginTop: "var(--space-7)" }}>
+          <div className="state" style={{ margin: "var(--space-5)", marginTop: "var(--space-7)", alignSelf: "center" }}>
             <div className="state-icon"><Icon name="chat" style={{ width: "2.5rem", height: "2.5rem" }} /></div>
             <div className="state-title">Ask the agent to browse the web</div>
             <div className="state-sub">
@@ -241,14 +227,6 @@ export function Chat() {
                         >
                           <img loading="lazy" src={meta.url} alt={meta.caption ?? "Screenshot"} />
                         </a>
-                        {meta.caption ? (
-                          <figcaption className="tool-screenshot-caption">
-                            <span className="tool-screenshot-caption-text">{meta.caption}</span>
-                            <a className="tool-file" href={meta.url} target="_blank" rel="noopener noreferrer">
-                              Open screenshot file
-                            </a>
-                          </figcaption>
-                        ) : null}
                       </figure>
                     ) : null;
                   })()}
@@ -266,67 +244,75 @@ export function Chat() {
           </div>
         )}
 
-        {error && <div className="alert alert-error" role="alert">{error}</div>}
-
-        <form
-          className="chat-compose"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void send();
-          }}
-        >
-          <textarea
-            rows={3}
-            value={input}
-            placeholder="Describe a browser task\u2026"
-            aria-label="Message"
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void send();
-              }
+        <div className="chat-compose-wrapper">
+          <form
+            className="chat-compose"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void send();
             }}
-          />
-          <div className="chat-actions">
-            {busy ? (
-              <button type="button" className="btn btn-danger" onClick={() => abortRef.current?.abort()}>
-                Stop
-              </button>
-            ) : (
-              <button type="submit" className="btn btn-primary" disabled={!input.trim()}>
-                Send
-              </button>
-            )}
-            <span className="chat-hint">Enter to send &middot; Shift+Enter for a new line</span>
-          </div>
-        </form>
+          >
+            <textarea
+              rows={1}
+              value={input}
+              placeholder="Message Browser MCP..."
+              aria-label="Message"
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void send();
+                }
+              }}
+            />
+            <div className="chat-actions">
+              <span className="chat-hint">Enter to send &middot; Shift+Enter for a new line</span>
+              {busy ? (
+                <button type="button" className="btn btn-danger" onClick={() => abortRef.current?.abort()}>
+                  Stop
+                </button>
+              ) : (
+                <button type="submit" className="btn btn-primary" disabled={!input.trim()}>
+                  <Icon name="play" />
+                </button>
+              )}
+            </div>
+            {error && <div className="alert alert-error" role="alert" style={{marginTop: "0.5rem"}}>{error}</div>}
+          </form>
+        </div>
       </div>
 
-      <div className="chat-side">
+      <div className="settings-drawer">
         <div className="card">
-          <div className="card-title">Ollama</div>
-          <div className="card-sub">Server model for the agent loop</div>
-          <div style={{ marginTop: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-            <div>
-              <span className="badge badge-accent">{config?.model ?? "gpt-oss:20b"}</span>
-            </div>
+          <div className="card-title">Agent Settings</div>
+          <div className="card-sub">Configure Ollama Model</div>
+          <div style={{ marginTop: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+            <label className="field">
+              <span>Model</span>
+              <input
+                className="input"
+                list="ollama-models"
+                value={activeModel}
+                placeholder="Model"
+                aria-label="Ollama model"
+                onChange={(e) => setModel(e.target.value)}
+              />
+            </label>
+            <datalist id="ollama-models">
+              {config ? <option value={config.model} /> : null}
+            </datalist>
             <div>
               <span className="badge badge-muted">{config?.host ?? ""}</span>
-            </div>
-            <div>
-              <span className="badge badge-info">{config?.tools ?? 0} tools</span>
             </div>
           </div>
         </div>
         <div className="card">
           <div className="card-title">Available tools</div>
-          <div className="card-sub">Injected into every agent run</div>
-          <div className="tools-panel">
+          <div className="card-sub">{config?.tools ?? 0} active tools</div>
+          <div className="tools-panel" style={{marginTop: "0.5rem"}}>
             {(config?.tool_names ?? []).map((name) => (
-              <div className="tool-item" key={name}>
+              <div className="tool-item" style={{padding: "0.25rem 0"}} key={name}>
                 <code>{name}</code>
-                <span className="badge badge-muted">tool</span>
               </div>
             ))}
           </div>

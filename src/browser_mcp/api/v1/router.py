@@ -21,8 +21,11 @@ EngineDep = Annotated[Any, Depends(get_engine)]
 def _get_screenshot_store(request: Request) -> ScreenshotStore:
     return request.app.state.screenshot_store
 
+def _get_artifact_manager(request: Request) -> Any:
+    return request.app.state.artifact_manager
 
 ScreenshotStoreDep = Annotated[ScreenshotStore, Depends(_get_screenshot_store)]
+ArtifactManagerDep = Annotated[Any, Depends(_get_artifact_manager)]
 
 
 @router.get("/jobs/{job_id}")
@@ -74,5 +77,17 @@ async def screenshot_file(filename: str, store: ScreenshotStoreDep) -> FileRespo
     return FileResponse(
         record.path,
         media_type=record.mime_type,
+        headers={"Cache-Control": "public, max-age=3600, stale-while-revalidate=86400"},
+    )
+
+@router.get("/artifacts/{artifact_id}")
+async def artifact_file(artifact_id: str, manager: ArtifactManagerDep) -> FileResponse:
+    """Serve a captured artifact file by its generated artifact_id."""
+    artifact = manager.get_artifact(artifact_id)
+    if artifact is None:
+        raise HTTPException(status_code=404, detail="artifact not found")
+    return FileResponse(
+        artifact.original_path,
+        media_type=artifact.mime_type,
         headers={"Cache-Control": "public, max-age=3600, stale-while-revalidate=86400"},
     )

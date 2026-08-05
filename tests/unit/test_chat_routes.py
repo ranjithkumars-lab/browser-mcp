@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from browser_mcp.api.chat.agent import ChatAgent
 from browser_mcp.api.screenshots import ScreenshotStore
 from browser_mcp.api.v1.router import router as v1_router
-from browser_mcp.config.models import OllamaConfig
+from browser_mcp.config.models import OllamaConfig, ChatConfig
 from enterprise_mcp.tools.decorators import tool
 from enterprise_mcp.tools.registry import ToolRegistry
 
@@ -39,6 +39,7 @@ def _app_client() -> TestClient:
     agent = ChatAgent(
         registry,
         OllamaConfig(host="http://ollama.local", model="test-model"),
+        ChatConfig(),
         client=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
     )
     app = FastAPI()

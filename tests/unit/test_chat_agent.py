@@ -10,7 +10,7 @@ import pytest
 
 from browser_mcp.api.chat.agent import ChatAgent, tool_parameters
 from browser_mcp.api.chat.schemas import ChatMessage
-from browser_mcp.config.models import OllamaConfig
+from browser_mcp.config.models import OllamaConfig, ChatConfig
 from enterprise_mcp.tools.decorators import tool
 from enterprise_mcp.tools.metadata import ToolMetadata, ToolParameter
 from enterprise_mcp.tools.registry import ToolRegistry
@@ -37,7 +37,7 @@ def _agent(
 ) -> ChatAgent:
     transport = httpx.MockTransport(handler)
     client = httpx.AsyncClient(transport=transport)
-    return ChatAgent(registry, config or OllamaConfig(), client=client)
+    return ChatAgent(registry, config or OllamaConfig(), ChatConfig(), client=client)
 
 
 def test_tool_parameters_builds_json_schema() -> None:
