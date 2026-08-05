@@ -32,11 +32,13 @@ const AssistantRenderer = ({ message, isLast }: { message: AssistantMessage & { 
         <Icon name="moon" style={{ width: "1.1rem", height: "1.1rem" }} />
       </div>
       <div className="chat-message-content markdown-body">
-        {message.content && (
+        {message.content ? (
           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
             {message.content}
           </ReactMarkdown>
-        )}
+        ) : (message.state === "completed" && (
+          <span style={{ fontStyle: "italic", color: "var(--muted)" }}>Task completed.</span>
+        ))}
         {isLast && message.state === "streaming" && (
            <div style={{ marginTop: "0.5rem" }}><AssistantStatus state="streaming" /></div>
         )}
