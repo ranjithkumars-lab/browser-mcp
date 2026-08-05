@@ -59,6 +59,21 @@ export const Icons = {
   play: (p: JSX.IntrinsicElements["svg"]) => (
     <svg {...base(p)}><path d="M5 3l14 9-14 9V3z" /></svg>
   ),
+  user: (p: JSX.IntrinsicElements["svg"]) => (
+    <svg {...base(p)}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+  ),
+  cpu: (p: JSX.IntrinsicElements["svg"]) => (
+    <svg {...base(p)}><rect x="4" y="4" width="16" height="16" rx="2" ry="2" /><rect x="9" y="9" width="6" height="6" /><line x1="9" y1="1" x2="9" y2="4" /><line x1="15" y1="1" x2="15" y2="4" /><line x1="9" y1="20" x2="9" y2="23" /><line x1="15" y1="20" x2="15" y2="23" /><line x1="20" y1="9" x2="23" y2="9" /><line x1="20" y1="14" x2="23" y2="14" /><line x1="1" y1="9" x2="4" y2="9" /><line x1="1" y1="14" x2="4" y2="14" /></svg>
+  ),
+  globe: (p: JSX.IntrinsicElements["svg"]) => (
+    <svg {...base(p)}><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
+  ),
+  check: (p: JSX.IntrinsicElements["svg"]) => (
+    <svg {...base(p)}><polyline points="20 6 9 17 4 12" /></svg>
+  ),
+  x: (p: JSX.IntrinsicElements["svg"]) => (
+    <svg {...base(p)}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+  ),
 } as const;
 
 export type IconName = keyof typeof Icons;
