@@ -164,7 +164,7 @@ export function Chat() {
       <div className="card chat-card">
         <div className="chat-head">
           <div>
-            <div className="card-title">DeepSeek Chat</div>
+            <div className="card-title">Ollama Chat</div>
             <div className="card-sub">{config ? `${config.tools} browser tools available via ${config.host}` : ""}</div>
           </div>
           <label className="chat-model">
@@ -174,7 +174,7 @@ export function Chat() {
               list="ollama-models"
               value={activeModel}
               placeholder="model"
-              aria-label="DeepSeek model"
+              aria-label="Ollama model"
               onChange={(e) => setModel(e.target.value)}
             />
             <datalist id="ollama-models">
@@ -305,11 +305,11 @@ export function Chat() {
 
       <div className="chat-side">
         <div className="card">
-          <div className="card-title">DeepSeek</div>
+          <div className="card-title">Ollama</div>
           <div className="card-sub">Server model for the agent loop</div>
           <div style={{ marginTop: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
             <div>
-              <span className="badge badge-accent">{config?.model ?? "deepseek-r1:14b"}</span>
+              <span className="badge badge-accent">{config?.model ?? "gpt-oss:20b"}</span>
             </div>
             <div>
               <span className="badge badge-muted">{config?.host ?? ""}</span>

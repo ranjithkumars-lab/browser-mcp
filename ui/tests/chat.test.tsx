@@ -23,7 +23,7 @@ function renderChat() {
 beforeEach(() => {
   vi.mocked(chatService.getChatConfig).mockResolvedValue({
     host: "http://ollama:11444",
-    model: "deepseek-r1:14b",
+    model: "gpt-oss:20b",
     tools: 54,
     tool_names: ["browser.goto", "browser.snapshot", "browser.search"],
   });
