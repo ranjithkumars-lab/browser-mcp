@@ -39,7 +39,6 @@ services:
       - "8081:8080"
     volumes:
       - ./config:/app/config:ro
-      - ../../ui/dist:/app/ui/dist:ro
     restart: unless-stopped
     entrypoint: ["browser-mcp"]
     command: ["api", "serve", "--host", "0.0.0.0", "--port", "8080"]
