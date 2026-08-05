@@ -51,7 +51,12 @@ class SystemPromptBuilder:
             "3. Call browser.new_page (with that context_id; optionally pass a url)\n"
             "Reuse the exact session_id/context_id/page_id returned by the tools in "
             "every later call. To read page content use browser.scrape.text with "
-            "output_format 'markdown'. Do not invent tool names or IDs."
+            "output_format 'markdown'. Do not invent tool names or IDs.\n\n"
+            "CRITICAL: If a task requires multiple steps (like filling a form, clicking submit, "
+            "and taking a screenshot), you MUST execute the tools sequentially until the entire "
+            "task is complete. Do NOT stop halfway to tell the user what you plan to do next. "
+            "Only stop and respond with text when the FINAL step (like the screenshot or download) "
+            "has been successfully completed."
         )
 
 
