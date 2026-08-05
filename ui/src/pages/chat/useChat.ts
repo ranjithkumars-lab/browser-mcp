@@ -16,8 +16,10 @@ export function currentUserId(): string {
   }
 }
 
+export type LocalChatMessage = ChatMessage & { state?: string };
+
 export function useChat(model: string | undefined) {
-  const [turns, setTurns] = useState<Turn[]>([]);
+  const [turns, setTurns] = useState<LocalChatMessage[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -33,8 +35,8 @@ export function useChat(model: string | undefined) {
     setBusy(false);
     setTurns((prev) => {
       const last = prev[prev.length - 1];
-      if (last && (last.kind === "assistant" || last.kind === "tool_call") && last.state === "streaming") {
-        return [...prev.slice(0, -1), { ...last, state: "cancelled" } as Turn];
+      if (last && last.role === "assistant" && last.state === "streaming") {
+        return [...prev.slice(0, -1), { ...last, state: "cancelled" } as LocalChatMessage];
       }
       return prev;
     });
@@ -44,17 +46,19 @@ export function useChat(model: string | undefined) {
     content = content.trim();
     if (!content || busy) return;
 
-    const messages: ChatMessage[] = turns
-      .filter((t) => t.kind === "user" || t.kind === "assistant")
-      .map((t) =>
-        t.kind === "user"
-          ? { role: "user" as const, content: t.content }
-          : { role: "assistant" as const, content: t.content },
-      );
-    messages.push({ role: "user", content });
+    const messages = turns.map(t => {
+      // Omit local UI state before sending
+      const { state, ...rest } = t;
+      return rest as ChatMessage;
+    });
+    
+    // Actually, only user and assistant messages need to be sent back normally
+    const history = messages.filter(m => m.role === "user" || m.role === "assistant");
+    
+    history.push({ role: "user", content });
 
     setError(null);
-    setTurns((prev) => [...prev, { kind: "user", content }]);
+    setTurns((prev) => [...prev, { role: "user", content }]);
     setBusy(true);
 
     const controller = new AbortController();
@@ -62,40 +66,39 @@ export function useChat(model: string | undefined) {
     let assistantContent = "";
 
     try {
-      for await (const event of chatStream(messages, model || undefined, userId, controller.signal)) {
+      for await (const event of chatStream(history, model || undefined, userId, controller.signal)) {
         if (event.type === "text") {
           assistantContent += event.delta;
           setTurns((prev) => {
             const last = prev[prev.length - 1];
-            if (last?.kind === "assistant" && (last.state === "streaming" || last.state === "loading" || last.state === "queued")) {
-              return [...prev.slice(0, -1), { kind: "assistant", content: assistantContent, state: "streaming" }];
+            if (last?.role === "assistant" && (last.state === "streaming" || last.state === "loading" || last.state === "queued")) {
+              return [...prev.slice(0, -1), { role: "assistant", content: assistantContent, state: "streaming" }];
             }
-            return [...prev, { kind: "assistant", content: assistantContent, state: "streaming" }];
+            return [...prev, { role: "assistant", content: assistantContent, state: "streaming" }];
           });
         } else if (event.type === "tool_call") {
           setTurns((prev) => [
             ...prev,
-            { kind: "tool_call", name: event.name, state: "completed" },
+            { role: "tool", name: event.name, content: "Tool called", state: "completed" },
           ]);
-        } else if (event.type === "tool_result") {
-          setTurns((prev) => [
-            ...prev,
-            { kind: "tool_result", name: event.name, content: event.content, error: event.error },
-          ]);
+        } else if (event.type === "message") {
+          // This captures our new ArtifactMessage, StatusMessage, etc.
+          const { type, ...msgProps } = event;
+          setTurns((prev) => [...prev, msgProps as LocalChatMessage]);
         } else if (event.type === "error") {
           setError(event.detail);
           setTurns((prev) => {
              const last = prev[prev.length - 1];
-             if (last?.kind === "assistant" && last.state === "streaming") {
-                return [...prev.slice(0, -1), { kind: "assistant", content: assistantContent, state: "error", errorDetail: event.detail }];
+             if (last?.role === "assistant" && last.state === "streaming") {
+                return [...prev.slice(0, -1), { role: "assistant", content: assistantContent, state: "error" }];
              }
              return prev;
           });
         } else if (event.type === "done") {
           setTurns((prev) => {
             const last = prev[prev.length - 1];
-            if (last?.kind === "assistant" && last.state === "streaming") {
-              return [...prev.slice(0, -1), { kind: "assistant", content: last.content, state: "completed" }];
+            if (last?.role === "assistant" && last.state === "streaming") {
+              return [...prev.slice(0, -1), { role: "assistant", content: last.content, state: "completed" }];
             }
             return prev;
           });
@@ -114,8 +117,8 @@ export function useChat(model: string | undefined) {
          setError(message);
          setTurns((prev) => {
             const last = prev[prev.length - 1];
-            if (last?.kind === "assistant" && last.state === "streaming") {
-               return [...prev.slice(0, -1), { kind: "assistant", content: assistantContent, state: "error", errorDetail: message }];
+            if (last?.role === "assistant" && last.state === "streaming") {
+               return [...prev.slice(0, -1), { role: "assistant", content: assistantContent, state: "error" }];
             }
             return prev;
          });

@@ -1,12 +1,14 @@
 import { memo } from "react";
-import { Markdown } from "../../utils/markdown";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
 import { Icon } from "../../components/Icon";
-import type { Turn } from "./types";
+import type { LocalChatMessage } from "./useChat";
 import { ArtifactRenderer } from "./ArtifactRenderer";
 import { AssistantStatus } from "./AssistantStatus";
 
-export const MessageRenderer = memo(({ turn, isLast }: { turn: Turn; isLast: boolean }) => {
-  if (turn.kind === "user") {
+export const MessageRenderer = memo(({ turn, isLast }: { turn: LocalChatMessage; isLast: boolean }) => {
+  if (turn.role === "user") {
     return (
       <div className="chat-message-wrapper user slide-up">
         <div className="chat-message" style={{ flexDirection: "row-reverse" }}>
@@ -23,21 +25,25 @@ export const MessageRenderer = memo(({ turn, isLast }: { turn: Turn; isLast: boo
     );
   }
 
-  if (turn.kind === "assistant") {
+  if (turn.role === "assistant" || turn.role === "system") {
     return (
       <div className="chat-message-wrapper assistant slide-up">
         <div className="chat-message">
           <div className="chat-avatar assistant">
             <Icon name="moon" style={{ width: "1.1rem", height: "1.1rem" }} />
           </div>
-          <div className="chat-message-content">
-            {turn.content && <Markdown text={turn.content} />}
+          <div className="chat-message-content markdown-body">
+            {turn.content && (
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                {turn.content}
+              </ReactMarkdown>
+            )}
             {isLast && turn.state === "streaming" && (
                <div style={{ marginTop: "0.5rem" }}><AssistantStatus state="streaming" /></div>
             )}
             {turn.state === "error" && (
                <div className="alert alert-error" style={{marginTop: "0.5rem"}}>
-                 {turn.errorDetail || "An error occurred generating the response."}
+                 An error occurred generating the response.
                </div>
             )}
             {turn.state === "cancelled" && (
@@ -51,44 +57,40 @@ export const MessageRenderer = memo(({ turn, isLast }: { turn: Turn; isLast: boo
     );
   }
 
-  if (turn.kind === "tool_call") {
+  if (turn.role === "artifact") {
     return (
       <div className="chat-message-wrapper assistant">
         <div className="chat-message">
           <div className="chat-avatar" style={{background: "transparent"}} />
           <div className="chat-message-content">
-            <AssistantStatus state={turn.state} toolName={turn.name} />
+            {turn.artifact_type.startsWith("image") ? (
+              <div className="border border-gray-200 p-2 rounded-lg bg-gray-50 max-w-sm">
+                <img src={turn.url} alt="Screenshot" className="max-w-full rounded" />
+                <div className="text-xs text-gray-500 mt-2 truncate">Screenshot captured</div>
+              </div>
+            ) : (
+              <a href={turn.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 border border-gray-200 p-3 rounded-lg bg-white shadow-sm hover:bg-gray-50 transition w-max">
+                <Icon name="download" className="w-5 h-5 text-blue-500" />
+                <span className="font-medium text-gray-700">Download File</span>
+              </a>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
-  if (turn.kind === "tool_result") {
-    if (!turn.error && turn.name === "browser.screenshot") {
-      return (
-        <div className="chat-message-wrapper assistant">
-          <div className="chat-message">
-            <div className="chat-avatar" style={{background: "transparent"}} />
-            <div className="chat-message-content">
-              <ArtifactRenderer content={turn.content} />
-            </div>
+  if (turn.role === "error") {
+    return (
+      <div className="chat-message-wrapper assistant">
+        <div className="chat-message">
+          <div className="chat-avatar" style={{background: "transparent"}} />
+          <div className="chat-message-content">
+            <div className="alert alert-error">Error: {turn.error.message}</div>
           </div>
         </div>
-      );
-    }
-    if (turn.error) {
-      return (
-        <div className="chat-message-wrapper assistant">
-          <div className="chat-message">
-            <div className="chat-avatar" style={{background: "transparent"}} />
-            <div className="chat-message-content">
-              <div className="alert alert-error">Tool error: {turn.name}</div>
-            </div>
-          </div>
-        </div>
-      );
-    }
+      </div>
+    );
   }
 
   return null;

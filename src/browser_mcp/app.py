@@ -58,6 +58,10 @@ from browser_mcp.plugins.scraper.actions import ScraperActions
 from browser_mcp.plugins.scraper.sizer import PayloadSizer
 from browser_mcp.plugins.scraper.tools import ScraperToolkit
 from browser_mcp.plugins.tools import PluginToolkit
+from browser_mcp.browser.orchestration.planner import ExecutionPlanner
+from browser_mcp.browser.orchestration.executor import BrowserExecutor
+from browser_mcp.browser.orchestration.forms import FormEngine
+from browser_mcp.tools.orchestration import OrchestrationToolkit
 from browser_mcp.tools.browser import BrowserToolkit
 from browser_mcp.tools.elements import ElementToolkit
 from browser_mcp.tools.keyboard import KeyboardToolkit
@@ -228,6 +232,12 @@ def create_browser_context(
     resolved.container.register_instance(navigation, name="navigation_manager")
     resolved.container.register_instance(elements, name="element_engine")
     resolved.container.register_instance(screenshot_manager, name="screenshot_manager")
+
+    form_engine = FormEngine(elements)
+    browser_executor = BrowserExecutor(navigation, screenshot_manager, form_engine)
+    execution_planner = ExecutionPlanner(browser_executor)
+    orchestration_toolkit = OrchestrationToolkit(execution_planner)
+    orchestration_toolkit.register(resolved.tools)
 
     _LOGGER.info(
         "browser_context_ready",

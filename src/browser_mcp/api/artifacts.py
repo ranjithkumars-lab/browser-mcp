@@ -9,11 +9,15 @@ from pydantic import BaseModel
 from browser_mcp.api.screenshots import ScreenshotStore
 
 class Artifact(BaseModel):
-    artifact_id: str
-    filename: str
-    mime_type: str
-    size: int
+    id: str
+    type: str
+    mime: str
+    thumbnail: str | None = None
+    download_url: str | None = None
+    preview_url: str | None = None
+    status: str = "ready"
     original_path: str
+    size: int
 
 
 class ArtifactManager:
@@ -28,7 +32,7 @@ class ArtifactManager:
 
     def process_tool_result(self, name: str, content: str) -> str:
         """Parse tool results and convert them to artifacts if they contain files."""
-        if name not in ("browser.screenshot", "browser.download"):
+        if not (name.startswith("browser.screenshot") or name == "browser.download"):
             return content
             
         try:
@@ -39,7 +43,7 @@ class ArtifactManager:
         if not isinstance(raw, dict):
             return content
             
-        if name == "browser.screenshot":
+        if name.startswith("browser.screenshot"):
             path = raw.get("screenshot_path")
             if not path:
                 return content
@@ -50,21 +54,22 @@ class ArtifactManager:
             
             artifact_id = uuid4().hex[:8]
             artifact = Artifact(
-                artifact_id=artifact_id,
-                filename=filename,
-                mime_type=mime_type,
+                id=artifact_id,
+                type="image",
+                mime=mime_type,
                 size=int(size),
-                original_path=str(path)
+                original_path=str(path),
+                preview_url=f"/api/v1/artifacts/{artifact_id}"
             )
             self._artifacts[artifact_id] = artifact
             
-            # Return a summarized preview for the LLM
             return json.dumps({
                 "artifact_id": artifact_id,
                 "filename": filename,
                 "mime_type": mime_type,
                 "size": size,
-                "message": f"Saved. You MUST cite this artifact in your response using markdown: ![Screenshot](artifact:{artifact_id})"
+                "url": artifact.preview_url,
+                "message": "Screenshot saved successfully."
             }, ensure_ascii=False)
             
         if name == "browser.download":
@@ -78,11 +83,12 @@ class ArtifactManager:
             
             artifact_id = uuid4().hex[:8]
             artifact = Artifact(
-                artifact_id=artifact_id,
-                filename=filename,
-                mime_type=mime_type,
+                id=artifact_id,
+                type="file",
+                mime=mime_type,
                 size=int(size),
-                original_path=str(path)
+                original_path=str(path),
+                download_url=f"/api/v1/artifacts/{artifact_id}"
             )
             self._artifacts[artifact_id] = artifact
             
@@ -91,6 +97,7 @@ class ArtifactManager:
                 "filename": filename,
                 "mime_type": mime_type,
                 "size": size,
-                "message": f"Downloaded successfully. You MUST cite this artifact in your response using a markdown link: [{filename}](artifact:{artifact_id})"
+                "url": artifact.download_url,
+                "message": "File downloaded successfully."
             }, ensure_ascii=False)
 

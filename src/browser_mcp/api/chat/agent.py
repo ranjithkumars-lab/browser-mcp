@@ -173,12 +173,6 @@ class ChatAgent:
             if steps >= self._config.max_tool_steps:
                 break
 
-        if used_tools and not final_text.strip():
-            async for delta in self._forced_summary(resolved_model, history):
-                if delta:
-                    final_text += delta
-                    yield {"type": "text", "delta": delta}
-
         yield {"type": "done", "content": final_text, "steps": steps}
 
     async def _chat_stream(
@@ -215,24 +209,6 @@ class ChatAgent:
                     else []
                 )
                 yield (content if isinstance(content, str) else ""), calls
-
-    async def _forced_summary(
-        self, model: str, history: list[dict[str, Any]]
-    ) -> AsyncIterator[str]:
-        """Request a plain-text wrap-up when tool calls produced no text.
-
-        The agent loop normally ends when the model answers without tools. If a
-        task exhausted ``max_tool_steps`` (or the model emitted tool calls with
-        no accompanying text), this asks the model one final time to summarize,
-        without offering any tools, so the user always receives a response.
-        """
-        prompt = self._prompt_manager.build_summary_prompt()
-        try:
-            async for delta, _calls in self._chat_stream(model, [*history, prompt], []):
-                if delta:
-                    yield delta
-        except (httpx.HTTPError, json.JSONDecodeError) as exc:
-            _LOGGER.error("chat_agent_summary_failed", error=str(exc))
 
     @staticmethod
     def _serialize(result: Any) -> str:

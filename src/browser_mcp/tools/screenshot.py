@@ -43,36 +43,74 @@ class ScreenshotToolkit:
         self._manager = manager
 
     @tool(
-        name=f"{TOOL_NAMESPACE}.screenshot",
-        description=(
-            "Capture a screenshot of a page. By default captures the visible "
-            "viewport as PNG. Pass full_page=true to capture the entire "
-            "scrollable page, or selector=<CSS> to capture a single element. "
-            "output_format is one of 'png' or 'jpeg'; quality (1-100) only "
-            "applies to jpeg. Returns the absolute screenshot_path."
-        ),
+        name=f"{TOOL_NAMESPACE}.screenshot.full_page",
+        description="Capture a screenshot of the entire scrollable page. output_format is one of 'png' or 'jpeg'.",
         returns="json",
     )
-    async def screenshot(
+    async def capture_full_page(
         self,
         session_id: str,
         page_id: str,
-        selector: str | None = None,
         output_format: str = "png",
-        full_page: bool | None = None,
         quality: int | None = None,
-        directory: str | None = None,
     ) -> dict[str, Any]:
-        """Capture a screenshot of ``page_id``."""
+        """Capture the entire page."""
         try:
-            result = await self._manager.capture(
+            result = await self._manager.capture_full_page(
+                session_id,
+                page_id,
+                output_format=output_format,
+                quality=quality,
+            )
+            return _ok(**result)
+        except Exception as exc:
+            return _err(str(exc), session_id=session_id, page_id=page_id)
+
+    @tool(
+        name=f"{TOOL_NAMESPACE}.screenshot.viewport",
+        description="Capture a screenshot of the visible viewport only. output_format is one of 'png' or 'jpeg'.",
+        returns="json",
+    )
+    async def capture_viewport(
+        self,
+        session_id: str,
+        page_id: str,
+        output_format: str = "png",
+        quality: int | None = None,
+    ) -> dict[str, Any]:
+        """Capture the viewport."""
+        try:
+            result = await self._manager.capture_viewport(
+                session_id,
+                page_id,
+                output_format=output_format,
+                quality=quality,
+            )
+            return _ok(**result)
+        except Exception as exc:
+            return _err(str(exc), session_id=session_id, page_id=page_id)
+
+    @tool(
+        name=f"{TOOL_NAMESPACE}.screenshot.element",
+        description="Capture a screenshot of a specific element using a CSS selector. output_format is one of 'png' or 'jpeg'.",
+        returns="json",
+    )
+    async def capture_element(
+        self,
+        session_id: str,
+        page_id: str,
+        selector: str,
+        output_format: str = "png",
+        quality: int | None = None,
+    ) -> dict[str, Any]:
+        """Capture a specific element."""
+        try:
+            result = await self._manager.capture_element(
                 session_id,
                 page_id,
                 selector=selector,
                 output_format=output_format,
-                full_page=full_page,
                 quality=quality,
-                directory=directory,
             )
             return _ok(**result)
         except Exception as exc:
@@ -85,7 +123,7 @@ class ScreenshotToolkit:
             registry_register(getattr(self, name))
 
 
-_TOOL_METHODS = frozenset({"screenshot"})
+_TOOL_METHODS = frozenset({"capture_full_page", "capture_viewport", "capture_element"})
 
 
 def build_screenshot_tools(manager: ScreenshotManager) -> list[Callable[..., Any]]:

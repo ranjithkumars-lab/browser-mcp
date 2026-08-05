@@ -1,15 +1,12 @@
 import { UiError, request } from "./client";
 
-export interface ChatMessage {
-  role: "system" | "user" | "assistant" | "tool";
-  content: string;
-  name?: string;
-}
+import type { ChatMessage as BaseChatMessage } from "../pages/chat/types";
+export type ChatMessage = BaseChatMessage;
 
 export type ChatEvent =
   | { type: "text"; delta: string }
   | { type: "tool_call"; name: string }
-  | { type: "tool_result"; name: string; content: string; error: boolean }
+  | { type: "message" } & ChatMessage
   | { type: "done"; content: string; steps: number }
   | { type: "error"; detail: string };
 

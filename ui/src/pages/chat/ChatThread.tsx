@@ -2,10 +2,12 @@ import { memo, useRef, useEffect, UIEvent, useState } from "react";
 import { Icon } from "../../components/Icon";
 import { MessageRenderer } from "./MessageRenderer";
 import { EmptyState } from "./EmptyState";
-import type { Turn } from "./types";
+import { AutomationTimeline } from "./AutomationTimeline";
+import type { ChatMessage, ProgressMessage, StatusMessage, ToolMessage } from "./types";
+import { LocalChatMessage } from "./useChat";
 
 interface ChatThreadProps {
-  turns: Turn[];
+  turns: LocalChatMessage[];
   busy: boolean;
   onPrompt: (prompt: string) => void;
 }
@@ -43,12 +45,35 @@ export const ChatThread = memo(({ turns, busy, onPrompt }: ChatThreadProps) => {
     );
   }
 
+  // Group timeline events
+  const renderedElements = [];
+  let currentTimelineGroup: (ProgressMessage | StatusMessage | ToolMessage)[] = [];
+
+  const flushTimeline = (keyPrefix: string) => {
+    if (currentTimelineGroup.length > 0) {
+      renderedElements.push(
+        <AutomationTimeline key={`timeline-${keyPrefix}`} events={currentTimelineGroup} />
+      );
+      currentTimelineGroup = [];
+    }
+  };
+
+  turns.forEach((turn, index) => {
+    if (turn.role === "progress" || turn.role === "status" || turn.role === "tool") {
+      currentTimelineGroup.push(turn as any);
+    } else {
+      flushTimeline(String(index));
+      renderedElements.push(
+        <MessageRenderer key={`msg-${index}`} turn={turn} isLast={index === turns.length - 1} />
+      );
+    }
+  });
+  flushTimeline("end");
+
   return (
     <div className="chat-main" style={{ position: "relative" }}>
       <div className="chat-thread" aria-live="polite" ref={threadRef} onScroll={handleScroll}>
-        {turns.map((turn, index) => (
-          <MessageRenderer key={index} turn={turn} isLast={index === turns.length - 1} />
-        ))}
+        {renderedElements}
         <div ref={scrollRef} style={{ height: "1px" }} />
       </div>
       

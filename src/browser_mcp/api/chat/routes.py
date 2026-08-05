@@ -9,9 +9,11 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
 from browser_mcp.api.chat.schemas import ChatConfigResponse, ChatRequest
+from browser_mcp.api.chat.formatter import ResponseFormatter
 from browser_mcp.api.screenshots import ScreenshotRecord, ScreenshotStore
 
 router = APIRouter(tags=["chat"])
+_formatter = ResponseFormatter()
 
 
 def _get_agent(request: Request) -> Any:
@@ -87,7 +89,14 @@ async def chat_stream(request: ChatRequest, agent: AgentDep, store: StoreDep) ->
             async for event in agent.stream(request.messages, model=request.model):
                 if event["type"] == "tool_result":
                     _record_screenshot(store, request.user_id, event["name"], event["content"])
-                yield _sse(event["type"], {k: v for k, v in event.items() if k != "type"})
+                    # Format raw tool result into a unified message model
+                    msg_model = _formatter.format_tool_result(
+                        event["name"], event["content"], event["error"]
+                    )
+                    # Yield as a message event
+                    yield _sse("message", msg_model.model_dump(exclude_none=True))
+                else:
+                    yield _sse(event["type"], {k: v for k, v in event.items() if k != "type"})
         except Exception as exc:
             yield _sse("error", {"detail": str(exc)})
 

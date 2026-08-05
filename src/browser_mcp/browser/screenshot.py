@@ -115,7 +115,71 @@ class ScreenshotManager:
 
     # -- public API -----------------------------------------------------
 
-    async def capture(
+    async def capture_full_page(
+        self,
+        session_id: str,
+        page_id: str,
+        *,
+        output_format: str = "png",
+        quality: int | None = None,
+        directory: str | None = None,
+    ) -> dict[str, Any]:
+        """Capture the entire scrollable page."""
+        return await self._capture_internal(
+            session_id,
+            page_id,
+            selector=None,
+            output_format=output_format,
+            full_page=True,
+            quality=quality,
+            directory=directory,
+        )
+
+    async def capture_viewport(
+        self,
+        session_id: str,
+        page_id: str,
+        *,
+        output_format: str = "png",
+        quality: int | None = None,
+        directory: str | None = None,
+    ) -> dict[str, Any]:
+        """Capture only the visible viewport."""
+        return await self._capture_internal(
+            session_id,
+            page_id,
+            selector=None,
+            output_format=output_format,
+            full_page=False,
+            quality=quality,
+            directory=directory,
+        )
+
+    async def capture_element(
+        self,
+        session_id: str,
+        page_id: str,
+        selector: str,
+        *,
+        output_format: str = "png",
+        quality: int | None = None,
+        directory: str | None = None,
+    ) -> dict[str, Any]:
+        """Capture a specific element by CSS selector."""
+        if not selector or not selector.strip():
+            raise ScreenshotError("selector must not be empty for element capture")
+            
+        return await self._capture_internal(
+            session_id,
+            page_id,
+            selector=selector,
+            output_format=output_format,
+            full_page=False,
+            quality=quality,
+            directory=directory,
+        )
+
+    async def _capture_internal(
         self,
         session_id: str,
         page_id: str,
@@ -126,34 +190,11 @@ class ScreenshotManager:
         quality: int | None = None,
         directory: str | None = None,
     ) -> dict[str, Any]:
-        """Capture a screenshot of ``page_id`` in ``session_id``.
-
-        Parameters
-        ----------
-        session_id:
-            Owning session identifier.
-        page_id:
-            Page to capture.
-        selector:
-            Optional CSS selector; when given only the matched element is
-            captured instead of the page viewport.
-        output_format:
-            ``png`` or ``jpeg``.
-        full_page:
-            When true, capture the entire scrollable page (page-level captures
-            only). Falls back to the configured default when ``None``.
-        quality:
-            Optional JPEG quality (1-100); ignored for PNG.
-        directory:
-            Override for the configured screenshot directory.
-        """
         resolved_format = self._resolve_format(output_format)
         if resolved_format == "jpeg" and quality is None:
             quality = self._settings.screenshot.default_quality
         if quality is not None and (quality < 1 or quality > 100):
             raise ScreenshotError("quality must be between 1 and 100")
-        if selector is not None and not selector.strip():
-            raise ScreenshotError("selector must not be empty")
 
         handle = self._state.page_in_session(session_id, page_id)
         page = handle.page
