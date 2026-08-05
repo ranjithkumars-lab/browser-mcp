@@ -52,7 +52,7 @@ export const ChatComposer = memo(({ input, setInput, onSend, onStop, busy, turns
     <div className="chat-compose-container">
       {showWarning && (
         <div className="busy-warning fade-in">
-          <Icon name="info" style={{ width: "1rem", height: "1rem" }} />
+          <Icon name="logs" style={{ width: "1rem", height: "1rem" }} />
           <span>
             {currentAction ? `Current step: ${currentAction}. ` : ""}
             Please wait until the current browser task finishes.

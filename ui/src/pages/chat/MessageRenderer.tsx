@@ -148,12 +148,7 @@ export const MessageRenderer = memo(({ turn, isLast }: { turn: LocalChatMessage;
     }
   }
 
-  if (mode === "advanced") {
-    // In advanced, show workflows too, but maybe hide raw JSON/tool calls if they existed as a specific role
-    if (!["user", "assistant", "summary", "artifact", "error", "workflow"].includes(turn.role)) {
-      return null;
-    }
-  }
+
 
   // mode === "developer" shows everything (including raw tool logs if we pass them)
 
