@@ -64,6 +64,21 @@ export interface ErrorMessage extends BaseMessage {
   error: TypedError;
 }
 
+export interface SummaryMessage extends BaseMessage {
+  role: "summary";
+  content: string;
+}
+
+export interface WorkflowMessage extends BaseMessage {
+  role: "workflow";
+  workflow_type: "navigation" | "authentication" | "form" | "screenshot" | "download" | "upload" | "extraction" | "search";
+  status: "queued" | "running" | "success" | "failed" | "cancelled";
+  details?: string;
+  metadata?: Record<string, any>;
+}
+
+export type DisplayMode = "simple" | "advanced" | "developer";
+
 export type ChatMessage =
   | UserMessage
   | AssistantMessage
@@ -73,6 +88,8 @@ export type ChatMessage =
   | ProgressMessage
   | PlanningMessage
   | StatusMessage
-  | ErrorMessage;
+  | ErrorMessage
+  | SummaryMessage
+  | WorkflowMessage;
 
 export type Turn = ChatMessage; // Keep Turn alias for backward compatibility for now if needed, but preferably use ChatMessage.

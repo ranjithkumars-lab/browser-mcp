@@ -184,6 +184,20 @@ a { color: var(--accent); }
 }
 .chat-toolbar .model-badge { font-size: var(--text-sm); font-weight: 600; color: var(--text-secondary); }
 
+.chat-toolbar-modes {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.chat-toolbar-modes button {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+.chat-toolbar-modes button.badge-muted:hover {
+  background: var(--surface-2);
+}
+
 .chat-thread {
   flex: 1; overflow-y: auto; display: flex; flex-direction: column;
   padding: var(--space-5) 0 8rem 0; scroll-behavior: auto;

@@ -28,21 +28,37 @@ class FormEngine:
     async def _fill_field(self, session_id: str, page_id: str, label_or_name: str, value: Any) -> None:
         """Heuristically find a field by label, name, or placeholder and fill it."""
         try:
-            # 1. Try to find by explicit Label text
-            result = await self._engine.find(session_id, page_id, "text", label_or_name, timeout_ms=3000, strict=False)
+            # 1. Try to find by explicit Label text using Playwright's get_by_label equivalent
+            result = await self._engine.find(session_id, page_id, "playwright", f"internal:label=\"{label_or_name}\"i", timeout_ms=3000, strict=False)
             element_id = result["element_id"]
             
-            # Usually the label text is associated with an input or is near it
-            # To be simple for now, we try aria role search
         except Exception:
             try:
                 # 2. Try by placeholder or name attribute via css
-                css_selector = f"input[name='{label_or_name}'], input[placeholder*='{label_or_name}'], select[name='{label_or_name}']"
+                # Add synonyms for common fields
+                search_term = label_or_name.lower()
+                selectors = [
+                    f"input[name='{label_or_name}']", 
+                    f"input[id='{label_or_name}']",
+                    f"input[placeholder*='{label_or_name}']", 
+                    f"select[name='{label_or_name}']",
+                    f"select[id='{label_or_name}']"
+                ]
+                
+                if search_term in ["username", "email", "login"]:
+                    selectors.extend(["input[type='email']", "input[name*='email']", "input[id*='email']", "input[name*='user']", "input[id*='user']", "input[name*='login']", "input[id*='login']"])
+                elif search_term == "password":
+                    selectors.extend(["input[type='password']", "input[name*='pass']", "input[id*='pass']"])
+                
+                # Filter for visible elements
+                css_selector = ", ".join(f"{sel}:visible" for sel in selectors)
+                
                 result = await self._engine.find(session_id, page_id, "css", css_selector, timeout_ms=3000, strict=False)
                 element_id = result["element_id"]
             except Exception as e:
-                _LOGGER.warning("form_engine_field_not_found", field=label_or_name, error=str(e))
-                return
+                error_msg = str(e).encode('ascii', 'ignore').decode('ascii')
+                _LOGGER.warning("form_engine_field_not_found", field=label_or_name, error=error_msg)
+                raise ValueError(f"Field '{label_or_name}' not found on page.")
 
         # Determine type of element
         try:
@@ -62,7 +78,8 @@ class FormEngine:
             result = await self._engine.find(session_id, page_id, "css", "button[type='submit'], input[type='submit'], button:has-text('Login'), button:has-text('Submit')", timeout_ms=2000, strict=False)
             await self._engine.click(session_id, page_id, result["element_id"])
         except Exception as e:
-            _LOGGER.warning("form_engine_submit_failed", error=str(e))
+            error_msg = str(e).encode('ascii', 'ignore').decode('ascii')
+            _LOGGER.warning("form_engine_submit_failed", error=error_msg)
             # Fallback to pressing Enter on the page
             try:
                 # Find body and press enter

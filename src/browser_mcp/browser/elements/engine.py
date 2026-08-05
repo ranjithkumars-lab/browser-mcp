@@ -148,7 +148,7 @@ class ElementEngine:
 
         try:
             locator = await self._registry.resolve(target, model)
-            await self._provider.wait_for(locator, "attached", timeout)
+            await self._provider.wait_for(locator, "attached", timeout, strict=model.strict)
         except ElementError as exc:
             if isinstance(exc, ElementNotFoundError):
                 await self._emit_not_found(session_id, handle, page_id, frame_id, model)
@@ -165,7 +165,7 @@ class ElementEngine:
             handle,
             page_id,
             frame_id,
-            locator,
+            self._provider.nth(locator, 0) if not model.strict else locator,
             model.strategy.value,
             model.value,
             index=None,

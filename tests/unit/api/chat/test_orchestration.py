@@ -37,7 +37,7 @@ async def test_execution_planner_login(mock_deps):
     
     result = await planner.execute_task("sess1", "page1", "login", params)
     
-    nav.navigate.assert_called_once_with("sess1", "page1", "https://example.com/login")
+    nav.goto.assert_called_once_with("sess1", "page1", "https://example.com/login")
     assert elements.fill.call_count == 2
     elements.click.assert_called_once()
     
@@ -63,7 +63,7 @@ async def test_execution_planner_register(mock_deps):
     
     result = await planner.execute_task("sess1", "page1", "register", params)
     
-    nav.navigate.assert_called_once_with("sess1", "page1", "https://example.com/register")
+    nav.goto.assert_called_once_with("sess1", "page1", "https://example.com/register")
     assert elements.fill.call_count == 2
     elements.click.assert_called_once()
     

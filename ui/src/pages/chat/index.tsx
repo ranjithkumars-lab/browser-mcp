@@ -6,6 +6,7 @@ import { ChatToolbar } from "./ChatToolbar";
 import { ChatThread } from "./ChatThread";
 import { ChatComposer } from "./ChatComposer";
 import { SettingsDrawer } from "./SettingsDrawer";
+import { DisplayModeProvider } from "./DisplayModeContext";
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
@@ -68,7 +69,8 @@ export function ChatPage() {
   }
 
   return (
-    <div className="chat-page">
+    <DisplayModeProvider>
+      <div className="chat-page">
       <div className="chat-main">
         <ChatToolbar 
            modelName={activeModel} 
@@ -109,5 +111,6 @@ export function ChatPage() {
          config={config} 
       />
     </div>
+    </DisplayModeProvider>
   );
 }

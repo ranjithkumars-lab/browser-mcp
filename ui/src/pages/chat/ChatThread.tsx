@@ -3,7 +3,7 @@ import { Icon } from "../../components/Icon";
 import { MessageRenderer } from "./MessageRenderer";
 import { EmptyState } from "./EmptyState";
 import { AutomationTimeline } from "./AutomationTimeline";
-import type { ProgressMessage, StatusMessage, ToolMessage } from "./types";
+import type { ProgressMessage, StatusMessage, ToolMessage, WorkflowMessage } from "./types";
 import { LocalChatMessage } from "./useChat";
 
 interface ChatThreadProps {
@@ -47,7 +47,7 @@ export const ChatThread = memo(({ turns, busy, onPrompt }: ChatThreadProps) => {
 
   // Group timeline events
   const renderedElements: React.ReactNode[] = [];
-  let currentTimelineGroup: (ProgressMessage | StatusMessage | ToolMessage)[] = [];
+  let currentTimelineGroup: (ProgressMessage | StatusMessage | ToolMessage | WorkflowMessage)[] = [];
 
   const flushTimeline = (keyPrefix: string) => {
     if (currentTimelineGroup.length > 0) {
@@ -59,7 +59,7 @@ export const ChatThread = memo(({ turns, busy, onPrompt }: ChatThreadProps) => {
   };
 
   turns.forEach((turn, index) => {
-    if (turn.role === "progress" || turn.role === "status" || turn.role === "tool") {
+    if (turn.role === "progress" || turn.role === "status" || turn.role === "tool" || turn.role === "workflow") {
       currentTimelineGroup.push(turn as any);
     } else {
       flushTimeline(String(index));

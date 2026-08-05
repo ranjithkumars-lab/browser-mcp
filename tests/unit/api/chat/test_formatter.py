@@ -1,53 +1,42 @@
 import pytest
+import json
 from browser_mcp.api.chat.formatter import ResponseFormatter
 from browser_mcp.api.artifacts import Artifact, ArtifactManager
 
 @pytest.fixture
 def formatter():
-    # Provide a dummy artifact manager mock
-    class DummyArtifactManager:
-        def generate_urls(self, artifact_id: str):
-            return {"download": f"http://localhost/artifacts/{artifact_id}/download"}
-        def get_metadata(self, artifact_id: str):
-            return {"size": 1024}
-
-    return ResponseFormatter(DummyArtifactManager())
+    return ResponseFormatter()
 
 def test_formatter_formats_artifact_success(formatter):
-    tool_output = {
+    tool_output = json.dumps({
         "success": True,
         "artifact_id": "test-id",
-        "mime_type": "image/png"
-    }
+        "mime_type": "image/png",
+        "url": "http://localhost/artifacts/test-id/download"
+    })
     
-    result = formatter.format("browser.screenshot", tool_output)
+    result = formatter.format_tool_result("browser.screenshot", tool_output, False)
     
-    assert result["type"] == "message"
-    assert result["role"] == "artifact"
-    assert result["artifact_id"] == "test-id"
-    assert result["url"] == "http://localhost/artifacts/test-id/download"
-    assert result["metadata"]["size"] == 1024
+    assert result.role == "artifact"
+    assert result.artifact_id == "test-id"
+    assert result.url == "http://localhost/artifacts/test-id/download"
+    assert result.artifact_type == "image/png"
 
 def test_formatter_formats_error(formatter):
-    tool_output = {
-        "success": False,
-        "error": "Failed to find element"
-    }
+    tool_output = "Traceback error: Failed to find element"
     
-    result = formatter.format("browser.click", tool_output)
+    result = formatter.format_tool_result("browser.click", tool_output, True)
     
-    assert result["type"] == "message"
-    assert result["role"] == "error"
-    assert result["error"]["message"] == "Failed to find element"
+    assert result.role == "error"
+    assert result.error.message == "Tool 'browser.click' failed during execution."
 
 def test_formatter_formats_status(formatter):
-    tool_output = {
+    tool_output = json.dumps({
         "success": True,
-        "status": "Navigation complete"
-    }
+        "url": "https://example.com"
+    })
     
-    result = formatter.format("browser.navigate", tool_output)
+    result = formatter.format_tool_result("browser.navigate", tool_output, False)
     
-    assert result["type"] == "message"
-    assert result["role"] == "status"
-    assert result["content"] == "Navigation complete"
+    assert result.role == "status"
+    assert result.content == "Navigated to https://example.com."
