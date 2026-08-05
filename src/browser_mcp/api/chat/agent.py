@@ -158,6 +158,7 @@ class ChatAgent:
                         content = self._artifact_manager.process_tool_result(name, content)
                     error = False
                 except Exception as exc:
+                    _LOGGER.exception("tool_execution_failed", tool=name)
                     content = f"Error: {exc}"
                     error = True
                 yield {
