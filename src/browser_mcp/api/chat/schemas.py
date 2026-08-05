@@ -61,6 +61,18 @@ class StatusMessage(BaseMessage):
     content: str
 
 
+class WorkflowMessage(BaseMessage):
+    role: Literal["workflow"] = "workflow"
+    workflow_type: str
+    status: Literal["running", "success", "failed"]
+    details: str | None = None
+
+
+class SummaryMessage(BaseMessage):
+    role: Literal["summary"] = "summary"
+    content: str
+
+
 class TypedError(BaseModel):
     type: Literal[
         "ToolError",
@@ -88,6 +100,8 @@ ChatMessage = Annotated[
     ProgressMessage |
     PlanningMessage |
     StatusMessage |
+    WorkflowMessage |
+    SummaryMessage |
     ErrorMessage,
     Field(discriminator="role")
 ]

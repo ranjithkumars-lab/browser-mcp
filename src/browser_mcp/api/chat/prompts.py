@@ -39,7 +39,9 @@ class SystemPromptBuilder:
             "every later call.\n\n"
             "CRITICAL: If a task requires multiple steps, prefer high-level orchestration "
             "tools (like browser.automation.execute) over manual DOM inspection. "
-            "Do NOT output markdown image links for screenshots, the system will render them automatically."
+            "The assistant must never expose internal implementation details, filesystem paths, "
+            "API payloads, or tool-specific identifiers to end users. "
+            "Presentation is handled entirely by the structured message pipeline."
         )
 
 
@@ -56,7 +58,8 @@ class ResponseStylePolicy:
                 "- Maintain a natural conversation.\n"
                 "- Do NOT use unnecessary headings like 'What the browser tools did'.\n"
                 "- Do NOT repeat step-by-step tool actions to the user.\n"
-                "- Focus directly on answering the user's request.\n"
+                "- Focus directly on answering the user's request. Keep it strictly goal-centric.\n"
+                "- For example, say 'Screenshot attached' or 'Login completed successfully' instead of logging execution details.\n"
                 "- Keep responses concise; expand only when asked."
             )
         return ""

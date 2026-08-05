@@ -1,18 +1,20 @@
 """Response Formatter for translating raw tool outputs into Unified Message Models."""
 
 import json
+from pathlib import Path
 from typing import Any
 from browser_mcp.api.chat.schemas import (
     ArtifactMessage,
     StatusMessage,
+    WorkflowMessage,
     ErrorMessage,
     TypedError
 )
 
-class ResponseFormatter:
-    """Formats raw tool executions into clean, UI-ready Message Models."""
+class PresentationGateway:
+    """Formats raw tool executions into clean, UI-ready Message Models (Presentation Gateway)."""
 
-    def format_tool_result(self, name: str, content: str, error: bool) -> ArtifactMessage | StatusMessage | ErrorMessage:
+    def format_tool_result(self, name: str, content: str, error: bool) -> ArtifactMessage | StatusMessage | WorkflowMessage | ErrorMessage:
         """Parse a tool execution result into a unified message."""
         if error:
             return ErrorMessage(
@@ -27,31 +29,63 @@ class ResponseFormatter:
         try:
             data = json.loads(content)
         except (TypeError, ValueError):
-            # Not JSON, return as a generic status message
             return StatusMessage(content=f"Action '{name}' completed successfully.")
 
         if not isinstance(data, dict):
             return StatusMessage(content=f"Action '{name}' completed.")
 
-        # If this tool produced an artifact (handled by ArtifactManager)
+        # Generic Artifact Resolver
+        # Look for any known artifact paths
+        artifact_path = data.get("screenshot_path") or data.get("download_path") or data.get("pdf_path")
+        if artifact_path:
+            filename = data.get("filename") or Path(artifact_path).name
+            mime_type = data.get("mime_type")
+            if not mime_type:
+                if "screenshot" in name:
+                    mime_type = "image/png"
+                elif "download" in name:
+                    mime_type = "application/octet-stream"
+            
+            # Map artifact to API endpoint
+            url = f"/api/v1/screenshots/{filename}" if "screenshot" in name else f"/api/v1/artifacts/{filename}"
+
+            return ArtifactMessage(
+                artifact_id=filename,
+                artifact_type=mime_type,
+                url=url,
+                metadata=data
+            )
+
         if "artifact_id" in data:
             return ArtifactMessage(
                 artifact_id=data["artifact_id"],
                 artifact_type=data.get("mime_type", "application/octet-stream"),
-                url=data.get("url", ""),
+                url=data.get("url", f"/api/v1/artifacts/{data['artifact_id']}"),
                 metadata=data
             )
 
-        # For regular browser actions (clicks, fills, navigation)
+        # Workflow/Status Emission
         if name == "browser.navigate":
             url = data.get("url", "the page")
-            return StatusMessage(content=f"Navigated to {url}.")
+            return WorkflowMessage(
+                workflow_type="Navigation",
+                status="success",
+                details=f"Loaded {url}"
+            )
         
-        if name in ("browser.element_fill", "browser.element_click", "browser.element_hover"):
-            return StatusMessage(content=f"Interacted with element successfully.")
+        if name in ("browser.element_fill", "browser.element_click", "browser.element_hover", "browser.form.fill"):
+            return WorkflowMessage(
+                workflow_type="Interaction",
+                status="success",
+                details=f"Interacted with element successfully"
+            )
             
         if name == "browser.scrape.text":
-            return StatusMessage(content=f"Scraped page content successfully.")
+            return WorkflowMessage(
+                workflow_type="Scraping",
+                status="success",
+                details="Scraped page content"
+            )
 
         return StatusMessage(content=f"Tool '{name}' completed successfully.")
 

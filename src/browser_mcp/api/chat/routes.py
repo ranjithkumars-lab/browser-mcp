@@ -9,11 +9,11 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
 from browser_mcp.api.chat.schemas import ChatConfigResponse, ChatRequest
-from browser_mcp.api.chat.formatter import ResponseFormatter
+from browser_mcp.api.chat.formatter import PresentationGateway
 from browser_mcp.api.screenshots import ScreenshotRecord, ScreenshotStore
 
 router = APIRouter(tags=["chat"])
-_formatter = ResponseFormatter()
+_formatter = PresentationGateway()
 
 
 def _get_agent(request: Request) -> Any:

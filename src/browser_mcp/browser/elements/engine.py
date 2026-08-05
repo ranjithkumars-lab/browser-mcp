@@ -154,6 +154,9 @@ class ElementEngine:
                 await self._emit_not_found(session_id, handle, page_id, frame_id, model)
             raise
         except Exception as exc:
+            if "strict mode violation" in str(exc).lower() and model.strict:
+                return await self._recover_strict_mode(session_id, page_id, frame_id, model, handle, target, start)
+
             await self._emit_not_found(session_id, handle, page_id, frame_id, model)
             raise ElementNotFoundError(
                 f"element '{model.strategy}:{model.value}' not found on page '{page_id}' "
@@ -235,6 +238,76 @@ class ElementEngine:
             "duration_ms": self._duration_ms(start),
         }
         await self._emit_found(self._refs[elements[0]["element_id"]], payload)
+        return payload
+
+    async def _recover_strict_mode(
+        self,
+        session_id: str,
+        page_id: str,
+        frame_id: str | None,
+        model: LocatorModel,
+        handle: PageHandle,
+        target: Any,
+        start: float,
+    ) -> dict[str, Any]:
+        """Ranked Recovery Strategy: visible > enabled > text match > first fallback."""
+        locator = self._registry.build(target, model)
+        count = await self._provider.count(locator)
+        
+        best_index = 0
+        best_rank = 999
+        
+        for index in range(count):
+            nth = self._provider.nth(locator, index)
+            is_visible = await self._state_checks.visible(nth)
+            if not is_visible:
+                continue
+                
+            is_enabled = await self._state_checks.enabled(nth)
+            rank = 2 if is_enabled else 3
+            
+            if rank < best_rank:
+                best_rank = rank
+                best_index = index
+                if rank == 2:  # Found visible + enabled, early exit
+                    break
+                    
+        # Fallback to the best found or 0
+        recovered_locator = self._provider.nth(locator, best_index)
+        
+        ref = self._cache(
+            session_id,
+            handle,
+            page_id,
+            frame_id,
+            recovered_locator,
+            model.strategy.value,
+            model.value,
+            index=best_index,
+        )
+        
+        payload = ref.payload()
+        payload["count"] = count
+        payload["recovered_index"] = best_index
+        payload["duration_ms"] = self._duration_ms(start)
+        
+        # Publish recovery event for Timeline
+        await self._events.publish(
+            DomainEvent(
+                event_name="element.recovered",
+                payload={
+                    "session_id": session_id,
+                    "page_id": page_id,
+                    "strategy": model.strategy.value,
+                    "value": model.value,
+                    "matched_count": count,
+                    "selected_index": best_index
+                }
+            )
+        )
+        
+        await self._emit_resolved(ref)
+        await self._emit_found(ref, payload)
         return payload
 
     # -- property / state queries --------------------------------------
