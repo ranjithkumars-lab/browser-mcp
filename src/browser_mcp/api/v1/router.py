@@ -88,6 +88,6 @@ async def artifact_file(artifact_id: str, manager: ArtifactManagerDep) -> FileRe
         raise HTTPException(status_code=404, detail="artifact not found")
     return FileResponse(
         artifact.original_path,
-        media_type=artifact.mime_type,
+        media_type=artifact.mime,
         headers={"Cache-Control": "public, max-age=3600, stale-while-revalidate=86400"},
     )
