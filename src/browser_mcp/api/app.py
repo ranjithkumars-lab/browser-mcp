@@ -67,8 +67,8 @@ def create_api_app(
     )
     screenshot_store = _screenshot_store(context)
     app.state.screenshot_store = screenshot_store
-    app.state.api_engine = ApiEngine(context)
-    app.state.job_manager = JobManager(app.state.api_engine)
+    app.state.job_manager = JobManager()
+    app.state.api_engine = ApiEngine(context, app.state.job_manager)
     
     artifact_manager = ArtifactManager(screenshot_store)
     app.state.artifact_manager = artifact_manager
