@@ -97,7 +97,8 @@ export function useChat(model: string | undefined) {
           setTurns((prev) => {
             const last = prev[prev.length - 1];
             if (last?.role === "assistant" && last.state === "streaming") {
-              return [...prev.slice(0, -1), { role: "assistant", content: last.content, state: "completed" }];
+              const finalContent = event.content ?? last.content;
+              return [...prev.slice(0, -1), { role: "assistant", content: finalContent, state: "completed" }];
             }
             return prev;
           });

@@ -77,7 +77,7 @@ export interface WorkflowMessage extends BaseMessage {
   metadata?: Record<string, any>;
 }
 
-export type DisplayMode = "simple" | "advanced" | "developer";
+export type DisplayMode = "simple" | "developer";
 
 export type ChatMessage =
   | UserMessage

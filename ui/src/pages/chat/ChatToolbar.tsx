@@ -22,11 +22,6 @@ export const ChatToolbar = memo(({ modelName, onOpenSettings }: ChatToolbarProps
            title="Simple: Answer, Screenshots, Downloads"
         >Simple</button>
         <button 
-           className={`badge ${mode === "advanced" ? "badge-primary" : "badge-muted"}`} 
-           onClick={() => setMode("advanced")}
-           title="Advanced: Summary & Timeline"
-        >Advanced</button>
-        <button 
            className={`badge ${mode === "developer" ? "badge-primary" : "badge-muted"}`} 
            onClick={() => setMode("developer")}
            title="Developer: Raw JSON & Tool Calls"

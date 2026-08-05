@@ -11,7 +11,9 @@ const DisplayModeContext = createContext<DisplayModeContextType | undefined>(und
 export function DisplayModeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<DisplayMode>(() => {
     try {
-      return (localStorage.getItem("browser-mcp-display-mode") as DisplayMode) || "simple";
+      const stored = localStorage.getItem("browser-mcp-display-mode");
+      if (stored === "advanced") return "developer";
+      return (stored as DisplayMode) || "simple";
     } catch {
       return "simple";
     }

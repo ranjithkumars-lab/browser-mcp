@@ -21,6 +21,7 @@ from browser_mcp.config.models import OllamaConfig, ChatConfig
 from enterprise_mcp.tools.metadata import ToolMetadata
 from enterprise_mcp.tools.registry import ToolRegistry
 from browser_mcp.api.chat.prompts import PromptManager
+from browser_mcp.api.chat.resolver import ExecutionContext, ParameterResolver
 from browser_mcp.api.artifacts import ArtifactManager
 
 __all__ = ["ChatAgent"]
@@ -114,6 +115,10 @@ class ChatAgent:
         steps = 0
         final_text = ""
         used_tools = False
+        
+        # Build execution context for this stream
+        exec_context = ExecutionContext.from_messages(messages)
+        resolver = ParameterResolver(exec_context)
 
         while True:
             steps += 1
@@ -149,10 +154,18 @@ class ChatAgent:
                 function = cast(dict[str, Any], tool_call.get("function") or {})
                 name = str(function.get("name", ""))
                 raw_arguments: Any = function.get("arguments") or {}
-                arguments = cast(dict[str, Any], raw_arguments)
+                
                 yield {"type": "tool_call", "name": name}
+                
                 try:
+                    arguments = cast(dict[str, Any], raw_arguments)
+                    arguments = resolver.resolve(name, arguments)
+                    
                     result = await self._tools.call(name, **arguments)
+                    
+                    # Update active context dynamically based on tool result
+                    exec_context.update_from_result(name, result)
+                    
                     content = self._serialize(result)
                     if self._artifact_manager:
                         content = self._artifact_manager.process_tool_result(name, content)
@@ -161,6 +174,7 @@ class ChatAgent:
                     _LOGGER.exception("tool_execution_failed", tool=name)
                     content = f"Error: {exc}"
                     error = True
+                    
                 yield {
                     "type": "tool_result",
                     "name": name,

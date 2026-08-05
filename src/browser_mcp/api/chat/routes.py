@@ -85,6 +85,8 @@ async def chat_stream(request: ChatRequest, agent: AgentDep, store: StoreDep) ->
     """Run the Ollama agent loop and stream events as Server-Sent Events."""
 
     async def generate():
+        has_artifacts = False
+        has_workflows = False
         try:
             async for event in agent.stream(request.messages, model=request.model):
                 if event["type"] == "tool_result":
@@ -93,8 +95,18 @@ async def chat_stream(request: ChatRequest, agent: AgentDep, store: StoreDep) ->
                     msg_model = _formatter.format_tool_result(
                         event["name"], event["content"], event["error"]
                     )
+                    if msg_model.role == "artifact":
+                        has_artifacts = True
+                    elif msg_model.role == "workflow":
+                        has_workflows = True
                     # Yield as a message event
                     yield _sse("message", msg_model.model_dump(exclude_none=True))
+                elif event["type"] == "done":
+                    filtered_content = _formatter.filter_hallucinations(
+                        event.get("content", ""), has_artifacts, has_workflows
+                    )
+                    event["content"] = filtered_content
+                    yield _sse("done", {k: v for k, v in event.items() if k != "type"})
                 else:
                     yield _sse(event["type"], {k: v for k, v in event.items() if k != "type"})
         except Exception as exc:

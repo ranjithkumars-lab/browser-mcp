@@ -71,10 +71,10 @@ export const ChatThread = memo(({ turns, busy, onPrompt }: ChatThreadProps) => {
   flushTimeline("end");
 
   return (
-    <div className="chat-main" style={{ position: "relative" }}>
+    <div className="chat-thread-wrapper">
       <div className="chat-thread" aria-live="polite" ref={threadRef} onScroll={handleScroll}>
         {renderedElements}
-        <div ref={scrollRef} style={{ height: "1px" }} />
+        <div ref={scrollRef} style={{ height: "1px", width: "100%", flexShrink: 0 }} />
       </div>
       
       {showScrollBtn && (

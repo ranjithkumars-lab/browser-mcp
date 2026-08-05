@@ -100,6 +100,7 @@ export function ChatPage() {
            }} 
            onStop={stop} 
            busy={busy} 
+           turns={turns}
         />
       </div>
 

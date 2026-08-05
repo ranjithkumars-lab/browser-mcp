@@ -175,7 +175,7 @@ a { color: var(--accent); }
 
 /* ---------- 3. ChatThread & Messages ---------- */
 .chat-page { display: flex; flex-direction: row; flex: 1; overflow: hidden; height: 100%; position: relative; }
-.chat-main { display: flex; flex-direction: column; flex: 1; min-width: 0; position: relative; }
+.chat-main { display: flex; flex-direction: column; flex: 1; min-width: 0; position: relative; overflow: hidden; }
 
 .chat-toolbar {
   display: flex; align-items: center; justify-content: space-between;
@@ -198,10 +198,14 @@ a { color: var(--accent); }
   background: var(--surface-2);
 }
 
+.chat-thread-wrapper {
+  position: relative; flex: 1; display: flex; flex-direction: column; min-height: 0;
+}
+
 .chat-thread {
   flex: 1; overflow-y: auto; display: flex; flex-direction: column;
   padding: var(--space-5) 0 8rem 0; scroll-behavior: auto;
-  align-items: center; gap: var(--space-6);
+  align-items: center; gap: var(--space-6); min-height: 0;
 }
 
 .chat-message-wrapper {
@@ -246,7 +250,13 @@ a { color: var(--accent); }
   position: absolute; bottom: 0; left: 0; right: 0;
   padding: var(--space-4) var(--space-5);
   background: linear-gradient(to top, var(--bg) 60%, transparent);
-  display: flex; justify-content: center; z-index: 20;
+  display: flex; justify-content: center; flex-direction: column; align-items: center; z-index: 20;
+}
+.busy-warning {
+  background: var(--warning-soft); color: var(--warning); border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); font-size: var(--text-xs); font-weight: 600;
+  display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); box-shadow: var(--shadow-sm);
+  z-index: 25;
 }
 .chat-compose-inner {
   width: 100%; max-width: var(--chat-max-width); position: relative;

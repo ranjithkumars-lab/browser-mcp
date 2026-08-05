@@ -89,3 +89,36 @@ class PresentationGateway:
 
         return StatusMessage(content=f"Tool '{name}' completed successfully.")
 
+    def filter_hallucinations(self, text: str, has_artifacts: bool, has_workflows: bool) -> str:
+        """Filter out hallucinated claims if evidence is missing."""
+        if not text:
+            return text
+            
+        import re
+        
+        # Claims about artifacts (screenshots, downloads, files)
+        artifact_claims = [
+            r"screenshot attached", r"taken a screenshot", r"captured a screenshot",
+            r"download completed", r"file downloaded",
+            r"file uploaded", r"pdf generated"
+        ]
+        
+        # Claims about workflows
+        workflow_claims = [
+            r"browser opened", r"login succeeded", r"logged in successfully"
+        ]
+        
+        filtered = text
+        if not has_artifacts:
+            for claim in artifact_claims:
+                # Replace hallucinated sentences with neutral or empty
+                # Using a simple case-insensitive regex to remove the sentence containing the claim
+                pattern = re.compile(r'[^.!?]*\b' + claim + r'\b[^.!?]*[.!?]', re.IGNORECASE)
+                filtered = pattern.sub('', filtered)
+                
+        if not has_workflows:
+            for claim in workflow_claims:
+                pattern = re.compile(r'[^.!?]*\b' + claim + r'\b[^.!?]*[.!?]', re.IGNORECASE)
+                filtered = pattern.sub('', filtered)
+                
+        return filtered.strip()
