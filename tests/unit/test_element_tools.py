@@ -29,6 +29,7 @@ EXPECTED_TOOLS = frozenset(
         "uncheck",
         "input_value",
         "focus",
+        "click",
     }
 )
 
@@ -37,7 +38,7 @@ def _toolkit(runtime: dict) -> ElementToolkit:
     return ElementToolkit(runtime["engine"])
 
 
-async def test_registers_all_fifteen_tools() -> None:
+async def test_registers_all_sixteen_tools() -> None:
     registry = ToolRegistry()
     _toolkit(await build_runtime()).register(registry)
     names = {m.name for m in registry.list()}
@@ -200,3 +201,69 @@ async def test_registry_call_through_toolkit() -> None:
         value="#heading",
     )
     assert result["success"] is True
+
+
+async def test_click_tool_by_element_id() -> None:
+    runtime = await build_runtime()
+    runtime["page"].set_elements("#btn", [FakeElement(text="Go")])
+    element_id = (
+        await runtime["engine"].find(
+            runtime["session_id"], runtime["page_handle"].page_id, "css", "#btn"
+        )
+    )["element_id"]
+    result = await _toolkit(runtime).click(
+        runtime["session_id"], runtime["page_handle"].page_id, element_id=element_id
+    )
+    assert result["success"] is True
+    assert result["action"] == "click"
+
+
+async def test_click_tool_resolves_selector() -> None:
+    runtime = await build_runtime()
+    runtime["page"].set_elements("#submit", [FakeElement(text="Login")])
+    result = await _toolkit(runtime).click(
+        runtime["session_id"],
+        runtime["page_handle"].page_id,
+        selector="#submit",
+        strategy="css",
+    )
+    assert result["success"] is True
+    assert result["action"] == "click"
+
+
+async def test_click_underscore_alias_registered() -> None:
+    runtime = await build_runtime()
+    runtime["page"].set_elements("button", [FakeElement(text="Login")])
+    registry = ToolRegistry()
+    _toolkit(runtime).register(registry)
+    result = await registry.call(
+        "browser.element_click",
+        session_id=runtime["session_id"],
+        page_id=runtime["page_handle"].page_id,
+        selector="button",
+        strategy="css",
+    )
+    assert result["success"] is True
+    assert result["action"] == "click"
+
+
+async def test_fill_tool_resolves_selector() -> None:
+    runtime = await build_runtime()
+    runtime["page"].set_elements("#email", [FakeElement(editable=True, enabled=True)])
+    result = await _toolkit(runtime).fill(
+        runtime["session_id"],
+        runtime["page_handle"].page_id,
+        selector="#email",
+        value="user@example.com",
+    )
+    assert result["success"] is True
+    assert result["value"] == "user@example.com"
+
+
+async def test_fill_tool_requires_element_or_selector() -> None:
+    runtime = await build_runtime()
+    result = await _toolkit(runtime).fill(
+        runtime["session_id"], runtime["page_handle"].page_id
+    )
+    assert result["success"] is False
+    assert "element_id" in result["error"]

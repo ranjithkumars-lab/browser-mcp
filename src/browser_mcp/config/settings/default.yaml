@@ -105,7 +105,7 @@ ui:
 
 ollama:
   host: "http://10.0.0.170:11444"
-  model: "gpt-oss:20b"
+  model: "deepseek-r1:14b"
   timeout_seconds: 300.0
   keep_alive: "30m"
   max_tool_steps: 16

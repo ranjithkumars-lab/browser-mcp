@@ -187,11 +187,12 @@ class ElementToolkit:
     @tool(
         name=f"{TOOL_NAMESPACE}.fill",
         description=(
-            "Set the value of a text input field. Takes an element_id returned "
-            "by browser.element.find (or a CSS selector via the selector "
-            "argument). Prefer this over form.fill when you already have an "
-            "element_id. After filling, submit with browser.element.press "
-            "key='Enter' or browser.form.submit."
+            "Set the value of a text input field. Pass the element_id returned "
+            "by browser.element.find. Alternatively pass a CSS selector via "
+            "'selector' (optionally with 'strategy' = 'css'|'xpath'|'aria'|'text') "
+            "and the element will be resolved on the fly. Prefer finding the "
+            "element once and reusing its element_id. After filling, submit with "
+            "browser.element.press key='Enter' or browser.form.submit."
         ),
         returns="json",
     )
@@ -199,14 +200,19 @@ class ElementToolkit:
         self,
         session_id: str,
         page_id: str,
-        element_id: str,
-        value: str,
+        element_id: str | None = None,
+        value: str = "",
+        selector: str | None = None,
+        strategy: str = "css",
         timeout_ms: int | None = None,
     ) -> dict[str, Any]:
-        """Fill a text input with ``value``."""
+        """Fill a text input with ``value`` by element_id or selector."""
         try:
+            resolved = await self._resolve_element(
+                session_id, page_id, element_id, selector, strategy, timeout_ms
+            )
             result = await self._engine.fill(
-                session_id, page_id, element_id, value, timeout_ms=timeout_ms
+                session_id, page_id, resolved, value, timeout_ms=timeout_ms
             )
             return _ok(**result)
         except Exception as exc:
@@ -400,7 +406,73 @@ class ElementToolkit:
         except Exception as exc:
             return _err(str(exc), session_id=session_id, page_id=page_id)
 
+    @tool(
+        name=f"{TOOL_NAMESPACE}.click",
+        description=(
+            "Click an element once it is visible and actionable. Pass an "
+            "element_id from browser.element.find, or a CSS selector via "
+            "'selector' (with optional 'strategy') to resolve on the fly. "
+            "button is 'left'|'right'|'middle'; click_count for "
+            "double-click-style behaviors. Use this to press login, submit, or "
+            "download buttons after filling a form."
+        ),
+        returns="json",
+    )
+    async def click(
+        self,
+        session_id: str,
+        page_id: str,
+        element_id: str | None = None,
+        selector: str | None = None,
+        strategy: str = "css",
+        button: str = "left",
+        click_count: int = 1,
+        timeout_ms: int | None = None,
+    ) -> dict[str, Any]:
+        """Click an element by element_id or selector."""
+        try:
+            resolved = await self._resolve_element(
+                session_id, page_id, element_id, selector, strategy, timeout_ms
+            )
+            result = await self._engine.click(
+                session_id,
+                page_id,
+                resolved,
+                button=button,
+                click_count=click_count,
+                timeout_ms=timeout_ms,
+            )
+            return _ok(**result)
+        except Exception as exc:
+            return _err(str(exc), session_id=session_id, page_id=page_id)
+
     # -- registration ---------------------------------------------------
+
+    async def _resolve_element(
+        self,
+        session_id: str,
+        page_id: str,
+        element_id: str | None,
+        selector: str | None,
+        strategy: str,
+        timeout_ms: int | None,
+    ) -> str:
+        """Return a usable element_id, resolving a ``selector`` if needed."""
+        if element_id:
+            return element_id
+        if not selector:
+            raise ValueError(
+                "either 'element_id' (from browser.element.find) or 'selector' is required"
+            )
+        found = await self._engine.find(
+            session_id,
+            page_id,
+            strategy,
+            selector,
+            timeout_ms=timeout_ms,
+            strict=False,
+        )
+        return found["element_id"]
 
     def register(self, registry: Any) -> None:
         """Register every tool in this toolkit with ``registry``."""
@@ -428,6 +500,7 @@ _TOOL_METHODS = frozenset(
         "uncheck",
         "input_value",
         "focus",
+        "click",
     }
 )
 

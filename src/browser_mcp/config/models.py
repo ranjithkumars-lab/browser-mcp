@@ -191,7 +191,7 @@ class OllamaConfig(BaseModel):
         default="http://10.0.0.170:11444",
         description="Ollama HTTP endpoint used by the chat agent.",
     )
-    model: str = Field(default="gpt-oss:20b", description="Default chat model name.")
+    model: str = Field(default="deepseek-r1:14b", description="Default chat model name.")
     timeout_seconds: float = Field(default=300.0, gt=0)
     keep_alive: str = Field(
         default="30m",

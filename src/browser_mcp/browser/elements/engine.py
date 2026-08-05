@@ -534,6 +534,36 @@ class ElementEngine:
             timeout_ms=timeout_ms,
         )
 
+    async def click(
+        self,
+        session_id: str,
+        page_id: str,
+        element_id: str,
+        *,
+        timeout_ms: int | None = None,
+        button: str = "left",
+        click_count: int = 1,
+        delay_ms: int | None = None,
+    ) -> dict[str, Any]:
+        """Click ``element_id`` once it is actionable."""
+        async def _click(locator: LocatorHandle, timeout: int | None) -> None:
+            await self._provider.click(
+                locator,
+                timeout,
+                button=button,
+                click_count=click_count,
+                delay_ms=delay_ms,
+            )
+        return await self._act(
+            "click",
+            session_id,
+            page_id,
+            element_id,
+            _click,
+            timeout_ms=timeout_ms,
+            extra={"button": button, "click_count": click_count, "delay_ms": delay_ms},
+        )
+
     # -- resolution helpers (used by InteractionManager) ---------------
 
     async def resolve_locator(

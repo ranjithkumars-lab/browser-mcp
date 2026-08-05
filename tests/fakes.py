@@ -367,6 +367,19 @@ class FakeLocatorProvider:
     async def focus(self, locator: FakeLocator, timeout: int | None = None) -> None:
         await locator.focus(timeout=timeout)
 
+    async def click(
+        self,
+        locator: FakeLocator,
+        timeout: int | None = None,
+        *,
+        button: str = "left",
+        click_count: int = 1,
+        delay_ms: int | None = None,
+    ) -> None:
+        await locator.click(
+            timeout=timeout, button=button, click_count=click_count, delay=delay_ms or 0
+        )
+
 
 class FakeRequest:
     """Minimal request supporting a redirect chain."""

@@ -159,6 +159,18 @@ class LocatorProvider(ABC):
     async def focus(self, locator: LocatorHandle, timeout: int | None = None) -> None:
         """Move keyboard focus to ``locator``."""
 
+    @abstractmethod
+    async def click(
+        self,
+        locator: LocatorHandle,
+        timeout: int | None = None,
+        *,
+        button: str = "left",
+        click_count: int = 1,
+        delay_ms: int | None = None,
+    ) -> None:
+        """Click the first match of ``locator``."""
+
 
 class PlaywrightLocatorProvider(LocatorProvider):
     """Playwright-backed implementation of :class:`LocatorProvider`.
@@ -261,3 +273,19 @@ class PlaywrightLocatorProvider(LocatorProvider):
 
     async def focus(self, locator: Locator, timeout: int | None = None) -> None:
         await locator.focus(timeout=timeout)
+
+    async def click(
+        self,
+        locator: Locator,
+        timeout: int | None = None,
+        *,
+        button: str = "left",
+        click_count: int = 1,
+        delay_ms: int | None = None,
+    ) -> None:
+        await locator.click(
+            timeout=timeout,
+            button=button,
+            click_count=click_count,
+            delay=delay_ms or 0,
+        )
