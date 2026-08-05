@@ -44,9 +44,13 @@ function parseInline(raw: string): InlinePart[] {
     else if (match[5]) {
       const inner = match[5];
       const close = inner.lastIndexOf("](");
+      let url = inner.slice(close + 2, -1);
+      if (url.startsWith("artifact:")) {
+         url = `/api/v1/artifacts/${url.replace("artifact:", "")}`;
+      }
       parts.push({
         text: inner.slice(1, close),
-        link: inner.slice(close + 2, -1),
+        link: url,
       });
     }
     last = match.index + match[0].length;
